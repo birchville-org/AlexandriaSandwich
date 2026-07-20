@@ -1,0 +1,19 @@
+# System & OS
+.DS_Store
+Thumbs.db
+
+# Daten- und Arbeitsverzeichnisse ausschließen (nur .gitkeep behalten)
+/data/input/*
+!/data/input/.gitkeep
+/data/processing/*
+!/data/processing/.gitkeep
+/data/output/*
+!/data/output/.gitkeep
+
+# n8n Daten & Secrets
+docker/n8n/data/
+*.env
+
+# Ansible Vault & Temporary Files
+*.retry
+.ansible/
