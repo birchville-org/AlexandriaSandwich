@@ -1,0 +1,7 @@
+---
+- name: Setup AlexandriaSandwich Infrastructure
+  hosts: all
+  gather_facts: yes
+  tasks:
+    - name: Ping hosts
+      ansible.builtin.ping:

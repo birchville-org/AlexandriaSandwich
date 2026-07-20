@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  # Compute-Worker für OCR & Bildverarbeitung
+  ocr_worker:
+    build:
+      context: ./docker/worker
+    container_name: alexandria_worker
+    restart: unless-stopped
+    volumes:
+      - ./data/input:/data/input
+      - ./data/processing:/data/processing
+      - ./data/output:/data/output
+
