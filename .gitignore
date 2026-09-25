@@ -2,7 +2,7 @@
 .DS_Store
 Thumbs.db
 
-# Daten- und Arbeitsverzeichnisse ausschließen (nur .gitkeep behalten)
+# Daten- und Arbeitsverzeichnisse ausschließen
 /data/input/*
 !/data/input/.gitkeep
 /data/processing/*
@@ -10,10 +10,20 @@ Thumbs.db
 /data/output/*
 !/data/output/.gitkeep
 
-# n8n Daten & Secrets
+# n8n Daten, Keys & Secrets
 docker/n8n/data/
+.env
+.env.*
+!.env.example
 *.env
 
 # Ansible Vault & Temporary Files
 *.retry
 .ansible/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv*/
+venv/
