@@ -25,6 +25,6 @@ docker/n8n/data/
 __pycache__/
 *.py[cod]
 *$py.class
-.venv*/
+.venv*
 venv/
 site/

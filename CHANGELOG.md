@@ -2,6 +2,25 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.1.0] - 2026-09-26
+
+### Added
+- **3-Schritte-Schnellstart:** Direkter Einstieg ohne Vorbedingungen (`clone -> compose up -> test run`) in `README.md`, `docs/de/index.md` und `docs/en/index.md`.
+- **Beispieldaten:** Lizenzfreie synthetische Testseiten (`examples/sample_book/`) samt Dokumentation für sofortige Pipeline-Tests.
+- **Konsolidiertes Docker Compose Setup:**
+  - Services `ui` und `n8n` über Compose-Profile (`--profile ui`, `--profile n8n`, `--profile all`) in `docker-compose.yml` integriert.
+  - Automatisches Lifecycle-Management des Docker-Netzwerks `alexandria_default`.
+  - Relative Host-Mounts (`./data`, `./templates`, `./examples`) als universeller Standard.
+- **Pipeline-Transparenz:**
+  - Ablaufdiagramm aller Pipeline-Stufen in Text-/ASCII-Form.
+  - Referenztabelle aller Skripte in `scripts/` mit Typ und Funktionsbeschreibung.
+- **Vollständige `.env.example`:** Dokumentation aller Umgebungsvariablen (`MISTRAL_API_KEY`, `OCR_LANG`, `OCR_CONFIDENCE_THRESHOLD`, `DATA_DIR`, `PORT_UI`, `PORT_N8N`, `N8N_HOST`).
+
+### Fixed
+- Kaputter Dokumentationslink in `README.md` und `CHANGELOG.md` korrigiert (`docs/de/INSTALLATION.md`).
+- Tippfehler `fallsFallback` in `docs/de/INSTALLATION.md` bereinigt.
+- Umgebungsspezifische Pfade und Hostnamen in den Referenz-Bereich ausgelagert.
+
 ## [1.0.0] - 2026-09-26
 
 ### Added
@@ -17,7 +36,7 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 - **Dokumentations-Infrastruktur:**
   - Zweisprachige MkDocs-Material-Dokumentation (DE & EN) mit Sprachumschalter (`mkdocs.yml`, `docs/de/`, `docs/en/`).
   - GitHub Actions Workflow (`.github/workflows/docs.yml`) für automatisches Deployment auf GitHub Pages.
-  - Detaillierte Installationsanleitung (`docs/INSTALLATION.md`).
+  - Detaillierte Installationsanleitung (`docs/de/INSTALLATION.md`).
 
 ## [0.1.1] - 2026-07-20
 

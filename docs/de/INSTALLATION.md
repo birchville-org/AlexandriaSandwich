@@ -120,33 +120,32 @@ cd /opt/alexandria
 ```
 
 ### Schritt 2: Umgebungskonfiguration (`.env`)
-Erstelle `/opt/alexandria/.env` (Dateirechte `600`):
+Erstelle `.env` (Dateirechte `600`):
 ```bash
-cat << 'EOF' > /opt/alexandria/.env
-# Mistral API-Schlüssel für OCR-Fallback (optional, fallsFallback genutzt wird)
+cp .env.example .env
+# Optional: MISTRAL_API_KEY und Pfade anpassen
+chmod 600 .env
+```
+
+Beispielinhalt:
+```bash
+# Mistral API-Schlüssel für OCR-Fallback (optional, falls Fallback genutzt wird)
 MISTRAL_API_KEY=dein_mistral_api_key_hier
 
 # Pipeline-Standards
 OCR_LANG=deu+eng
 OCR_CONFIDENCE_THRESHOLD=85
-DATA_DIR=/data
-EOF
-chmod 600 /opt/alexandria/.env
+DATA_DIR=./data
 ```
 
-### Schritt 3: Gemeinsames Docker-Netzwerk anlegen
-```bash
-docker network create alexandria_default || true
-```
+### Schritt 3: Docker-Netzwerk
+Das gemeinsame Netzwerk **`alexandria_default`** wird von Docker Compose automatisch verwaltet. Ein manueller Eingriff ist nicht erforderlich (bei Bedarf: `docker network create alexandria_default || true`).
 
-### Schritt 4: Worker-Container bauen und starten
-```bash
-# Image bauen
-docker build -t alexandria-worker:latest /opt/alexandria/docker/worker
+### Schritt 4: Worker-Container starten
+Der OCR-Worker kann direkt über das Wurzel-Composefile gestartet werden (baut automatisch das lokale Image):
 
-# Worker starten
-cp deploy/docker-compose.alex.yml docker-compose.yml
-docker compose up -d
+```bash
+docker compose up -d --build ocr_worker
 ```
 
 Verifikation:
@@ -155,13 +154,21 @@ docker exec alexandria_worker typst --version
 # Ausgabe: typst 0.11.1 (...)
 ```
 
-### Schritt 5: n8n Orchestrator starten und konfigurieren
+### Schritt 5: Optional — Vollständiger Stack (UI + n8n) via Compose-Profile
+Statt einzelne Compose-Dateien zu kopieren, stehen Compose-Profile bereit:
+
 ```bash
-mkdir -p /opt/alexandria/n8n-data
-docker compose -f deploy/docker-compose.n8n.yml up -d
+# Nur UI starten:
+docker compose --profile ui up -d --build
+
+# Nur n8n Orchestrator starten:
+docker compose --profile n8n up -d
+
+# Den gesamten Stack (Worker + UI + n8n) auf einmal starten:
+docker compose --profile all up -d --build
 ```
 
-Workflow importieren und publizieren:
+Workflow in n8n aktivieren (falls n8n genutzt wird):
 ```bash
 # 1. Workflow importieren
 docker exec alexandria_n8n n8n import:workflow --input=/opt/alexandria/workflows/n8n_ocr_pipeline.json
@@ -171,11 +178,6 @@ docker exec alexandria_n8n n8n publish:workflow --id=alexandria-pipeline
 
 # 3. Container neu starten, damit Trigger scharfgeschaltet wird
 docker restart alexandria_n8n
-```
-
-### Schritt 6: Web UI bauen und starten
-```bash
-docker compose -f deploy/docker-compose.ui.yml up -d --build
 ```
 
 Verifikation:
