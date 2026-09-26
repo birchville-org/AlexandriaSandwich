@@ -1,9 +1,9 @@
 site_name: AlexandriaSandwich
-site_url: https://marcodem.github.io/AlexandriaSandwich/
+site_url: https://birchville-org.github.io/AlexandriaSandwich/
 site_author: AlexandriaSandwich Team
 site_description: Automatisierte Buch-Digitalisierung mit Hybrid-OCR, TEI-P5, Sandwich-PDF & Typst Neusatz.
-repo_url: https://github.com/marcodem/AlexandriaSandwich
-repo_name: marcodem/AlexandriaSandwich
+repo_url: https://github.com/birchville-org/AlexandriaSandwich
+repo_name: birchville-org/AlexandriaSandwich
 
 theme:
   name: material
