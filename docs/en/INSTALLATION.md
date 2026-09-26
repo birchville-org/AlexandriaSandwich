@@ -120,33 +120,32 @@ cd /opt/alexandria
 ```
 
 ### Step 2: Configure Environment (`.env`)
-Create `/opt/alexandria/.env` (file permissions `600`):
+Create `.env` (file permissions `600`):
 ```bash
-cat << 'EOF' > /opt/alexandria/.env
+cp .env.example .env
+# Optional: customize MISTRAL_API_KEY and paths
+chmod 600 .env
+```
+
+Example content:
+```bash
 # Mistral API Key for OCR fallback (optional)
 MISTRAL_API_KEY=your_mistral_api_key_here
 
 # Pipeline Defaults
 OCR_LANG=deu+eng
 OCR_CONFIDENCE_THRESHOLD=85
-DATA_DIR=/data
-EOF
-chmod 600 /opt/alexandria/.env
+DATA_DIR=./data
 ```
 
-### Step 3: Create Shared Docker Network
-```bash
-docker network create alexandria_default || true
-```
+### Step 3: Docker Network
+The shared bridge network **`alexandria_default`** is declared in Docker Compose and created automatically. Manual creation is optional (`docker network create alexandria_default || true`).
 
-### Step 4: Build and Start Worker Container
-```bash
-# Build worker image
-docker build -t alexandria-worker:latest /opt/alexandria/docker/worker
+### Step 4: Start Worker Container
+The OCR worker can be started directly using the root compose file (automatically builds the local worker image):
 
-# Start worker service
-cp deploy/docker-compose.alex.yml docker-compose.yml
-docker compose up -d
+```bash
+docker compose up -d --build ocr_worker
 ```
 
 Verify Typst installation inside worker:
@@ -155,13 +154,21 @@ docker exec alexandria_worker typst --version
 # Expected output: typst 0.11.1 (...)
 ```
 
-### Step 5: Start & Configure n8n Orchestrator
+### Step 5: Optional — Full Stack (UI + n8n) via Compose Profiles
+Instead of copying individual compose files, use compose profiles:
+
 ```bash
-mkdir -p /opt/alexandria/n8n-data
-docker compose -f deploy/docker-compose.n8n.yml up -d
+# Start Web UI:
+docker compose --profile ui up -d --build
+
+# Start n8n orchestrator:
+docker compose --profile n8n up -d
+
+# Start the full stack (Worker + UI + n8n):
+docker compose --profile all up -d --build
 ```
 
-Import and activate pipeline workflow:
+Import and activate pipeline workflow (if using n8n):
 ```bash
 # 1. Import workflow
 docker exec alexandria_n8n n8n import:workflow --input=/opt/alexandria/workflows/n8n_ocr_pipeline.json
@@ -171,11 +178,6 @@ docker exec alexandria_n8n n8n publish:workflow --id=alexandria-pipeline
 
 # 3. Restart container to arm webhook trigger
 docker restart alexandria_n8n
-```
-
-### Step 6: Build & Start Web UI
-```bash
-docker compose -f deploy/docker-compose.ui.yml up -d --build
 ```
 
 Verify Web UI health:
