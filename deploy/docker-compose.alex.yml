@@ -1,9 +1,5 @@
-version: '3.8'
-
 services:
   ocr_worker:
-    build:
-      context: ./docker/worker
     image: alexandria-worker:latest
     container_name: alexandria_worker
     restart: unless-stopped
@@ -15,7 +11,8 @@ services:
       - OCR_LANG=${OCR_LANG:-deu+eng}
       - OCR_CONFIDENCE_THRESHOLD=${OCR_CONFIDENCE_THRESHOLD:-85}
     volumes:
-      - ./data/input:/data/input
-      - ./data/processing:/data/processing
-      - ./data/output:/data/output
-      - ./scripts:/opt/alexandria/scripts:ro
+      - /data/input:/data/input
+      - /data/processing:/data/processing
+      - /data/output:/data/output
+      - /opt/alexandria/scripts:/opt/alexandria/scripts:ro
+      - /opt/alexandria/templates:/opt/alexandria/templates:ro

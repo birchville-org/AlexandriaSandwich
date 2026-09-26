@@ -1,0 +1,16 @@
+---
+# AlexandriaSandwich shared vars
+alexandria_data_root: /data
+alexandria_subdirs:
+  - input
+  - processing
+  - output
+
+# NAS NFS (adjust to your NAS export paths)
+alexandria_nas_host: nas.local
+alexandria_nas_nfs_base: /volume1/alexandria
+alexandria_nfs_opts: "rw,soft,intr,timeo=50,_netdev,nofail"
+
+# Whether ansible should write /etc/fstab entries on proxmox_worker
+alexandria_nfs_manage_fstab: false
+alexandria_nfs_mount: false

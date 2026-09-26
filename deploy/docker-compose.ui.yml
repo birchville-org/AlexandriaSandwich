@@ -1,0 +1,24 @@
+services:
+  ui:
+    build:
+      context: ..
+      dockerfile: ui/Dockerfile
+    image: alexandria-ui:latest
+    container_name: alexandria_ui
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - DATA_DIR=/data
+      - N8N_WEBHOOK_URL=http://alexandria_n8n:5678/webhook/alexandria/ocr
+    volumes:
+      - /data/input:/data/input
+      - /data/processing:/data/processing
+      - /data/output:/data/output
+    networks:
+      - default
+
+networks:
+  default:
+    name: alexandria_default
+    external: true

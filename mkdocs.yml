@@ -1,0 +1,74 @@
+site_name: AlexandriaSandwich
+site_url: https://marcodem.github.io/AlexandriaSandwich/
+site_author: AlexandriaSandwich Team
+site_description: Automatisierte Buch-Digitalisierung mit Hybrid-OCR, TEI-P5, Sandwich-PDF & Typst Neusatz.
+repo_url: https://github.com/marcodem/AlexandriaSandwich
+repo_name: marcodem/AlexandriaSandwich
+
+theme:
+  name: material
+  language: de
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Wechsel zu dunklem Modus
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Wechsel zu hellem Modus
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: de
+          name: Deutsch
+          build: true
+          default: true
+        - locale: en
+          name: English
+          build: true
+      nav_translations:
+        en:
+          Startseite: Home
+          Installation: Installation
+          Verfahren: Pipeline Architecture
+          Korrekturpfade: Correction Paths
+          Deployment: Deployment
+          Speicherstruktur: Storage Layout
+          n8n Integration: n8n Integration
+
+nav:
+  - Startseite: index.md
+  - Installation: INSTALLATION.md
+  - Verfahren: WIKI_VERFAHREN.md
+  - Korrekturpfade: CORRECTION_PATHS.md
+  - Deployment: DEPLOY.md
+  - Speicherstruktur: STORAGE.md
+  - n8n Integration: N8N.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - tables
+  - attr_list
