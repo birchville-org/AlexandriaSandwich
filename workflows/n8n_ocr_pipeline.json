@@ -1,0 +1,156 @@
+{
+  "id": "alexandria-pipeline",
+  "name": "AlexandriaSandwich OCR Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "alexandria/ocr",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook OCR Job",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "alexandria-ocr"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst job = body.job || body.job_name || `job-${Date.now()}`;\nconst payload = JSON.stringify({\n  job,\n  pull: body.pull === true || body.pull === 'true' || body.pull === 1,\n  push: body.push === true || body.push === 'true' || body.push === 1,\n  lang: body.lang || 'deu+eng',\n  threshold: body.threshold ?? 85,\n  limit: body.limit ?? 0,\n  no_mistral: body.no_mistral === true,\n  container: body.container || 'alexandria_worker',\n  scripts_path: body.scripts_path || '/opt/alexandria/scripts',\n});\nconst escaped = payload.replace(/'/g, `'\\\\''`);\nconst command = `/opt/alexandria/scripts/n8n_run_job.sh '${escaped}'`;\nreturn [{ json: { job, payload: JSON.parse(payload), command, request: body } }];"
+      },
+      "id": "prep-command",
+      "name": "Build docker exec command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.command }}"
+      },
+      "id": "exec-pipeline",
+      "name": "Run OCR pipeline",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        740,
+        300
+      ],
+      "notesInFlow": true,
+      "notes": "Requires docker CLI + socket in n8n container (deploy_n8n_alex.sh)."
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.stdout || $json.data || '';\nlet report = null;\ntry {\n  const text = typeof raw === 'string' ? raw : JSON.stringify(raw);\n  const m = text.match(/\\{[\\s\\S]*\"job\"\\s*:[\\s\\S]*\\}/);\n  if (m) {\n    report = JSON.parse(m[0]);\n  } else {\n    const start = text.indexOf('{');\n    const end = text.lastIndexOf('}');\n    if (start >= 0 && end > start) report = JSON.parse(text.slice(start, end + 1));\n  }\n} catch (e) {\n  report = { parse_error: String(e), raw };\n}\nconst prep = $('Build docker exec command').item.json;\nconst ok = !!(report && !report.parse_error && !report.error);\nreturn [{\n  json: {\n    ok,\n    job: prep.job,\n    command: prep.command,\n    report,\n    exitCode: $json.exitCode ?? null\n  }\n}];"
+      },
+      "id": "parse-report",
+      "name": "Parse pipeline report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## AlexandriaSandwich OCR\n\nPOST webhook path: `alexandria/ocr`\n\n```json\n{\n  \"job\": \"book-001\",\n  \"pull\": false,\n  \"push\": false,\n  \"lang\": \"deu+eng\",\n  \"threshold\": 85,\n  \"limit\": 0,\n  \"no_mistral\": false\n}\n```\n\nRuns on alex.local: n8n \u2192 n8n_run_job.sh \u2192 docker exec alexandria_worker run_pipeline.sh\n",
+        "height": 480,
+        "width": 420
+      },
+      "id": "sticky-docs",
+      "name": "API docs",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        20
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook OCR Job": {
+      "main": [
+        [
+          {
+            "node": "Build docker exec command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build docker exec command": {
+      "main": [
+        [
+          {
+            "node": "Run OCR pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run OCR pipeline": {
+      "main": [
+        [
+          {
+            "node": "Parse pipeline report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse pipeline report": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": true,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [
+    {
+      "name": "alexandria"
+    },
+    {
+      "name": "ocr"
+    }
+  ]
+}

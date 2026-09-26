@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Upload — AlexandriaSandwich{% endblock %}
+{% block content %}
+<h1>Dokument hochladen &amp; OCR starten</h1>
+
+{% if result %}
+  {% if result.triggered and result.n8n_response and result.n8n_response.ok %}
+  <div class="alert alert-success">
+    ✅ <strong>{{ result.saved|length }} Datei(en) gespeichert</strong> in <code>/data/input/{{ result.job }}/</code><br>
+    Pipeline gestartet — n8n Antwort: <code>{{ result.n8n_response }}</code>
+  </div>
+  {% elif result.triggered and result.n8n_response %}
+  <div class="alert alert-error">
+    ⚠️ <strong>{{ result.saved|length }} Datei(en) gespeichert</strong>, aber Pipeline-Trigger fehlgeschlagen:<br>
+    <pre>{{ result.n8n_response }}</pre>
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    ✅ <strong>{{ result.saved|length }} Datei(en) gespeichert</strong> in <code>/data/input/{{ result.job }}/</code><br>
+    Pipeline nicht gestartet (nur Upload).
+  </div>
+  {% endif %}
+{% endif %}
+
+<div class="card">
+  <h2>Schritt 1: Dateien auswählen</h2>
+  <form id="uploadForm" method="post" action="/upload" enctype="multipart/form-data">
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <p style="font-size:1.2rem;">📁 Bilder hierher ziehen oder klicken zum Auswählen</p>
+      <p class="text-muted">PNG, JPG, TIFF — eine Seite pro Datei</p>
+    </div>
+    <input type="file" id="fileInput" name="files" multiple accept=".png,.jpg,.jpeg,.tif,.tiff" style="display:none;" required>
+
+    <ul class="file-list" id="fileList"></ul>
+
+    <h2 style="margin-top:2rem;">Schritt 2: Job konfigurieren</h2>
+    <div class="grid">
+      <div class="form-group">
+        <label for="job">Job-Name (Ordnername)</label>
+        <input type="text" id="job" name="job" placeholder="z.B. buch-001" required>
+      </div>
+      <div class="form-group">
+        <label for="lang">OCR-Sprache</label>
+        <select id="lang" name="lang">
+          <option value="deu+eng" selected>Deutsch + Englisch</option>
+          <option value="deu">Deutsch</option>
+          <option value="eng">Englisch</option>
+          <option value="fra">Französisch</option>
+          <option value="san">Sanskrit (Devanagari)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="threshold">Confidence-Schwelle (%)</label>
+        <input type="number" id="threshold" name="threshold" value="85" min="0" max="100">
+      </div>
+      <div class="form-group">
+        <label for="limit">Seiten-Limit (0 = alle)</label>
+        <input type="number" id="limit" name="limit" value="0" min="0">
+      </div>
+    </div>
+    <div class="form-group checkbox-group">
+      <input type="checkbox" id="no_mistral" name="no_mistral" value="true">
+      <label for="no_mistral">Mistral-Fallback deaktivieren</label>
+    </div>
+    <div class="form-group checkbox-group">
+      <input type="checkbox" id="trigger" name="trigger" value="true" checked>
+      <label for="trigger">Pipeline nach Upload automatisch starten</label>
+    </div>
+    <button type="submit" class="btn">📤 Upload &amp; Start</button>
+  </form>
+</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileList = document.getElementById('fileList');
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  fileInput.files = e.dataTransfer.files;
+  updateFileList();
+});
+fileInput.addEventListener('change', updateFileList);
+
+function updateFileList() {
+  fileList.innerHTML = '';
+  for (const f of fileInput.files) {
+    const li = document.createElement('li');
+    li.textContent = f.name + ' (' + (f.size/1024).toFixed(1) + ' KB)';
+    fileList.appendChild(li);
+  }
+}
+
+// Auto-fill job name from first file
+fileInput.addEventListener('change', () => {
+  const jobInput = document.getElementById('job');
+  if (!jobInput.value && fileInput.files.length > 0) {
+    const name = fileInput.files[0].name.replace(/\.[^.]+$/, '');
+    jobInput.value = 'job-' + name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+services:
+  ocr_worker:
+    image: alexandria-worker:latest
+    container_name: alexandria_worker
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - OCR_LANG=${OCR_LANG:-deu+eng}
+      - OCR_CONFIDENCE_THRESHOLD=${OCR_CONFIDENCE_THRESHOLD:-85}
+    volumes:
+      - /data/input:/data/input
+      - /data/processing:/data/processing
+      - /data/output:/data/output
+      - /opt/alexandria/scripts:/opt/alexandria/scripts:ro
+      - /opt/alexandria/templates:/opt/alexandria/templates:ro

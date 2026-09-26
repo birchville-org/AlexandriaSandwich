@@ -1,0 +1,26 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: alexandria_n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=alex.local
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://alex.local:5678/
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - TZ=Europe/Berlin
+      - N8N_SECURE_COOKIE=false
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+      - EXECUTIONS_DATA_SAVE_ON_ERROR=all
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - NODES_EXCLUDE=[]
+    volumes:
+      - /opt/alexandria/n8n-data:/home/node/.n8n
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/alexandria/scripts:/opt/alexandria/scripts:ro
+      - /opt/alexandria/workflows:/opt/alexandria/workflows:ro
+      - /usr/bin/docker:/usr/bin/docker:ro
+    user: root

@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}{{ job }} — AlexandriaSandwich{% endblock %}
+{% block content %}
+<h1>Job: {{ job }}</h1>
+<p><a href="/">← zurück zum Dashboard</a></p>
+
+<div class="actions" style="margin-bottom:1.5rem;">
+  <form method="post" action="/jobs/{{ job }}/trigger" style="display:inline;"
+        onsubmit="return confirm('Job {{ job }} neu starten?');">
+    <button type="submit" class="btn">▶ Pipeline neu starten</button>
+  </form>
+</div>
+
+{% if info.report %}
+<div class="card">
+  <h2>Pipeline Report</h2>
+  <div class="grid">
+    <div class="stat"><div class="num">{{ info.report.pass|default(0) }}</div><div class="label">Pass</div></div>
+    <div class="stat"><div class="num">{{ info.report.fail|default(0) }}</div><div class="label">Fail</div></div>
+  </div>
+  <table style="margin-top:1rem;">
+    <tr><th>Threshold</th><td>{{ info.report.threshold|default("—") }}%</td></tr>
+    <tr><th>Sprache</th><td>{{ info.report.lang|default("—") }}</td></tr>
+    <tr><th>Seiten total</th><td>{{ info.report.pages_total|default("—") }}</td></tr>
+    <tr><th>Mistral Fallbacks</th><td>{{ info.report.mistral_ok|default(0) }}</td></tr>
+    <tr><th>Sandwich PDF</th><td>{{ info.report.sandwich_pdf|default("—") }}</td></tr>
+    <tr><th>Sidecar TXT</th><td>{{ info.report.sidecar_txt|default("—") }}</td></tr>
+  </table>
+</div>
+{% else %}
+<div class="card">
+  <p class="text-muted">⚠️ Noch kein Pipeline-Report vorhanden. Starte die Pipeline über den Button oben.</p>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>🏛️ Die 3 Primär-Artefakte</h2>
+  <table>
+    <thead><tr><th>Artefakt</th><th>Format</th><th>Datei & Größe</th><th>Aktionen</th></tr></thead>
+    <tbody>
+      <!-- 1. Generisches TEI-P5 XML -->
+      <tr>
+        <td><strong>1. Generisches TEI-P5</strong><br><small class="text-muted">Digital Humanities & Archivstandard</small></td>
+        <td><span class="badge" style="background:#0284c7;color:#fff;">XML</span></td>
+        <td>
+          {% if info.tei_xml %}
+            <code>{{ info.tei_xml.name }}</code> ({{ info.tei_xml.size_kb }} KB)
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if info.tei_xml %}
+            <a href="/browse/tei/{{ job }}/{{ info.tei_xml.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
+            <a href="/download/tei/{{ job }}/{{ info.tei_xml.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
+          {% else %}
+            <span class="text-muted">Noch nicht generiert</span>
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- 2. 1:1 Sandwich-PDF -->
+      {% set sandwich = info.pdfs | selectattr("kind", "equalto", "sandwich") | first | default(none) %}
+      <tr>
+        <td><strong>2. 1:1 Sandwich-PDF</strong><br><small class="text-muted">Originalscan + unsichtbare Textebene</small></td>
+        <td><span class="badge" style="background:#16a34a;color:#fff;">PDF</span></td>
+        <td>
+          {% if sandwich %}
+            <code>{{ sandwich.name }}</code> ({{ sandwich.size_kb }} KB)
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if sandwich %}
+            <a href="/jobs/{{ job }}/edit" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;">✏️ Path B Editor</a>
+            <a href="/download/pdf/{{ job }}/{{ sandwich.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
+          {% else %}
+            <span class="text-muted">Noch nicht generiert</span>
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- 3. Neusatz-PDF (Typst) -->
+      {% set digital = info.pdfs | selectattr("kind", "equalto", "digital") | first | default(none) %}
+      <tr>
+        <td><strong>3. Neusatz-PDF</strong><br><small class="text-muted">Moderner Vektorsatz (Typst)</small></td>
+        <td><span class="badge" style="background:#9333ea;color:#fff;">PDF</span></td>
+        <td>
+          {% if digital %}
+            <code>{{ digital.name }}</code> ({{ digital.size_kb }} KB)
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if digital %}
+            <a href="/browse/pdf/{{ job }}/{{ digital.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
+            <a href="/download/pdf/{{ job }}/{{ digital.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
+          {% else %}
+            <span class="text-muted">Noch nicht generiert</span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if info.book_files %}
+  <div style="margin-top:1.2rem;padding-top:0.8rem;border-top:1px solid #334155;">
+    <strong>📚 Konsolidierte Buchdaten:</strong>
+    {% for bf in info.book_files %}
+      <a href="/browse/books/{{ job }}/{{ bf }}" class="pill" target="_blank" style="margin-right:0.4rem;">📄 {{ bf }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if info.sidecar %}
+  <p style="margin-top:0.5rem;"><a href="/browse/pdf/{{ job }}/{{ info.sidecar }}" class="pill">📄 {{ info.sidecar }} (Sidecar)</a></p>
+  {% endif %}
+</div>
+
+{% if info.report and info.report.pages %}
+<div class="card">
+  <h2>📊 Seiten-Qualität</h2>
+  <table>
+    <thead><tr><th>Seite</th><th>Confidence</th><th>Decision</th><th>Mistral</th></tr></thead>
+    <tbody>
+      {% for p in info.report.pages %}
+      <tr>
+        <td>{{ p.page }}</td>
+        <td>{{ p.mean_confidence }}%</td>
+        <td>
+          {% if p.decision == "pass" %}<span class="badge badge-pass">PASS</span>
+          {% else %}<span class="badge badge-fail">FALLBACK</span>{% endif %}
+        </td>
+        <td>{{ p.mistral_md if p.mistral_md else "—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="grid">
+  <div class="card">
+    <h2>📥 Input ({{ info.input_pages|length }})</h2>
+    {% if info.input_pages %}
+    <ul>
+      {% for p in info.input_pages %}
+      <li><a href="/browse/input/{{ job }}/{{ p }}" class="pill">{{ p }}</a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="text-muted">Keine Input-Dateien.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>🔧 Preprocessed ({{ info.preprocessed_pages|length }})</h2>
+    {% if info.preprocessed_pages %}
+    <ul>
+      {% for p in info.preprocessed_pages %}
+      <li><a href="/browse/preprocessed/{{ job }}/{{ p }}" class="pill">{{ p }}</a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="text-muted">Keine vorverarbeiteten Dateien.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>✅ Quality JSONs ({{ info.quality_files|length }})</h2>
+    {% if info.quality_files %}
+    <ul>
+      {% for p in info.quality_files %}
+      <li><a href="/browse/quality/{{ job }}/{{ p }}" class="pill">{{ p }}</a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="text-muted">Keine Quality-Checks.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h2>📝 Markdown ({{ info.markdown_files|length }})</h2>
+    {% if info.markdown_files %}
+    <ul>
+      {% for p in info.markdown_files %}
+      <li><a href="/browse/markdown/{{ job }}/{{ p }}" class="pill">{{ p }}</a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="text-muted">Keine Markdown-Dateien.</p>{% endif %}
+  </div>
+</div>
+
+{% if info.e2e_report %}
+<div class="card">
+  <h2>🏁 E2E Report</h2>
+  <details open>
+    <summary>E2E Report JSON</summary>
+    <pre>{{ info.e2e_report }}</pre>
+  </details>
+</div>
+{% endif %}
+
+{% if info.report %}
+<div class="card">
+  <h2>📋 Full Pipeline Report JSON</h2>
+  <details>
+    <summary>Report anzeigen</summary>
+    <pre>{{ info.report }}</pre>
+  </details>
+</div>
+{% endif %}
+
+{% endblock %}

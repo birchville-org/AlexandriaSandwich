@@ -1,7 +1,77 @@
 ---
-- name: Setup AlexandriaSandwich Infrastructure
-  hosts: all
-  gather_facts: yes
+- name: AlexandriaSandwich — base facts
+  hosts: alexandria
+  gather_facts: true
   tasks:
-    - name: Ping hosts
+    - name: Ping
       ansible.builtin.ping:
+
+- name: Prepare compute worker host (alex.local)
+  hosts: proxmox_worker
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Ensure data directories exist
+      ansible.builtin.file:
+        path: "{{ alexandria_data_root }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ alexandria_subdirs }}"
+
+    - name: Install NFS client tools
+      ansible.builtin.package:
+        name:
+          - nfs-common
+          - rsync
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install NFS client tools (RHEL)
+      ansible.builtin.package:
+        name:
+          - nfs-utils
+          - rsync
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Docker engine packages if missing (optional helper)
+      ansible.builtin.package:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+      when: ansible_os_family == "Debian"
+      failed_when: false
+
+    - name: Mount NAS NFS shares into /data/*
+      ansible.posix.mount:
+        src: "{{ alexandria_nas_host }}:{{ alexandria_nas_nfs_base }}/{{ item }}"
+        path: "{{ alexandria_data_root }}/{{ item }}"
+        fstype: nfs
+        opts: "{{ alexandria_nfs_opts }}"
+        state: mounted
+      loop: "{{ alexandria_subdirs }}"
+      when: alexandria_nfs_mount | bool
+
+    - name: Persist NFS mounts in fstab
+      ansible.posix.mount:
+        src: "{{ alexandria_nas_host }}:{{ alexandria_nas_nfs_base }}/{{ item }}"
+        path: "{{ alexandria_data_root }}/{{ item }}"
+        fstype: nfs
+        opts: "{{ alexandria_nfs_opts }}"
+        state: present
+      loop: "{{ alexandria_subdirs }}"
+      when: alexandria_nfs_manage_fstab | bool
+
+- name: NAS-side directory layout hints
+  hosts: nas
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Ensure alexandria share subdirs (path must exist/export on NAS)
+      ansible.builtin.file:
+        path: "{{ alexandria_nas_nfs_base }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: "{{ alexandria_subdirs }}"
+      failed_when: false
