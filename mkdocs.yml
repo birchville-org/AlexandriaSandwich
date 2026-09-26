@@ -43,15 +43,14 @@ plugins:
         - locale: en
           name: English
           build: true
-      nav_translations:
-        en:
-          Startseite: Home
-          Installation: Installation
-          Verfahren: Pipeline Architecture
-          Korrekturpfade: Correction Paths
-          Deployment: Deployment
-          Speicherstruktur: Storage Layout
-          n8n Integration: n8n Integration
+          nav_translations:
+            Startseite: Home
+            Installation: Installation
+            Verfahren: Pipeline Architecture
+            Korrekturpfade: Correction Paths
+            Deployment: Deployment
+            Speicherstruktur: Storage Layout
+            n8n Integration: n8n Integration
 
 nav:
   - Startseite: index.md

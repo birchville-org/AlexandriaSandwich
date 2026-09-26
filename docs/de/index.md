@@ -58,7 +58,7 @@
 
 ## 📖 Dokumentation & Installation
 
-- **Detaillierte Installationsanleitung:** [`docs/INSTALLATION.md`](docs/INSTALLATION.md) (Abhängigkeiten, Systempakete, Multi-Container-Setup, n8n-Aktivierung).
+- **Detaillierte Installationsanleitung:** [`INSTALLATION.md`](INSTALLATION.md) (Abhängigkeiten, Systempakete, Multi-Container-Setup, n8n-Aktivierung).
 - **Die drei Primär-Artefakte:**
   1. **Generisches TEI-P5 XML** (`<job>.tei.xml`) für Langzeitarchivierung und Bibliothekskataloge.
   2. **1:1 Sandwich-PDF** (`<job>.sandwich.pdf`) mit unverändertem Scan und unsichtbarer Textebene.
