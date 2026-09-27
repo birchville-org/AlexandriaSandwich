@@ -51,6 +51,7 @@ plugins:
             Deployment: Deployment
             Speicherstruktur: Storage Layout
             n8n Integration: n8n Integration
+            Fallstudie (Böhtlingk 1887): Case Study (Böhtlingk 1887)
 
 nav:
   - Startseite: index.md
@@ -60,6 +61,7 @@ nav:
   - Deployment: DEPLOY.md
   - Speicherstruktur: STORAGE.md
   - n8n Integration: N8N.md
+  - Fallstudie (Böhtlingk 1887): case-study.md
 
 markdown_extensions:
   - admonition

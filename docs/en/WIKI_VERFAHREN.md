@@ -83,3 +83,11 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
 3. **Digital Vector PDF (`<job>.digital.pdf`):**
    * Built from an Abstract Syntax Tree (`book.json` / `book.md`) via Typst 0.11+.
    * Clean typography, selectable vector fonts (Linux Libertine, DejaVu, Noto), optimized for reading and printing.
+
+---
+
+## Reference Projects & Case Studies
+
+* **[Pāṇini's Grammar (Otto von Böhtlingk, 1887)](case-study.md):**
+  Complete scholarly digitization, multi-script OCR, canonical alignment, and TEI-P5 modeling of 3,997 Sūtras on 478 book pages.
+
