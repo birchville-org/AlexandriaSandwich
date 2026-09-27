@@ -29,6 +29,7 @@ def escape_typst(text: str) -> str:
     # For body text, escaping backslash, brackets and hashes is primary.
     text = text.replace("\\", "\\\\")
     text = text.replace("[", "\\[").replace("]", "\\]")
+    text = text.replace("<", "\\<").replace(">", "\\>")
     text = text.replace("$", "\\$")
     text = text.replace("#", "\\#")
     text = text.replace("@", "\\@")
