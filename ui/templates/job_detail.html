@@ -61,8 +61,9 @@
 
       <!-- 2. 1:1 Sandwich-PDF -->
       {% set sandwich = info.pdfs | selectattr("kind", "equalto", "sandwich") | first | default(none) %}
+      {% set pathb = info.pdfs | selectattr("kind", "equalto", "pathb") | first | default(none) %}
       <tr>
-        <td><strong>2. 1:1 Sandwich-PDF</strong><br><small class="text-muted">Originalscan + unsichtbare Textebene</small></td>
+        <td><strong>2. 1:1 Sandwich-PDF (Tesseract Basis)</strong><br><small class="text-muted">Originalscan + Tesseract OCR-Hintergrund</small></td>
         <td><span class="badge" style="background:#16a34a;color:#fff;">PDF</span></td>
         <td>
           {% if sandwich %}
@@ -80,6 +81,19 @@
           {% endif %}
         </td>
       </tr>
+
+      {% if pathb %}
+      <tr style="background: rgba(16, 185, 129, 0.08);">
+        <td><strong>2b. Perfektes Sandwich (Weg B)</strong><br><small class="text-muted">Originalscan + KI-ausgerichtete Mistral-Textebene</small></td>
+        <td><span class="badge" style="background:#059669;color:#fff;">PDF (Weg B)</span></td>
+        <td>
+          <code>{{ pathb.name }}</code> ({{ pathb.size_kb }} KB)
+        </td>
+        <td>
+          <a href="/download/pdf/{{ job }}/{{ pathb.name }}" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;background:#059669;color:#fff;">⬇ Download (Weg B)</a>
+        </td>
+      </tr>
+      {% endif %}
 
       <!-- 3. Neusatz-PDF (Typst) -->
       {% set digital = info.pdfs | selectattr("kind", "equalto", "digital") | first | default(none) %}

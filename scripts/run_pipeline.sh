@@ -221,10 +221,35 @@ else
   DIGITAL_PDF_OUT=""
 fi
 
+# Weg B: Automatic Mistral Token Alignment into Sandwich PDF (Path B)
+ALIGN_SCRIPT="${SCRIPT_DIR}/align_mistral_pdf.py"
+PATHB_PDF="${OUT_DIR}/pdf/${JOB_NAME}.pathb.pdf"
+if [[ -f "$ALIGN_SCRIPT" && -n "$PDF_OUT" && -f "$PDF_OUT" ]]; then
+  log "align mistral text with sandwich pdf (Weg B) -> $PATHB_PDF"
+  set +e
+  python3 "$ALIGN_SCRIPT" \
+    --pdf "$PDF_OUT" \
+    --mistral-dir "$MD_DIR" \
+    --book-json "${BOOK_DIR}/book.json" \
+    --output "$PATHB_PDF" \
+    --corrections "${QC_DIR}/mistral_align.json" \
+    --json >"${QC_DIR}/align.json"
+  align_rc=$?
+  set -e
+  if [[ "$align_rc" -eq 0 && -f "$PATHB_PDF" ]]; then
+    log "pathb aligned pdf ok: $PATHB_PDF"
+  else
+    log "warn: align_mistral_pdf failed (rc=$align_rc)"
+    PATHB_PDF=""
+  fi
+else
+  PATHB_PDF=""
+fi
+
 REPORT="$(JOB_NAME="$JOB_NAME" INPUT_DIR="$INPUT_DIR" PRE_DIR="$PRE_DIR" \
 THRESHOLD="$THRESHOLD" LANG_OCR="$LANG_OCR" PASS_N="$PASS_N" FAIL_N="$FAIL_N" \
 MISTRAL_N="$MISTRAL_N" TOTAL="${#PAGES[@]}" PAGES_JSONL="$PAGES_JSONL" \
-PDF_OUT="${PDF_OUT:-}" SIDECAR_OUT="${SIDECAR_OUT:-}" TEI_OUT="${TEI_OUT:-}" DIGITAL_PDF_OUT="${DIGITAL_PDF_OUT:-}" \
+PDF_OUT="${PDF_OUT:-}" PATHB_PDF="${PATHB_PDF:-}" SIDECAR_OUT="${SIDECAR_OUT:-}" TEI_OUT="${TEI_OUT:-}" DIGITAL_PDF_OUT="${DIGITAL_PDF_OUT:-}" \
 python3 - <<'PY'
 import json, os
 pages = []
@@ -244,6 +269,7 @@ report = {
     "fail": int(os.environ["FAIL_N"]),
     "mistral_ok": int(os.environ["MISTRAL_N"]),
     "sandwich_pdf": os.environ.get("PDF_OUT") or None,
+    "pathb_pdf": os.environ.get("PATHB_PDF") or None,
     "sidecar_txt": os.environ.get("SIDECAR_OUT") or None,
     "tei_xml": os.environ.get("TEI_OUT") or None,
     "digital_pdf": os.environ.get("DIGITAL_PDF_OUT") or None,
