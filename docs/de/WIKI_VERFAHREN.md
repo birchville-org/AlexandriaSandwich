@@ -149,3 +149,11 @@ Zur Steuerung und manuellen Qualitätskontrolle dient die Weboberfläche auf `al
 - **100 % Bildtreue:** Das Originaldokument wird visuell niemals verändert oder degradiert.
 - **Kostenkontrolle:** Lokale OCR übernimmt das Gros der Seiten; externe API-Aufrufe erfolgen ausschließlich bei Bedarf.
 - **Chirurgische Korrigierbarkeit:** Durch Pfad B können typische OCR-Fehler korrigiert werden, ohne dass die gesamte Pipeline oder das PDF neu gerechnet werden müssen.
+
+---
+
+## 7. Referenzprojekte & Fallstudien
+
+* **[Pāṇinis Grammatik (Otto von Böhtlingk, 1887)](case-study.md):**
+  Vollständige Digitalisierung und kanonische Textschichtung von 3.997 Sūtras auf 478 Buchseiten historischer Mehrschriftigkeit (Devanāgarī, Fraktur/Antiqua, IAST) mit autarkem QA-Viewer.
+
