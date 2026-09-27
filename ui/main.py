@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """AlexandriaSandwich Web UI (FastAPI)"""
 from __future__ import annotations
-import html, json, os
+import asyncio
+import html, json, logging, os, re, shutil, subprocess, zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -84,23 +85,113 @@ async def dashboard(request: Request):
     return templates.TemplateResponse(request, "dashboard.html", {"jobs": jobs})
 
 
+logger = logging.getLogger("alexandria_ui")
+VALID_IMG_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".pnm", ".ppm"}
+
+
+def _extract_pdf(pdf_path: Path, target_dir: Path, stem: str, dpi: int = 300) -> list[str]:
+    """Extrahiert Seiten eines Multi-Page PDFs als PNG via pdftoppm."""
+    target_dir.mkdir(parents=True, exist_ok=True)
+    clean_stem = re.sub(r"[^a-zA-Z0-9_-]", "_", stem).strip("_") or "page"
+    prefix = target_dir / clean_stem
+    cmd = ["pdftoppm", "-png", "-r", str(dpi), str(pdf_path), str(prefix)]
+    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if res.returncode != 0:
+        err = res.stderr.strip() or res.stdout.strip()
+        logger.error(f"pdftoppm fehlgeschlagen: {err}")
+        raise RuntimeError(f"pdftoppm Fehler: {err}")
+    pages = sorted([p.name for p in target_dir.glob(f"{clean_stem}-*.png")])
+    return pages
+
+
+def _extract_zip(zip_path: Path, target_dir: Path, dpi: int = 300) -> list[str]:
+    """Entpackt Bilddateien und PDFs aus einem ZIP-Archiv."""
+    target_dir.mkdir(parents=True, exist_ok=True)
+    extracted = []
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        for member in zf.infolist():
+            if member.is_dir():
+                continue
+            fname = Path(member.filename).name
+            if not fname or fname.startswith(".") or fname.startswith("__MACOSX"):
+                continue
+            ext = Path(fname).suffix.lower()
+            if ext in VALID_IMG_EXTS:
+                dest = target_dir / fname
+                with zf.open(member) as src, open(dest, "wb") as dst:
+                    shutil.copyfileobj(src, dst)
+                extracted.append(dest.name)
+            elif ext == ".pdf":
+                temp_pdf = target_dir / f"_temp_{fname}"
+                with zf.open(member) as src, open(temp_pdf, "wb") as dst:
+                    shutil.copyfileobj(src, dst)
+                try:
+                    pdf_pages = _extract_pdf(temp_pdf, target_dir, stem=Path(fname).stem, dpi=dpi)
+                    extracted.extend(pdf_pages)
+                finally:
+                    temp_pdf.unlink(missing_ok=True)
+    return sorted(extracted)
+
+
 @app.get("/upload", response_class=HTMLResponse)
 async def upload_form(request: Request):
     return templates.TemplateResponse(request, "upload.html", {"result": None})
 
 
 @app.post("/upload")
-async def upload_submit(request: Request, job: str = Form(...), lang: str = Form("deu+eng"), threshold: int = Form(85), limit: int = Form(0), no_mistral: bool = Form(False), trigger: bool = Form(False), files: list[UploadFile] = File(...)):
+async def upload_submit(
+    request: Request,
+    job: str = Form(...),
+    lang: str = Form("deu+eng"),
+    threshold: int = Form(85),
+    limit: int = Form(0),
+    dpi: int = Form(300),
+    no_mistral: bool = Form(False),
+    trigger: bool = Form(False),
+    files: list[UploadFile] = File(...),
+):
     job_dir = INPUT_DIR / job
     job_dir.mkdir(parents=True, exist_ok=True)
     saved = []
+    notes = []
+
     for f in files:
-        if not f.filename: continue
-        dest = job_dir / Path(f.filename).name
-        with open(dest, "wb") as out: out.write(await f.read())
-        saved.append(f.filename)
-    result = {"saved": saved, "job": job, "triggered": False}
-    if trigger:
+        if not f.filename:
+            continue
+        ext = Path(f.filename).suffix.lower()
+        if ext == ".pdf":
+            # Originales PDF als Quelle sichern
+            pdf_path = job_dir / f"source_{Path(f.filename).name}"
+            with open(pdf_path, "wb") as out:
+                out.write(await f.read())
+            try:
+                pages = await asyncio.to_thread(_extract_pdf, pdf_path, job_dir, Path(f.filename).stem, dpi)
+                saved.extend(pages)
+                notes.append(f"PDF '{f.filename}' zerlegt in {len(pages)} Einzelseite(n) ({dpi} DPI)")
+            except Exception as e:
+                notes.append(f"Fehler bei PDF-Extraktion von '{f.filename}': {e}")
+        elif ext == ".zip":
+            zip_path = job_dir / f"_temp_{Path(f.filename).name}"
+            with open(zip_path, "wb") as out:
+                out.write(await f.read())
+            try:
+                items = await asyncio.to_thread(_extract_zip, zip_path, job_dir, dpi)
+                saved.extend(items)
+                notes.append(f"ZIP-Archiv '{f.filename}' entpackt: {len(items)} Seite(n) bereitgestellt")
+            except Exception as e:
+                notes.append(f"Fehler bei ZIP-Entpacken von '{f.filename}': {e}")
+            finally:
+                zip_path.unlink(missing_ok=True)
+        elif ext in VALID_IMG_EXTS:
+            dest = job_dir / Path(f.filename).name
+            with open(dest, "wb") as out:
+                out.write(await f.read())
+            saved.append(dest.name)
+        else:
+            notes.append(f"Format nicht unterstützt und übersprungen: '{f.filename}'")
+
+    result = {"saved": saved, "notes": notes, "job": job, "triggered": False}
+    if trigger and len(saved) > 0:
         n8n_resp = _trigger_n8n(job, lang=lang, threshold=threshold, limit=limit, no_mistral=no_mistral)
         result["triggered"] = True
         result["n8n_response"] = n8n_resp
