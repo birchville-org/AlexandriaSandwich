@@ -162,6 +162,7 @@ def consolidate_job(
     job_name: str,
     input_dir: Path,
     output_dir: Path,
+    markdown_dir: Optional[Path] = None,
     title: Optional[str] = None,
     author: Optional[str] = None,
     language: str = "deu+eng"
@@ -170,68 +171,75 @@ def consolidate_job(
     output_dir.mkdir(parents=True, exist_ok=True)
     doc_title = title or job_name.replace("_", " ").title()
     doc_author = author or "Alexandria Archive"
-    
-    # 1. Discover page files
-    # Priority:
-    # a) Corrected hOCR (*.corrected.hocr)
-    # b) Standard hOCR (*.hocr)
-    # c) Mistral Markdown (*.mistral.md / *.md)
-    # d) Plain text (*.txt)
-    
-    all_hocr = list(input_dir.glob("*.hocr"))
-    md_files = sorted(input_dir.glob("*.mistral.md"))
-    if not md_files:
-        md_files = sorted(input_dir.glob("*.md"))
+
+    # 1. Discover all page stems
+    stems = set()
+    for f in input_dir.glob("*.hocr"):
+        stems.add(f.name.replace(".corrected.hocr", "").replace(".hocr", ""))
+    for f in input_dir.glob("*.tsv"):
+        stems.add(f.stem)
+    for f in input_dir.glob("*.png"):
+        stems.add(f.stem)
+    if markdown_dir and markdown_dir.is_dir():
+        for f in markdown_dir.glob("*.md"):
+            stems.add(f.name.replace(".mistral.md", "").replace(".md", ""))
+
+    sorted_stems = sorted(stems)
+    log(f"Found {len(sorted_stems)} total page(s) for job '{job_name}'")
 
     pages_data = []
+    for idx, base in enumerate(sorted_stems, start=1):
+        # Check for Mistral Markdown (HIGH PRECISION PRIORITY)
+        md_file = None
+        if markdown_dir and markdown_dir.is_dir():
+            if (markdown_dir / f"{base}.mistral.md").is_file():
+                md_file = markdown_dir / f"{base}.mistral.md"
+            elif (markdown_dir / f"{base}.md").is_file():
+                md_file = markdown_dir / f"{base}.md"
+        if not md_file:
+            if (input_dir / f"{base}.mistral.md").is_file():
+                md_file = input_dir / f"{base}.mistral.md"
+            elif (input_dir / f"{base}.md").is_file():
+                md_file = input_dir / f"{base}.md"
 
-    if all_hocr:
-        # Group by page stem, prefer .corrected.hocr over .hocr
-        page_map: Dict[str, Path] = {}
-        for f in all_hocr:
-            if f.name.endswith(".corrected.hocr"):
-                base = f.name[:-15]
-                page_map[base] = f
-            elif f.name.endswith(".hocr"):
-                base = f.name[:-5]
-                if base not in page_map:
-                    page_map[base] = f
+        hocr_file = None
+        if (input_dir / f"{base}.corrected.hocr").is_file():
+            hocr_file = input_dir / f"{base}.corrected.hocr"
+        elif (input_dir / f"{base}.hocr").is_file():
+            hocr_file = input_dir / f"{base}.hocr"
 
-        sorted_hocr = [page_map[k] for k in sorted(page_map.keys())]
-        log(f"Found {len(sorted_hocr)} hOCR pages for job '{job_name}'")
-        for idx, hocr in enumerate(sorted_hocr, start=1):
-            p = parse_hocr_page(hocr)
+        if md_file:
+            log(f"page {base}: using high-precision Mistral markdown ({md_file.name})")
+            p = parse_markdown_page(md_file)
+            p["page_num"] = idx
+            # If hOCR exists, inherit geometry
+            if hocr_file:
+                try:
+                    h_info = parse_hocr_page(hocr_file)
+                    p["bbox"] = h_info.get("bbox", [0, 0, 0, 0])
+                    p["facs"] = h_info.get("facs", p["facs"])
+                except Exception:
+                    pass
+            pages_data.append(p)
+        elif hocr_file:
+            log(f"page {base}: using Tesseract hOCR ({hocr_file.name})")
+            p = parse_hocr_page(hocr_file)
             p["page_num"] = idx
             if not p["facs"]:
-                p["facs"] = hocr.name.replace(".corrected.hocr", ".png").replace(".hocr", ".png")
-            pages_data.append(p)
-    elif md_files:
-        log(f"Found {len(md_files)} Markdown pages for job '{job_name}'")
-        for idx, md in enumerate(md_files, start=1):
-            p = parse_markdown_page(md)
-            p["page_num"] = idx
-            pages_data.append(p)
-    else:
-        # Check if single all-pages markdown or txt exists
-        single_md = input_dir / f"{job_name}.mistral.md"
-        if single_md.exists():
-            p = parse_markdown_page(single_md)
-            p["page_num"] = 1
+                p["facs"] = f"{base}.png"
             pages_data.append(p)
         else:
-            txt_files = sorted(input_dir.glob("*.txt"))
-            if txt_files:
-                log(f"Falling back to {len(txt_files)} plain text files")
-                for idx, txt in enumerate(txt_files, start=1):
-                    content = txt.read_text(encoding="utf-8").strip()
-                    pages_data.append({
-                        "page_num": idx,
-                        "facs": txt.stem + ".png",
-                        "bbox": [0, 0, 0, 0],
-                        "blocks": [{"type": "p", "text": content, "bbox": [0, 0, 0, 0]}] if content else []
-                    })
+            txt_file = input_dir / f"{base}.txt"
+            if txt_file.is_file():
+                content = txt_file.read_text(encoding="utf-8").strip()
+                pages_data.append({
+                    "page_num": idx,
+                    "facs": f"{base}.png",
+                    "bbox": [0, 0, 0, 0],
+                    "blocks": [{"type": "p", "text": content, "bbox": [0, 0, 0, 0]}] if content else []
+                })
             else:
-                log(f"Warning: No OCR page artifacts found in {input_dir}")
+                log(f"Warning: No OCR artifacts found for page {base}")
 
     # 2. Filter artifacts (running headers/footers)
     pages_data = clean_page_artifacts(pages_data)
@@ -292,7 +300,8 @@ def consolidate_job(
 def main():
     parser = argparse.ArgumentParser(description="Consolidate OCR page outputs into unified book.json and book.md")
     parser.add_argument("--job", "-j", required=True, help="Job name (e.g. e2e_m1)")
-    parser.add_argument("--input-dir", "-i", help="Directory containing OCR page files (default: /data/processing/quality/<job> or /data/output/markdown/<job>)")
+    parser.add_argument("--input-dir", "-i", help="Directory containing OCR page files (default: /data/processing/quality/<job>)")
+    parser.add_argument("--markdown-dir", "-m", help="Directory containing Mistral markdown files (default: /data/output/markdown/<job>)")
     parser.add_argument("--output-dir", "-o", help="Output directory (default: /data/output/books/<job>)")
     parser.add_argument("--title", help="Book title")
     parser.add_argument("--author", help="Book author")
@@ -307,15 +316,13 @@ def main():
     if args.input_dir:
         input_dir = Path(args.input_dir)
     else:
-        # Try quality directory first, then markdown
-        cand1 = data_dir / "processing" / "quality" / args.job
-        cand2 = data_dir / "output" / "markdown" / args.job
-        if cand1.exists() and any(cand1.glob("*.hocr")):
-            input_dir = cand1
-        elif cand2.exists() and any(cand2.glob("*.md")):
-            input_dir = cand2
-        else:
-            input_dir = cand1
+        input_dir = data_dir / "processing" / "quality" / args.job
+
+    if args.markdown_dir:
+        markdown_dir = Path(args.markdown_dir)
+    else:
+        cand_md = data_dir / "output" / "markdown" / args.job
+        markdown_dir = cand_md if cand_md.is_dir() else None
 
     if args.output_dir:
         output_dir = Path(args.output_dir)
@@ -326,6 +333,7 @@ def main():
         job_name=args.job,
         input_dir=input_dir,
         output_dir=output_dir,
+        markdown_dir=markdown_dir,
         title=args.title,
         author=args.author,
         language=args.lang

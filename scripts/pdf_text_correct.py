@@ -25,7 +25,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 try:
     import pikepdf
@@ -84,15 +84,47 @@ def load_corrections(path: Path) -> Dict[str, str]:
 
 
 def apply_mapping_to_text(text: str, mapping: Dict[str, str]) -> Tuple[str, int]:
+    if not mapping or not text:
+        return text, 0
+
+    stripped = text.strip()
+    has_trailing_space = text.endswith(" ")
+    has_leading_space = text.startswith(" ")
+
+    # 1. Exact full-token match (safest and most common for OCR token streams)
+    if stripped in mapping:
+        new_val = mapping[stripped]
+        if new_val == "":
+            return "", 1
+        res = (" " if has_leading_space else "") + new_val + (" " if has_trailing_space else "")
+        return res, 1
+
+    # 2. Exact match with original text (including spaces/punctuation)
+    if text in mapping:
+        new_val = mapping[text]
+        return new_val, 1
+
+    # 3. Sub-token matching for compound expressions or literal strings
+    current = text
     total = 0
     for old, new in mapping.items():
         if not old or old == new:
             continue
-        count = text.count(old)
-        if count:
-            text = text.replace(old, new)
-            total += count
-    return text, total
+        # Word boundary replacement for alphanumeric words
+        if re.match(r"^\w+$", old):
+            pattern = re.compile(r"(?<!\w)" + re.escape(old) + r"(?!\w)")
+            new_current, n = pattern.subn(new, current)
+            if n:
+                current = new_current
+                total += n
+        else:
+            # If old contains punctuation / dots / noise:
+            # Only match substring if len(old) >= 3 to avoid short punctuation collateral damage
+            if len(old) >= 3 and old in current:
+                current = current.replace(old, new)
+                total += 1
+
+    return current, total
 
 
 def decode_pdf_literal(data: bytes) -> str:
@@ -322,15 +354,12 @@ def iter_stream_objects(pdf: Pdf) -> Iterable[Tuple[str, Object]]:
         yield item
 
 
-def replace_in_pdf(src: Path, dst: Path, mapping: Dict[str, str]) -> dict:
-    # Drop identity mappings
-    mapping = {k: v for k, v in mapping.items() if k and k != v}
-    if not mapping:
-        die("no non-identity replacements to apply")
-
+def replace_in_pdf(src: Path, dst: Path, mapping: Union[Dict[str, str], List[Dict[str, str]]]) -> dict:
     pdf = Pdf.open(src)
     total = 0
     touched = []
+    is_list = isinstance(mapping, list)
+
     for label, obj in iter_stream_objects(pdf):
         try:
             data = obj.read_bytes()
@@ -339,11 +368,23 @@ def replace_in_pdf(src: Path, dst: Path, mapping: Dict[str, str]) -> dict:
         # skip huge binary-like streams
         if len(data) > 2_000_000:
             continue
-        new_data, hits = transform_content_stream(data, mapping)
+
+        if is_list:
+            m_p = re.search(r"page(\d+)", label)
+            pidx = int(m_p.group(1)) if m_p else -1
+            cur_map = mapping[pidx] if 0 <= pidx < len(mapping) else {}
+        else:
+            cur_map = mapping
+
+        if not cur_map:
+            continue
+
+        new_data, hits = transform_content_stream(data, cur_map)
         if hits:
             obj.write(new_data)
             total += hits
             touched.append({"stream": label, "replacements": hits})
+
     pdf.save(dst)
     pdf.close()
     return {
@@ -351,7 +392,7 @@ def replace_in_pdf(src: Path, dst: Path, mapping: Dict[str, str]) -> dict:
         "output": str(dst),
         "replacement_hits": total,
         "streams_touched": touched,
-        "mapping": mapping,
+        "mapping": mapping if not is_list else {"pages_mapped": len(mapping)},
     }
 
 

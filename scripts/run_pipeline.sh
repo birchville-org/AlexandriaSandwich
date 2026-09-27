@@ -185,7 +185,7 @@ mkdir -p "$BOOK_DIR" "$(dirname "$TEI_OUT")"
 if [[ -f "$CONSOLIDATE" ]]; then
   log "consolidate book -> $BOOK_DIR"
   set +e
-  python3 "$CONSOLIDATE" --job "$JOB_NAME" --input-dir "$QC_DIR" --output-dir "$BOOK_DIR" --lang "$LANG_OCR"
+  python3 "$CONSOLIDATE" --job "$JOB_NAME" --input-dir "$QC_DIR" --markdown-dir "$MD_DIR" --output-dir "$BOOK_DIR" --lang "$LANG_OCR"
   con_rc=$?
   set -e
   if [[ "$con_rc" -ne 0 ]]; then
