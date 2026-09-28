@@ -21,7 +21,7 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
   - Direkte Navigation vom Upload-Ergebnis zur Buchansicht.
   - Sprachprofil `deu+san` (Deutsch + Sanskrit Devanagari) als Schnellwahl.
 - **End-to-End-Produktionsvalidierung:**
-  - Erfolgreiche Konvertierung des 176-seitigen Verlagsbands *Stenzler: Elementarbuch der Sanskrit-Sprache* über alle 7 Zielformate.
+  - Erfolgreiche Konvertierung und Validierung eines 176-seitigen Sanskrit-Grammatikbands über alle 7 Zielformate.
 
 ## [1.1.0] - 2026-09-26
 
