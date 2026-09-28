@@ -56,14 +56,16 @@ docker exec alexandria_worker /opt/alexandria/scripts/run_pipeline.sh \
 * 🪓 **Headless Pre-Processing:** Automatic deskewing and edge cleaning for yellowed pages via **ImageMagick + unpaper** (`scripts/preprocess.sh`).
 * 🤖 **Hybrid Quality Loop:**
   * **Local & Fast:** First-pass OCR using Tesseract on the compute node.
-  * **AI Fallback:** Automatic switch to **Mistral OCR (`mistral-ocr-latest`)** for low confidence scores (< 85%), Fraktur typography, or degraded pages.
-* 📦 **Three Core Artifacts:**
-  1. **Generic TEI-P5 XML** (`<job>.tei.xml`) for long-term preservation and digital libraries.
-  2. **1:1 Sandwich PDF** (`<job>.sandwich.pdf`) retaining the original scan 1:1 with an invisible text layer (PDF Mode 3).
-  3. **Digital Vector PDF** (`<job>.digital.pdf`) typeset from an AST via Typst with modern typography.
+  * **AI Fallback:** Automatic switch to **Mistral OCR (`mistral-ocr-latest`)** for low confidence scores (< 85%), Fraktur typ* 📝 **Multi-Format Export (Full Target Format Matrix):**
+  1. **1:1 Sandwich PDF (Path A & Path B):** Visual facsimile with an invisible text layer (`<job>.sandwich.pdf`) and semantically aligned text layer via Mistral OCR eliminating noise artifacts (`<job>.pathb.pdf`).
+  2. **Reflowable EPUB 3 eBook:** For mobile devices and e-readers (`<job>.epub`) with 102+ chapters and embedded Unicode fonts (*Noto Serif Devanagari* + *Linux Libertine O*).
+  3. **Digital Vector PDF:** Typeset from clean AST via Typst with modern typography (`<job>.digital.pdf`).
+  4. **TEI-P5 XML:** Archival standard XML (`<job>.tei.xml`) for library catalogs and digital humanities.
+  5. **Semantic AST & Markdown:** Canonical `book.json` (Single Source of Truth with token bounding boxes) and clean `book.md` for AI text processing.
+  *(See detailed specification: [Target Formats & Dual Layout](TARGET_FORMATS.md))*
 * 🛠️ **Dual Correction Paths:**
   * **Path A:** hOCR text editing *prior* to PDF compilation.
-  * **Path B:** Direct editing of the invisible text layer *inside* the finished PDF via QA Viewer.
+  * **Path B:** Direct token-level editing and alignment of the invisible text layer *inside* the finished PDF via pikepdf & QA Viewer.
 * 🐳 **Multi-Architecture Support:** Built for `linux/amd64` (Intel/AMD servers & VMs) and `linux/arm64` (Apple Silicon M-series).
 
 ---
@@ -92,15 +94,15 @@ Raw Scans (PNG / TIFF / JPEG)
             ├────────────────────────────────────────────────────┘
             │
             ▼
- ┌────────────────────────────────────────────────────────────────────────────┐
- │ Multi-Artifact Assembly & Export                                           │
- ├────────────────────────────┬───────────────────────────┬───────────────────┤
- │ 5. Sandwich PDF Assembly   │ 6. TEI-P5 XML Export      │ 7. Typst Vector   │
- │ (OCRmyPDF + img2pdf)       │ (lxml + book.json schema) │ (book.typ template)│
- └──────────┬─────────────────┴─────────────┬─────────────┴─────────────┬─────┘
-            ▼                               ▼                           ▼
-   <job>.sandwich.pdf                 <job>.tei.xml               <job>.digital.pdf
- (Visual scan + text layer)         (Library archive standard)  (Digital reading PDF)
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │ Multi-Artifact Assembly & Target Exports                                               │
+ ├────────────────────────────┬───────────────────────────┬───────────────┬───────────────┤
+ │ 5. Sandwich PDF Assembly   │ 6. TEI-P5 XML Export      │ 7. Typst Satz │ 8. EPUB 3     │
+ │ (OCRmyPDF + Path B Align)  │ (lxml + book.json schema) │ (book.typ)    │ (Font Inlined)│
+ └──────────┬─────────────────┴─────────────┬─────────────┴───────┬───────┴───────┬───────┘
+            ▼                               ▼                     ▼               ▼
+   <job>.sandwich / pathb.pdf        <job>.tei.xml          <job>.digital.pdf <job>.epub
+ (Facsimile + aligned layer)      (Academic Standard)    (Vector Typeset)  (Mobile eBook)
 ```
 
 ---
@@ -109,15 +111,18 @@ Raw Scans (PNG / TIFF / JPEG)
 
 | Script | Type | Description |
 | :--- | :--- | :--- |
-| [`run_pipeline.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/run_pipeline.sh) | Bash | Master pipeline orchestrator (Preprocessing, Quality Check, Fallback, Assembly, Reporting). |
-| [`preprocess.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/preprocess.sh) | Bash | Cleans raw scans using ImageMagick and unpaper (deskew, border cleaning, contrast). |
-| [`quality_check.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/quality_check.py) | Python | Executes Tesseract, evaluates per-word/per-page confidence, decides pass/fallback. |
-| [`mistral_ocr.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/mistral_ocr.py) | Python | Vision LLM API client for fallback OCR on damaged or degraded pages. |
-| [`assemble_sandwich.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/assemble_sandwich.py) | Python | Assembles 1:1 Sandwich PDFs with invisible searchable text layer (PDF Mode 3). |
-| [`consolidate_book.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/consolidate_book.py) | Python | Aggregates individual page hOCR/Markdown files into canonical `book.json`. |
+| [`run_pipeline.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/run_pipeline.sh) | Bash | Master pipeline orchestrator (Preprocessing, Quality Check, Fallback, Assembly, Multi-Format Exports). |
+| [`align_mistral_pdf.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/align_mistral_pdf.py) | Python | Path B: Injects Mistral OCR corrections directly into PDF text streams matching Tesseract geometry. |
+| [`export_epub.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/export_epub.py) | Python | Compiles standard EPUB 3 eBooks with semantic XHTML and embedded Unicode fonts. |
+| [`render_digital_pdf.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/render_digital_pdf.py) | Python | Typesets publication-grade digital vector PDF using Typst 0.11+. |
 | [`export_tei.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/export_tei.py) | Python | Generates archival TEI-P5 XML from `book.json`. |
-| [`render_digital_pdf.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/render_digital_pdf.py) | Python | Typesets modern readable PDF using Typst 0.11+. |
+| [`consolidate_book.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/consolidate_book.py) | Python | Aggregates individual page hOCR/Markdown files into canonical `book.json` and `book.md`. |
+| [`mistral_ocr.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/mistral_ocr.py) | Python | Vision LLM API client supporting concurrent batch processing with exponential retry backoff. |
+| [`assemble_sandwich.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/assemble_sandwich.py) | Python | Assembles 1:1 Sandwich PDFs with invisible searchable text layer (PDF Mode 3). |
+| [`quality_check.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/quality_check.py) | Python | Executes Tesseract, evaluates per-word/per-page confidence, decides pass/fallback. |
+| [`preprocess.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/preprocess.sh) | Bash | Cleans raw scans using ImageMagick and unpaper (deskew, border cleaning, contrast). |
 | [`hocr_correct.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/hocr_correct.py) | Python | Path A interactive/batch correction tool for hOCR word boundaries. |
+| [`pdf_text_correct.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/pdf_text_correct.py) | Python | Low-level stream replacement engine for post-processing PDF text layers (Path B). |
 | [`sync_storage.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/sync_storage.sh) | Bash | Storage synchronization utility for network shares (NFS/SMB). |
 
 ---

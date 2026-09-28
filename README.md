@@ -56,14 +56,16 @@ docker exec alexandria_worker /opt/alexandria/scripts/run_pipeline.sh \
 * 🪓 **Automatisches Pre-Processing:** Ausrichten (Deskewing) und Reinigen vergilbter Seiten via **ImageMagick + unpaper** (`scripts/preprocess.sh`).
 * 🤖 **Hybrid Quality Loop:**
   * **Lokal & Schnell:** Erste OCR-Ebene mit Tesseract OCR auf der lokalen Compute-Node.
-  * **KI-Fallback:** Automatischer Wechsel auf **Mistral OCR (`mistral-ocr-latest`)** bei schlechten Scores (< 85% Confidence), Frakturschriften oder beschädigten Seiten.
-* 📝 **Multi-Format Export (Drei Primär-Artefakte):**
-  1. **Generisches TEI-P5 XML** (`<job>.tei.xml`) für Langzeitarchivierung und Bibliothekskataloge.
-  2. **1:1 Sandwich-PDF** (`<job>.sandwich.pdf`) mit unverändertem Scan und unsichtbarer Textebene (PDF Mode 3).
-  3. **Neusatz-PDF** (`<job>.digital.pdf`) via modernem Typst-Vektorsatz.
+  * **KI-Fallback:** Automatischer Wechsel auf **Mistral OCR (`mistral-ocr-latest`)** bei schlechten Scores (< 85% Confidence), Fraktur* 📝 **Multi-Format Export (Vollständige Zielformat-Matrix):**
+  1. **1:1 Sandwich-PDF (Weg A & Weg B):** Unverändertes Faksimile mit unsichtbarem Textlayer (`<job>.sandwich.pdf`) bzw. semantisch mit Mistral OCR synchronisierter Textlayer ohne Rauschzeilen (`<job>.pathb.pdf`).
+  2. **Reflowable EPUB 3 eBook:** Für Mobilgeräte und E-Reader (`<job>.epub`) mit 102+ Kapiteln und eingebetteten Unicode-Schriften (*Noto Serif Devanagari* + *Linux Libertine O*).
+  3. **Digitales Neusatz-PDF:** Typografisch optimierter Vektorneusatz (`<job>.digital.pdf`) via Typst-Engine.
+  4. **TEI-P5 XML:** Standardkonformes Archivformat (`<job>.tei.xml`) für Bibliotheken und Digital Humanities.
+  5. **Semantischer AST & Markdown:** Strukturierte `book.json` (Single Source of Truth mit Bounding-Boxes) sowie bereinigtes `book.md` für KI- und Textpipelines.
+  *(Siehe Dokumentation: [Zielformat-Architektur & Duale Reproduktion](docs/de/TARGET_FORMATS.md))*
 * 🛠️ **Zwei Korrekturpfade:**
   * **Pfad A:** hOCR-Textkorrektur *vor* dem Zusammenbau des PDFs.
-  * **Pfad B:** Direktes Editieren der unsichtbaren Textschicht *im* fertigen PDF via QA-Viewer.
+  * **Pfad B:** Direktes Token-Alignment und Editieren der unsichtbaren Textschicht *im* fertigen PDF via pikepdf & QA-Viewer.
 * 🐳 **Multi-Architektur Support:** Native Unterstützung für `linux/amd64` (Server / Proxmox VM) und `linux/arm64` (Apple Silicon M-Serie).
 
 ---
@@ -92,15 +94,15 @@ Scans (PNG / TIFF / JPEG)
             ├────────────────────────────────────────────────────┘
             │
             ▼
- ┌────────────────────────────────────────────────────────────────────────────┐
- │ Multi-Artifact Assembly & Export                                           │
- ├────────────────────────────┬───────────────────────────┬───────────────────┤
- │ 5. Sandwich PDF Assembly   │ 6. TEI-P5 XML Export      │ 7. Typst Neusatz  │
- │ (OCRmyPDF + img2pdf)       │ (lxml + book.json Schema) │ (book.typ Vektor) │
- └──────────┬─────────────────┴─────────────┬─────────────┴─────────────┬─────┘
-            ▼                               ▼                           ▼
-   <job>.sandwich.pdf                 <job>.tei.xml               <job>.digital.pdf
- (Original + unsichtbare Ebene)     (Bibliotheksstandard)       (Digitales Lese-PDF)
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │ Multi-Artifact Assembly & Target Exports                                               │
+ ├────────────────────────────┬───────────────────────────┬───────────────┬───────────────┤
+ │ 5. Sandwich PDF Assembly   │ 6. TEI-P5 XML Export      │ 7. Typst Satz │ 8. EPUB 3     │
+ │ (OCRmyPDF + Weg B Align)   │ (lxml + book.json Schema) │ (book.typ)    │ (Font Inlined)│
+ └──────────┬─────────────────┴─────────────┬─────────────┴───────┬───────┴───────┬───────┘
+            ▼                               ▼                     ▼               ▼
+   <job>.sandwich / pathb.pdf        <job>.tei.xml          <job>.digital.pdf <job>.epub
+ (Faksimile + korrigierter Text)  (Akademie-Standard)    (Vektor-Neusatz)  (eBook Mobil)
 ```
 
 ---
@@ -109,15 +111,18 @@ Scans (PNG / TIFF / JPEG)
 
 | Skript | Typ | Funktion |
 | :--- | :--- | :--- |
-| [`run_pipeline.sh`](scripts/run_pipeline.sh) | Bash | Haupt-Orchestrator: steuert Preprocessing, Quality Gate, Fallback, Assembly und JSON-Reporting. |
-| [`preprocess.sh`](scripts/preprocess.sh) | Bash | Bereinigt Scans via ImageMagick und unpaper (Deskew, Randentfernung, Kontrast). |
-| [`quality_check.py`](scripts/quality_check.py) | Python | Führt Tesseract aus, analysiert Wort- und Seitenkonfidenzen und entscheidet über Pass/Fallback. |
-| [`mistral_ocr.py`](scripts/mistral_ocr.py) | Python | API-Client für LLM-Vision-Fallback bei schlechter Scanqualität oder komplexen Layouts. |
-| [`assemble_sandwich.py`](scripts/assemble_sandwich.py) | Python | Baut 1:1 Sandwich-PDFs mit unsichtbarer Textebene (Mode 3) aus bereinigten Seitenbildern. |
-| [`consolidate_book.py`](scripts/consolidate_book.py) | Python | Führt Einzelseiten-hOCR/Markdown-Daten in ein einheitliches Zwischenformat (`book.json`) zusammen. |
+| [`run_pipeline.sh`](scripts/run_pipeline.sh) | Bash | Haupt-Orchestrator: steuert Preprocessing, Quality Gate, Fallback, Assembly und Multi-Format-Exporte. |
+| [`align_mistral_pdf.py`](scripts/align_mistral_pdf.py) | Python | Weg B: Synchronisiert Mistral-Text mit Tesseract-Bounding-Boxes direkt im PDF-Inhaltsstrom. |
+| [`export_epub.py`](scripts/export_epub.py) | Python | Baut standardkonformes EPUB 3 mit semantischem XHTML und eingebetteten Unicode-Schriften. |
+| [`render_digital_pdf.py`](scripts/render_digital_pdf.py) | Python | Erzeugt ein typografisches Neusatz-PDF mit modernem Schriftsatz via Typst-Engine. |
 | [`export_tei.py`](scripts/export_tei.py) | Python | Generiert standardkonformes TEI-P5 XML für Langzeitarchive und Metadatenkataloge. |
-| [`render_digital_pdf.py`](scripts/render_digital_pdf.py) | Python | Erzeugt ein typografisches Neusatz-PDF mit modernem Schrifsatz via Typst-Engine. |
+| [`consolidate_book.py`](scripts/consolidate_book.py) | Python | Führt Einzelseiten-hOCR/Markdown-Daten in ein einheitliches Zwischenformat (`book.json` / `book.md`) zusammen. |
+| [`mistral_ocr.py`](scripts/mistral_ocr.py) | Python | Parallelisierter API-Client für LLM-Vision mit exponentiellem Backoff und Caching. |
+| [`assemble_sandwich.py`](scripts/assemble_sandwich.py) | Python | Baut 1:1 Sandwich-PDFs mit unsichtbarer Textebene (Mode 3) aus bereinigten Seitenbildern. |
+| [`quality_check.py`](scripts/quality_check.py) | Python | Führt Tesseract aus, analysiert Wort- und Seitenkonfidenzen und steuert das Quality Gate. |
+| [`preprocess.sh`](scripts/preprocess.sh) | Bash | Bereinigt Scans via ImageMagick und unpaper (Deskew, Randentfernung, Kontrast). |
 | [`hocr_correct.py`](scripts/hocr_correct.py) | Python | Ermöglicht hOCR-Textkorrekturen vor dem PDF-Bau (Pfad A). |
+| [`pdf_text_correct.py`](scripts/pdf_text_correct.py) | Python | Low-Level-Stream-Editor für Post-Processing-Textkorrekturen in generierten PDFs (Pfad B). |
 | [`sync_storage.sh`](scripts/sync_storage.sh) | Bash | Synchronisiert Eingabe- und Ausgabedaten optional mit zentralem NAS-/NFS-Storage. |
 
 ---
