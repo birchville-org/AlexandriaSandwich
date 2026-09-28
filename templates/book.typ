@@ -14,7 +14,7 @@
 
   // Typography rules
   set text(
-    font: ("Linux Libertine", "DejaVu Serif", "Noto Serif", "Times New Roman"),
+    font: ("Linux Libertine", "Noto Serif Devanagari", "DejaVu Serif", "Noto Serif", "Times New Roman"),
     size: 10pt,
     lang: lang,
     hyphenate: true
@@ -28,7 +28,7 @@
 
   // Headings
   show heading: it => {
-    set text(font: ("Linux Libertine", "DejaVu Serif", "Noto Serif", "Times New Roman"), weight: "bold")
+    set text(font: ("Linux Libertine", "Noto Serif Devanagari", "DejaVu Serif", "Noto Serif", "Times New Roman"), weight: "bold")
     if it.level == 1 {
       pagebreak(weak: true)
       v(2cm)
@@ -61,7 +61,7 @@
           title
         }
 
-        set text(size: 8.5pt, font: ("Linux Libertine", "DejaVu Serif", "Noto Serif", "Times New Roman"), fill: luma(80))
+        set text(size: 8.5pt, font: ("Linux Libertine", "Noto Serif Devanagari", "DejaVu Serif", "Noto Serif", "Times New Roman"), fill: luma(80))
         if calc.even(page_num) {
           align(left)[#smallcaps(title)]
         } else {
@@ -72,7 +72,7 @@
     footer: context {
       let page_num = here().page()
       if page_num > 1 {
-        set text(size: 9pt, font: ("Linux Libertine", "DejaVu Serif", "Noto Serif", "Times New Roman"))
+        set text(size: 9pt, font: ("Linux Libertine", "Noto Serif Devanagari", "DejaVu Serif", "Noto Serif", "Times New Roman"))
         align(center)[#page_num]
       }
     }

@@ -13,6 +13,7 @@ import json
 import mimetypes
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
@@ -123,10 +124,22 @@ def process_with_mistral(
         kwargs["pages"] = pages
 
     print(f"Sende {image_path} an Mistral OCR ({model})...", file=sys.stderr)
-    try:
-        resp = client.ocr.process(**kwargs)
-    except Exception as exc:  # noqa: BLE001 - surface API errors cleanly
-        die(f"Mistral OCR request failed: {exc}", code=1)
+    max_retries = 5
+    resp = None
+    for attempt in range(max_retries):
+        try:
+            resp = client.ocr.process(**kwargs)
+            break
+        except Exception as exc:  # noqa: BLE001
+            err_str = str(exc)
+            if "429" in err_str or "rate_limit" in err_str.lower() or "too many" in err_str.lower():
+                wait_sec = 2 * (attempt + 1)
+                print(f"Rate limited on {image_path.name} (attempt {attempt+1}/{max_retries}), retrying in {wait_sec}s...", file=sys.stderr)
+                time.sleep(wait_sec)
+                if attempt == max_retries - 1:
+                    die(f"Mistral OCR request failed after {max_retries} attempts: {exc}", code=1)
+            else:
+                die(f"Mistral OCR request failed: {exc}", code=1)
 
     payload = response_to_dict(resp)
     markdown = extract_markdown(payload)
@@ -140,9 +153,80 @@ def process_with_mistral(
     }
 
 
+def process_batch(
+    input_dir: Path,
+    output_dir: Path,
+    model: str = DEFAULT_MODEL,
+    workers: int = 5,
+    json_dir: Optional[Path] = None
+) -> int:
+    import concurrent.futures
+
+    files = sorted([f for f in input_dir.iterdir() if f.is_file() and f.suffix.lower() in SUPPORTED_SUFFIXES])
+    if not files:
+        print(f"No supported images found in {input_dir}", file=sys.stderr)
+        return 1
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if json_dir:
+        json_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"Starting batch Mistral OCR on {len(files)} files in {input_dir} (workers={workers})...", file=sys.stderr)
+
+    def process_single(f: Path) -> tuple[str, bool, str]:
+        out_md = output_dir / f"{f.stem}.mistral.md"
+        out_json = (json_dir or output_dir) / f"{f.stem}.mistral.json" if json_dir else None
+
+        if out_md.exists() and out_md.stat().st_size > 0:
+            return (f.name, True, "cached")
+
+        try:
+            res = process_with_mistral(f, model=model)
+            out_md.write_text(res["markdown"] or "", encoding="utf-8")
+            if out_json:
+                dump = {
+                    "source": res["source"],
+                    "model": res["model"],
+                    "markdown": res["markdown"],
+                    "usage_info": res["usage_info"],
+                    "pages": res["pages"],
+                }
+                out_json.write_text(json.dumps(dump, ensure_ascii=False, indent=2), encoding="utf-8")
+            return (f.name, True, "ok")
+        except Exception as e:
+            return (f.name, False, str(e))
+
+    completed = 0
+    failed = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(process_single, f): f for f in files}
+        for future in concurrent.futures.as_completed(futures):
+            completed += 1
+            fname, success, status = future.result()
+            if success:
+                print(f"[{completed}/{len(files)}] {fname}: {status}", file=sys.stderr)
+            else:
+                failed += 1
+                print(f"[{completed}/{len(files)}] {fname}: FAILED ({status})", file=sys.stderr)
+
+    print(f"Batch completed: {completed - failed} ok, {failed} failed.", file=sys.stderr)
+    return 0 if failed == 0 else 1
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="AlexandriaSandwich Mistral OCR fallback")
-    parser.add_argument("path", type=Path, help="Image or PDF path")
+    parser = argparse.ArgumentParser(description="AlexandriaSandwich Mistral OCR fallback / batch")
+    parser.add_argument("path", type=Path, nargs="?", default=None, help="Image or PDF path (single mode)")
+    parser.add_argument(
+        "--batch-dir",
+        type=Path,
+        help="Process all images in this directory concurrently",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=5,
+        help="Number of concurrent worker threads for batch mode (default: 5)",
+    )
     parser.add_argument(
         "-m",
         "--model",
@@ -153,13 +237,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "-o",
         "--output",
         type=Path,
-        help="Write markdown to this file (default: <stem>.mistral.md beside input)",
+        help="Write markdown to this file/dir",
     )
     parser.add_argument(
         "--json",
         dest="json_out",
         type=Path,
-        help="Also write full JSON response to this path",
+        help="Also write full JSON response to this path/dir",
     )
     parser.add_argument(
         "--pages",
@@ -176,6 +260,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         help="Print markdown to stdout instead of only writing a file",
     )
     args = parser.parse_args(argv)
+
+    if args.batch_dir:
+        out_dir = args.output or args.batch_dir
+        return process_batch(
+            args.batch_dir,
+            output_dir=out_dir,
+            model=args.model,
+            workers=args.workers,
+            json_dir=args.json_out
+        )
+
+    if not args.path:
+        parser.error("Either path or --batch-dir is required.")
 
     result = process_with_mistral(
         args.path,
