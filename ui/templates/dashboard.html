@@ -18,6 +18,7 @@
         <th>Seiten</th>
         <th>Pass / Fail</th>
         <th>Mistral</th>
+        <th>Fremdkosten</th>
         <th>Confidence ≥</th>
         <th>PDF</th>
         <th>Geändert</th>
@@ -36,6 +37,11 @@
         <td>{{ j.pages_total if j.pages_total else j.input_pages }}</td>
         <td>{{ j.pass|default(0) }} / {{ j.fail|default(0) }}</td>
         <td>{{ j.mistral_ok|default(0) }}</td>
+        <td>
+          <strong style="color:{% if j.mistral_cost_usd|default(0) > 0 %}#1e40af{% else %}#64748b{% endif %};">
+            ${{ "%.3f"|format(j.mistral_cost_usd|default(0.0)) }}
+          </strong>
+        </td>
         <td>{{ j.threshold|default("—") }}%</td>
         <td>{% if j.has_pdf %}✅{% else %}—{% endif %}</td>
         <td class="text-muted">{{ j.modified|default("—") }}</td>

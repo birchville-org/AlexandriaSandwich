@@ -38,6 +38,82 @@
     <a href="/jobs/{{ result.job }}" class="btn btn-secondary" style="margin-top:0.8rem;display:inline-block;">👉 Job-Seite aufrufen &amp; manuell starten</a>
   </div>
   {% endif %}
+
+  <!-- 💰 Fremdkosten-Ausweis für den aktuellen Job -->
+  <div id="costReportCard" class="card" style="background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #2563eb;margin-top:1rem;margin-bottom:1.5rem;display:{% if result.has_report %}block{% else %}none{% endif %};">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+      <h3 style="margin:0;color:#1e40af;font-size:1.15rem;">💰 Entstandene Fremdkosten (Mistral OCR) für '{{ result.job }}'</h3>
+      <span class="badge" style="background:{% if result.has_report %}#059669{% else %}#1d4ed8{% endif %};color:#fff;font-size:0.85rem;" id="costStatusBadge">
+        {% if result.has_report %}✅ Job abgeschlossen{% else %}Wird ermittelt...{% endif %}
+      </span>
+    </div>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; margin-top: 0.8rem;">
+      <div style="background:#fff;padding:0.75rem 1rem;border-radius:6px;border:1px solid #dbeafe;">
+        <div class="text-muted" style="font-size:0.8rem;text-transform:uppercase;font-weight:600;">Mistral Fremdkosten</div>
+        <div id="costVal" style="font-size:1.6rem;font-weight:bold;color:#1e40af;margin-top:0.2rem;">
+          ${{ "%.4f"|format(result.mistral_cost_usd|default(0.0)) }}
+        </div>
+        <small class="text-muted" id="costRate">Tarif: 0,004 $ / Seite</small>
+      </div>
+      <div style="background:#fff;padding:0.75rem 1rem;border-radius:6px;border:1px solid #dbeafe;">
+        <div class="text-muted" style="font-size:0.8rem;text-transform:uppercase;font-weight:600;">Mistral AI Seiten</div>
+        <div id="mistralPagesVal" style="font-size:1.6rem;font-weight:bold;color:#0f172a;margin-top:0.2rem;">
+          {{ result.mistral_pages|default(0) }} <span style="font-size:0.9rem;font-weight:normal;color:#64748b;">/ <span id="pagesTotalVal">{{ result.pages_total|default(result.saved|length) }}</span></span>
+        </div>
+        <small class="text-muted">Cloud Fallback</small>
+      </div>
+      <div style="background:#fff;padding:0.75rem 1rem;border-radius:6px;border:1px solid #dbeafe;">
+        <div class="text-muted" style="font-size:0.8rem;text-transform:uppercase;font-weight:600;">Tesseract (Kostenlos)</div>
+        <div id="tesseractPagesVal" style="font-size:1.6rem;font-weight:bold;color:#059669;margin-top:0.2rem;">
+          {{ result.tesseract_pass|default(0) }}
+        </div>
+        <small class="text-muted" style="color:#059669;">0,00 $ (Lokaler Server)</small>
+      </div>
+    </div>
+    <p style="margin:0.8rem 0 0 0;font-size:0.85rem;color:#475569;">
+      ℹ️ <strong>Transparenzhinweis:</strong> Fremdkosten fallen ausschließlich bei Inanspruchnahme der multimodalen Mistral Document AI OCR (<code>mistral-ocr-latest</code> à 0,004 $ pro Seite) an. Lokales Tesseract, Typst-Neusatz und EPUB 3-Generierung verursachen keinerlei externe API-Kosten.
+    </p>
+  </div>
+
+  {% if result.triggered and not result.has_report %}
+  <div id="pollingStatusCard" class="card" style="background:#fefce8;border:1px solid #fef08a;border-left:4px solid #ca8a04;margin-top:1rem;margin-bottom:1.5rem;">
+    <div style="display:flex;align-items:center;gap:0.8rem;">
+      <span style="font-size:1.4rem;">⏳</span>
+      <div>
+        <strong>Pipeline arbeitet im Hintergrund...</strong>
+        <div class="text-muted" style="font-size:0.9rem;" id="pollingMsg">Prüfe Fortschritt und Fremdkosten für '{{ result.job }}'...</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function pollJob() {
+      const jobName = "{{ result.job }}";
+      const pollTimer = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/jobs/${encodeURIComponent(jobName)}/status`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.has_report) {
+            clearInterval(pollTimer);
+            const pollCard = document.getElementById("pollingStatusCard");
+            if (pollCard) pollCard.style.display = "none";
+            const costCard = document.getElementById("costReportCard");
+            if (costCard) {
+              costCard.style.display = "block";
+              document.getElementById("costVal").textContent = "$" + Number(data.mistral_cost_usd).toFixed(4);
+              document.getElementById("mistralPagesVal").innerHTML = `${data.mistral_pages} <span style="font-size:0.9rem;font-weight:normal;color:#64748b;">/ ${data.pages_total}</span>`;
+              document.getElementById("tesseractPagesVal").textContent = data.tesseract_pass;
+              document.getElementById("costStatusBadge").textContent = "✅ Job abgeschlossen";
+              document.getElementById("costStatusBadge").style.background = "#059669";
+            }
+          }
+        } catch (e) {
+          console.error("Polling error:", e);
+        }
+      }, 2500);
+    })();
+  </script>
+  {% endif %}
 {% endif %}
 
 <div class="card" style="background:#f8fafc;border-left:4px solid #3b82f6;margin-bottom:1.5rem;">
@@ -137,6 +213,56 @@
     </div>
   </form>
 </div>
+
+{% if recent_jobs %}
+<div class="card" style="margin-top:2rem;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem;">
+    <h3 style="margin:0;">📊 Bisherige Fremdkosten (Mistral OCR) nach Jobs</h3>
+    <span class="badge" style="background:#0f172a;color:#fff;font-size:0.9rem;padding:0.35rem 0.75rem;">
+      Gesamt aufgelaufen: <strong>${{ "%.3f"|format(total_mistral_cost|default(0.0)) }}</strong>
+    </span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Job</th>
+        <th>Status</th>
+        <th>Seiten</th>
+        <th>Tesseract (Kostenlos)</th>
+        <th>Mistral (Seiten)</th>
+        <th>Fremdkosten (USD)</th>
+        <th>Aktionen</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for j in recent_jobs %}
+      <tr>
+        <td><a href="/jobs/{{ j.name }}"><strong>{{ j.name }}</strong></a></td>
+        <td>
+          {% if j.status == "PASS" %}<span class="badge badge-pass">✓ PASS</span>
+          {% elif j.status == "FAIL" %}<span class="badge badge-fail">✗ FAIL</span>
+          {% else %}<span class="badge badge-neutral">—</span>{% endif %}
+        </td>
+        <td>{{ j.pages_total if j.pages_total else j.input_pages }}</td>
+        <td>{{ j.pass|default(0) }}</td>
+        <td>{{ j.mistral_ok|default(0) }}</td>
+        <td>
+          <strong style="color:{% if j.mistral_cost_usd|default(0) > 0 %}#1e40af{% else %}#64748b{% endif %};">
+            ${{ "%.3f"|format(j.mistral_cost_usd|default(0.0)) }}
+          </strong>
+        </td>
+        <td>
+          <a href="/jobs/{{ j.name }}" class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.8rem;">Details &amp; Formate</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="text-muted" style="margin-top:0.8rem;margin-bottom:0;font-size:0.85rem;">
+    * Berechnung basiert auf <code>mistral-ocr-latest</code> (0,004 $ pro Seite). Alle lokalen Tesseract-Durchläufe und Vektor-Neusätze sind kostenfrei.
+  </p>
+</div>
+{% endif %}
 
 <script>
 const dropZone = document.getElementById('dropZone');
