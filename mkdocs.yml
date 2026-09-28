@@ -52,11 +52,13 @@ plugins:
             Speicherstruktur: Storage Layout
             n8n Integration: n8n Integration
             Fallstudie (Böhtlingk 1887): Case Study (Böhtlingk 1887)
+            Zielformate & Dualität: Target Formats & Dual Layout
 
 nav:
   - Startseite: index.md
   - Installation: INSTALLATION.md
   - Verfahren: WIKI_VERFAHREN.md
+  - Zielformate & Dualität: TARGET_FORMATS.md
   - Korrekturpfade: CORRECTION_PATHS.md
   - Deployment: DEPLOY.md
   - Speicherstruktur: STORAGE.md
