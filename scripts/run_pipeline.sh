@@ -22,6 +22,8 @@ DO_PUSH=0
 LANG_OCR="${OCR_LANG:-deu+eng}"
 THRESHOLD="${OCR_CONFIDENCE_THRESHOLD:-85}"
 USE_MISTRAL=1
+USE_UNPAPER=1
+SKIP_PREPROCESS=0
 LIMIT=0
 INPUT_DIR="${AS_INPUT_DIR:-/data/input}"
 PROC_DIR="${AS_PROCESSING_DIR:-/data/processing}"
@@ -38,6 +40,8 @@ while [[ $# -gt 0 ]]; do
     --lang) LANG_OCR="$2"; shift 2 ;;
     --threshold) THRESHOLD="$2"; shift 2 ;;
     --no-mistral) USE_MISTRAL=0; shift ;;
+    --no-unpaper) USE_UNPAPER=0; shift ;;
+    --skip-preprocess) SKIP_PREPROCESS=1; shift ;;
     --limit) LIMIT="$2"; shift 2 ;;
     --input) INPUT_DIR="$2"; shift 2 ;;
     --processing) PROC_DIR="$2"; shift 2 ;;
@@ -80,8 +84,15 @@ if [[ ! -d "$JOB_INPUT" ]]; then
   JOB_INPUT="$INPUT_DIR"
 fi
 
-log "preprocess job=$JOB_NAME input=$JOB_INPUT -> $PRE_DIR"
-bash "$PREPROCESS" --input "$JOB_INPUT" --output "$PRE_DIR" --overwrite
+if [[ "$SKIP_PREPROCESS" -eq 1 ]]; then
+  log "skip preprocess: copy $JOB_INPUT/*.png -> $PRE_DIR"
+  cp -a "$JOB_INPUT"/*.png "$PRE_DIR/"
+else
+  log "preprocess job=$JOB_NAME input=$JOB_INPUT -> $PRE_DIR"
+  PRE_OPTS=()
+  [[ "$USE_UNPAPER" -eq 0 ]] && PRE_OPTS+=("--no-unpaper")
+  bash "$PREPROCESS" "${PRE_OPTS[@]}" --input "$JOB_INPUT" --output "$PRE_DIR" --overwrite
+fi
 
 shopt -s nullglob
 PAGES=( "$PRE_DIR"/*.png )
@@ -118,6 +129,10 @@ for page in "${PAGES[@]}"; do
     if [[ "$USE_MISTRAL" -eq 1 ]]; then
       if [[ -z "${MISTRAL_API_KEY:-}" ]]; then
         log "warn: low confidence on $base but MISTRAL_API_KEY unset"
+      elif [[ -s "${MD_DIR}/${base}.mistral.md" ]]; then
+        log "mistral cached $base"
+        MISTRAL_N=$((MISTRAL_N + 1))
+        mistral_md="${MD_DIR}/${base}.mistral.md"
       elif [[ -f "$MISTRAL" ]]; then
         log "mistral fallback $base"
         set +e
@@ -172,14 +187,16 @@ else
   PDF_OUT=""
 fi
 
-# Multi-format outputs: TEI-P5 XML & Typst Digital PDF
+# Multi-format outputs: TEI-P5 XML, Typst Digital PDF & EPUB 3
 CONSOLIDATE="${SCRIPT_DIR}/consolidate_book.py"
 EXPORT_TEI="${SCRIPT_DIR}/export_tei.py"
 RENDER_DIGITAL="${SCRIPT_DIR}/render_digital_pdf.py"
+EXPORT_EPUB="${SCRIPT_DIR}/export_epub.py"
 
 BOOK_DIR="${OUT_DIR}/books/${JOB_NAME}"
 TEI_OUT="${OUT_DIR}/tei/${JOB_NAME}.tei.xml"
 DIGITAL_PDF_OUT="${OUT_DIR}/pdf/${JOB_NAME}.digital.pdf"
+EPUB_OUT="${BOOK_DIR}/${JOB_NAME}.epub"
 mkdir -p "$BOOK_DIR" "$(dirname "$TEI_OUT")"
 
 if [[ -f "$CONSOLIDATE" ]]; then
@@ -221,6 +238,20 @@ else
   DIGITAL_PDF_OUT=""
 fi
 
+if [[ -f "$EXPORT_EPUB" && -f "${BOOK_DIR}/book.json" ]]; then
+  log "export epub 3 -> $EPUB_OUT"
+  set +e
+  python3 "$EXPORT_EPUB" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$EPUB_OUT"
+  epub_rc=$?
+  set -e
+  if [[ "$epub_rc" -ne 0 ]]; then
+    log "warn: export_epub failed (rc=$epub_rc)"
+    EPUB_OUT=""
+  fi
+else
+  EPUB_OUT=""
+fi
+
 # Weg B: Automatic Mistral Token Alignment into Sandwich PDF (Path B)
 ALIGN_SCRIPT="${SCRIPT_DIR}/align_mistral_pdf.py"
 PATHB_PDF="${OUT_DIR}/pdf/${JOB_NAME}.pathb.pdf"
@@ -249,7 +280,8 @@ fi
 REPORT="$(JOB_NAME="$JOB_NAME" INPUT_DIR="$INPUT_DIR" PRE_DIR="$PRE_DIR" \
 THRESHOLD="$THRESHOLD" LANG_OCR="$LANG_OCR" PASS_N="$PASS_N" FAIL_N="$FAIL_N" \
 MISTRAL_N="$MISTRAL_N" TOTAL="${#PAGES[@]}" PAGES_JSONL="$PAGES_JSONL" \
-PDF_OUT="${PDF_OUT:-}" PATHB_PDF="${PATHB_PDF:-}" SIDECAR_OUT="${SIDECAR_OUT:-}" TEI_OUT="${TEI_OUT:-}" DIGITAL_PDF_OUT="${DIGITAL_PDF_OUT:-}" \
+PDF_OUT="${PDF_OUT:-}" PATHB_PDF="${PATHB_PDF:-}" SIDECAR_OUT="${SIDECAR_OUT:-}" \
+TEI_OUT="${TEI_OUT:-}" DIGITAL_PDF_OUT="${DIGITAL_PDF_OUT:-}" EPUB_OUT="${EPUB_OUT:-}" \
 python3 - <<'PY'
 import json, os
 pages = []
@@ -273,6 +305,7 @@ report = {
     "sidecar_txt": os.environ.get("SIDECAR_OUT") or None,
     "tei_xml": os.environ.get("TEI_OUT") or None,
     "digital_pdf": os.environ.get("DIGITAL_PDF_OUT") or None,
+    "epub": os.environ.get("EPUB_OUT") or None,
     "pages": pages,
 }
 print(json.dumps(report, ensure_ascii=False, indent=2))
