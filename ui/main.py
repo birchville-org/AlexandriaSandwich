@@ -12,7 +12,9 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, Red
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-DATA_DIR = Path(os.getenv("DATA_DIR", "/data"))
+BASE_DIR = Path(__file__).resolve().parent
+_default_data = "/data" if Path("/data").exists() else str(BASE_DIR.parent / "data")
+DATA_DIR = Path(os.getenv("DATA_DIR", _default_data))
 INPUT_DIR = DATA_DIR / "input"
 PROC_DIR = DATA_DIR / "processing"
 OUT_DIR = DATA_DIR / "output"
@@ -22,7 +24,6 @@ TEI_DIR = OUT_DIR / "tei"
 BOOKS_DIR = OUT_DIR / "books"
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "http://localhost:5678/webhook/alexandria/ocr")
 N8N_WEBHOOK_TIMEOUT = float(os.getenv("N8N_WEBHOOK_TIMEOUT", "180"))
-BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
 
@@ -47,7 +48,9 @@ def _list_jobs():
             entry["has_report"] = True
             entry["pass"] = report.get("pass", 0)
             entry["fail"] = report.get("fail", 0)
-            entry["mistral_ok"] = report.get("mistral_ok", 0)
+            mistral_pages = report.get("mistral_ok", 0)
+            entry["mistral_ok"] = mistral_pages
+            entry["mistral_cost_usd"] = round(mistral_pages * 0.004, 4)
             entry["pages_total"] = report.get("pages_total", 0)
             entry["threshold"] = report.get("threshold", 0)
             entry["lang"] = report.get("lang", "")
@@ -135,7 +138,13 @@ def _extract_zip(zip_path: Path, target_dir: Path, dpi: int = 300) -> list[str]:
 
 @app.get("/upload", response_class=HTMLResponse)
 async def upload_form(request: Request):
-    return templates.TemplateResponse(request, "upload.html", {"result": None})
+    jobs = _list_jobs()
+    total_cost = sum(j.get("mistral_cost_usd", 0.0) for j in jobs)
+    return templates.TemplateResponse(request, "upload.html", {
+        "result": None,
+        "recent_jobs": jobs[:6],
+        "total_mistral_cost": round(total_cost, 4),
+    })
 
 
 @app.post("/upload")
@@ -190,12 +199,89 @@ async def upload_submit(
         else:
             notes.append(f"Format nicht unterstützt und übersprungen: '{f.filename}'")
 
-    result = {"saved": saved, "notes": notes, "job": job, "triggered": False}
+    result = {
+        "saved": saved,
+        "notes": notes,
+        "job": job,
+        "triggered": False,
+        "has_report": False,
+        "mistral_pages": 0,
+        "mistral_cost_usd": 0.0,
+        "cost_per_page_usd": 0.004,
+        "tesseract_pass": 0,
+        "tesseract_fail": 0,
+        "pages_total": len(saved),
+    }
+
     if trigger and len(saved) > 0:
         n8n_resp = _trigger_n8n(job, lang=lang, threshold=threshold, limit=limit, no_mistral=no_mistral)
         result["triggered"] = True
         result["n8n_response"] = n8n_resp
-    return templates.TemplateResponse(request, "upload.html", {"result": result})
+
+        # Check ob Report unmittelbar vorliegt (z. B. synchrone Pipeline)
+        report_path = REPORTS_DIR / f"{job}.pipeline.json"
+        if report_path.exists():
+            try:
+                rep = json.loads(report_path.read_text())
+                result["has_report"] = True
+                result["pages_total"] = rep.get("pages_total", len(saved))
+                result["tesseract_pass"] = rep.get("pass", 0)
+                result["tesseract_fail"] = rep.get("fail", 0)
+                m_ok = rep.get("mistral_ok", 0)
+                result["mistral_pages"] = m_ok
+                result["mistral_cost_usd"] = round(m_ok * 0.004, 4)
+            except Exception:
+                pass
+
+    jobs = _list_jobs()
+    total_cost = sum(j.get("mistral_cost_usd", 0.0) for j in jobs)
+    return templates.TemplateResponse(request, "upload.html", {
+        "result": result,
+        "recent_jobs": jobs[:6],
+        "total_mistral_cost": round(total_cost, 4),
+    })
+
+
+@app.get("/api/jobs/{job}/status")
+async def job_status_api(job: str):
+    report_path = REPORTS_DIR / f"{job}.pipeline.json"
+    in_dir = INPUT_DIR / job
+    input_pages = len([p for p in in_dir.iterdir() if p.suffix.lower() in VALID_IMG_EXTS]) if in_dir.is_dir() else 0
+    if not report_path.exists():
+        return {
+            "job": job,
+            "status": "PROCESSING",
+            "has_report": False,
+            "input_pages": input_pages,
+            "tesseract_pass": 0,
+            "tesseract_fail": 0,
+            "mistral_pages": 0,
+            "mistral_cost_usd": 0.0,
+            "cost_per_page_usd": 0.004,
+        }
+    try:
+        report = json.loads(report_path.read_text())
+    except Exception as e:
+        return {"job": job, "status": "ERROR", "error": str(e)}
+
+    mistral_pages = report.get("mistral_ok", 0)
+    cost_usd = round(mistral_pages * 0.004, 4)
+    pages_total = report.get("pages_total", input_pages)
+    pass_pages = report.get("pass", 0)
+    fail_pages = report.get("fail", 0)
+
+    return {
+        "job": job,
+        "status": "COMPLETED",
+        "has_report": True,
+        "pages_total": pages_total,
+        "tesseract_pass": pass_pages,
+        "tesseract_fail": fail_pages,
+        "mistral_pages": mistral_pages,
+        "mistral_cost_usd": cost_usd,
+        "cost_per_page_usd": 0.004,
+        "modified": datetime.fromtimestamp(report_path.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+    }
 
 
 @app.post("/jobs/{job}/trigger")

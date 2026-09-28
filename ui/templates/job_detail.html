@@ -13,16 +13,29 @@
 
 {% if info.report %}
 <div class="card">
-  <h2>Pipeline Report</h2>
-  <div class="grid">
-    <div class="stat"><div class="num">{{ info.report.pass|default(0) }}</div><div class="label">Pass</div></div>
-    <div class="stat"><div class="num">{{ info.report.fail|default(0) }}</div><div class="label">Fail</div></div>
+  <h2>Pipeline Report &amp; Fremdkosten</h2>
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
+    <div class="stat"><div class="num" style="color:#059669;">{{ info.report.pass|default(0) }}</div><div class="label">Pass (Tesseract)</div></div>
+    <div class="stat"><div class="num" style="color:#d97706;">{{ info.report.fail|default(0) }}</div><div class="label">Fail (Tesseract)</div></div>
+    <div class="stat"><div class="num" style="color:#2563eb;">{{ info.report.mistral_ok|default(0) }}</div><div class="label">Mistral AI Seiten</div></div>
+    <div class="stat" style="background:#eff6ff;border:1px solid #bfdbfe;">
+      <div class="num" style="color:#1e40af;">${{ "%.4f"|format(info.report.mistral_ok|default(0) * 0.004) }}</div>
+      <div class="label" style="font-weight:bold;color:#1e40af;">Fremdkosten (Mistral)</div>
+    </div>
   </div>
   <table style="margin-top:1rem;">
     <tr><th>Threshold</th><td>{{ info.report.threshold|default("—") }}%</td></tr>
     <tr><th>Sprache</th><td>{{ info.report.lang|default("—") }}</td></tr>
     <tr><th>Seiten total</th><td>{{ info.report.pages_total|default("—") }}</td></tr>
-    <tr><th>Mistral Fallbacks</th><td>{{ info.report.mistral_ok|default(0) }}</td></tr>
+    <tr><th>Tesseract (kostenlos)</th><td>{{ info.report.pass|default(0) }} Seiten (0,00 $)</td></tr>
+    <tr><th>Mistral AI Fallback</th><td>{{ info.report.mistral_ok|default(0) }} Seiten</td></tr>
+    <tr style="background:#eff6ff;font-weight:bold;">
+      <th>💰 Entstandene Fremdkosten (Mistral OCR)</th>
+      <td style="color:#1e40af;font-size:1.05rem;">
+        ${{ "%.4f"|format(info.report.mistral_ok|default(0) * 0.004) }}
+        <span style="font-weight:normal;color:#64748b;font-size:0.85rem;margin-left:0.5rem;">({{ info.report.mistral_ok|default(0) }} Seiten à 0,004 $)</span>
+      </td>
+    </tr>
     <tr><th>Sandwich PDF</th><td>{{ info.report.sandwich_pdf|default("—") }}</td></tr>
     <tr><th>Sidecar TXT</th><td>{{ info.report.sidecar_txt|default("—") }}</td></tr>
   </table>
