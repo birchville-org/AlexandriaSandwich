@@ -230,6 +230,19 @@ async def job_detail(job: str, request: Request):
     info["tei_xml"] = {"name": tei_file.name, "size_kb": round(tei_file.stat().st_size / 1024, 1)} if tei_file.exists() else None
 
     book_dir = BOOKS_DIR / job
+    epub_file = book_dir / f"{job}.epub"
+    if not epub_file.exists():
+        epub_alt = OUT_DIR / "books" / f"{job}.epub"
+        if epub_alt.exists():
+            epub_file = epub_alt
+    info["epub"] = {"name": epub_file.name, "size_kb": round(epub_file.stat().st_size / 1024, 1)} if epub_file.exists() else None
+
+    b_json = book_dir / "book.json"
+    info["book_json"] = {"name": b_json.name, "size_kb": round(b_json.stat().st_size / 1024, 1)} if b_json.exists() else None
+
+    b_md = book_dir / "book.md"
+    info["book_md"] = {"name": b_md.name, "size_kb": round(b_md.stat().st_size / 1024, 1)} if b_md.exists() else None
+
     info["book_files"] = sorted([p.name for p in book_dir.iterdir()]) if book_dir.is_dir() else []
 
     sidecar = PDF_DIR / f"{job}.sidecar.txt"
@@ -244,7 +257,7 @@ async def browse_file(kind: str, job: str, filename: str):
     base_map = {
         "input": INPUT_DIR, "preprocessed": PROC_DIR / "preprocessed",
         "quality": PROC_DIR / "quality", "markdown": OUT_DIR / "markdown",
-        "pdf": PDF_DIR, "reports": REPORTS_DIR, "tei": TEI_DIR, "books": BOOKS_DIR
+        "pdf": PDF_DIR, "reports": REPORTS_DIR, "tei": TEI_DIR, "books": BOOKS_DIR, "epub": BOOKS_DIR
     }
     base = base_map.get(kind)
     if base is None: return JSONResponse({"error": "invalid kind"}, status_code=400)
@@ -266,6 +279,7 @@ async def browse_file(kind: str, job: str, filename: str):
     elif path.suffix in {".txt", ".md", ".hocr", ".tsv", ".typ"}:
         return HTMLResponse(f"<pre style='white-space:pre-wrap;word-break:break-all;'>{html.escape(path.read_text(errors='replace'))}</pre>")
     elif path.suffix == ".pdf": return StreamingResponse(open(path, "rb"), media_type="application/pdf", headers={"Content-Disposition": f"inline; filename={path.name}"})
+    elif path.suffix == ".epub": return StreamingResponse(open(path, "rb"), media_type="application/epub+zip", headers={"Content-Disposition": f"attachment; filename={path.name}"})
     return JSONResponse({"error": "unsupported"}, status_code=400)
 
 

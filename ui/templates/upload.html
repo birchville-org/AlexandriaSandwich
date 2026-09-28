@@ -12,7 +12,8 @@
         {% for note in result.notes %}<li>{{ note }}</li>{% endfor %}
       </ul>
     {% endif %}
-    Pipeline gestartet — n8n Antwort: <code>{{ result.n8n_response }}</code>
+    Pipeline gestartet — n8n Antwort: <code>{{ result.n8n_response }}</code><br>
+    <a href="/jobs/{{ result.job }}" class="btn" style="margin-top:0.8rem;display:inline-block;background:#059669;color:#fff;">👉 Zu den Buch-Artefakten für '{{ result.job }}'</a>
   </div>
   {% elif result.triggered and result.n8n_response %}
   <div class="alert alert-error">
@@ -23,6 +24,7 @@
       </ul>
     {% endif %}
     <pre>{{ result.n8n_response }}</pre>
+    <a href="/jobs/{{ result.job }}" class="btn btn-secondary" style="margin-top:0.8rem;display:inline-block;">👉 Job-Details anzeigen</a>
   </div>
   {% else %}
   <div class="alert alert-info">
@@ -32,10 +34,48 @@
         {% for note in result.notes %}<li>{{ note }}</li>{% endfor %}
       </ul>
     {% endif %}
-    Pipeline nicht gestartet (nur Upload &amp; Bereitstellung).
+    Pipeline nicht gestartet (nur Upload &amp; Bereitstellung).<br>
+    <a href="/jobs/{{ result.job }}" class="btn btn-secondary" style="margin-top:0.8rem;display:inline-block;">👉 Job-Seite aufrufen &amp; manuell starten</a>
   </div>
   {% endif %}
 {% endif %}
+
+<div class="card" style="background:#f8fafc;border-left:4px solid #3b82f6;margin-bottom:1.5rem;">
+  <h3 style="margin-top:0;">🏛️ Automatisch erzeugte Zielformate</h3>
+  <p class="text-muted" style="margin-bottom:0.8rem;">Jeder Upload durchläuft die AlexandriaSandwich-Pipeline und generiert die vollständige Formatmatrix:</p>
+  <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; font-size: 0.9rem;">
+    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+      <span class="badge" style="background:#2563eb;color:#fff;">EPUB 3</span><br>
+      <strong>Reflowable eBook</strong><br>
+      <small class="text-muted">Mit eingebetteten Vektor-Schriften (*Devanagari* &amp; *Libertine*)</small>
+    </div>
+    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+      <span class="badge" style="background:#059669;color:#fff;">PDF Weg B</span><br>
+      <strong>Perfektes Sandwich</strong><br>
+      <small class="text-muted">Faksimile + Mistral-Token-Alignment (0 Rauschzeilen)</small>
+    </div>
+    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+      <span class="badge" style="background:#9333ea;color:#fff;">Typst PDF</span><br>
+      <strong>Digitaler Neusatz</strong><br>
+      <small class="text-muted">Moderner wissenschaftlicher Buchsatz (A5 Vektor)</small>
+    </div>
+    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+      <span class="badge" style="background:#16a34a;color:#fff;">Sandwich-PDF</span><br>
+      <strong>1:1 Faksimile</strong><br>
+      <small class="text-muted">Originalscan + Tesseract OCR-Layer</small>
+    </div>
+    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+      <span class="badge" style="background:#0284c7;color:#fff;">TEI-P5</span><br>
+      <strong>Archivstandard XML</strong><br>
+      <small class="text-muted">Langzeitarchivierung (50+ Jahre) &amp; Akademienorm</small>
+    </div>
+    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+      <span class="badge" style="background:#d97706;color:#fff;">AST &amp; MD</span><br>
+      <strong>book.json &amp; book.md</strong><br>
+      <small class="text-muted">Hierarchische Tokens mit BBoxes &amp; UTF-8 Text</small>
+    </div>
+  </div>
+</div>
 
 <div class="card">
   <h2>Schritt 1: Buch oder Seiten auswählen</h2>
@@ -57,11 +97,13 @@
       <div class="form-group">
         <label for="lang">OCR-Sprache</label>
         <select id="lang" name="lang">
-          <option value="deu+eng" selected>Deutsch + Englisch</option>
-          <option value="deu">Deutsch</option>
-          <option value="eng">Englisch</option>
-          <option value="fra">Französisch</option>
-          <option value="san">Sanskrit (Devanagari)</option>
+          <option value="deu+eng" selected>Deutsch + Englisch (deu+eng)</option>
+          <option value="deu+san">Deutsch + Sanskrit (deu+san)</option>
+          <option value="san">Sanskrit Devanagari (san)</option>
+          <option value="deu">Deutsch (deu)</option>
+          <option value="eng">Englisch (eng)</option>
+          <option value="fra">Französisch (fra)</option>
+          <option value="lat">Latein (lat)</option>
         </select>
       </div>
       <div class="form-group">
