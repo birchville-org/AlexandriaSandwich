@@ -2,6 +2,27 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.2.0] - 2026-09-28
+
+### Added
+- **Vollständige 7-Zielformat-Matrix & Duale Rekonstruktion:**
+  - **Reflowable EPUB 3 eBook (`scripts/export_epub.py`):** Semantisches XHTML5, hierarchische Navigation (`nav.xhtml` und `toc.ncx`) sowie eingebettete Vektor-Schriften (*Noto Serif Devanagari* Regular/Bold & *Linux Libertine O* Regular/Bold/Italic) für perfekte Darstellung von Devanagari und IAST-Diakritika auf Mobilgeräten und E-Readern.
+  - **Automatisches Weg B Token-Alignment (`scripts/align_mistral_pdf.py`):** Synchronisiert Tesseract-Bounding-Boxes direkt im PDF-Inhaltsstrom mit KI-erkannter Mistral-Semantik. Beseitigt Rausch-Halluzinationen (z. B. auf gepunkteten Zeilen) und garantiert 1:1 Koordinatentreue bei 0 Rauschen.
+  - **Typst Vektor-Neusatz (`scripts/render_digital_pdf.py`, `templates/book.typ`):** A5-Buchlayout mit automatischer Devanagari-Font-Kaskade und robuster Zeichen-Maskierung.
+  - **TEI-P5 XML Archivformat (`scripts/export_tei.py`):** Standardkonforme Strukturierung (`teiHeader`, `pb`, `div`, `head`, `p`) nach Vorgaben der Digital Humanities.
+  - **Single Source of Truth AST (`book.json`, `book.md`):** Universeller Zwischenstand mit Bounding-Boxes zur Nachgenerierung aller Formate ohne Re-OCR.
+- **Batch Mistral OCR mit Parallelisierung & Caching (`scripts/mistral_ocr.py`):**
+  - Parallele ThreadPool-Abarbeitung (`--batch-dir`, `--workers`).
+  - Automatisches Rate-Limit-Handling mit exponentiellem Backoff bei HTTP 429.
+  - Persistentes Caching (`*.mistral.md`), um redundante API-Kosten zu vermeiden.
+- **Web UI & Upload-Erweiterungen (`ui/`):**
+  - Vollständige Zielformat-Matrix auf der Upload- (`upload.html`) und Job-Detailseite (`job_detail.html`).
+  - Direkte Download- und Vorschauaktionen für `.epub`, `.pathb.pdf`, `.digital.pdf`, `.tei.xml`, `book.json` und `book.md`.
+  - Direkte Navigation vom Upload-Ergebnis zur Buchansicht.
+  - Sprachprofil `deu+san` (Deutsch + Sanskrit Devanagari) als Schnellwahl.
+- **End-to-End-Produktionsvalidierung:**
+  - Erfolgreiche Konvertierung des 176-seitigen Verlagsbands *Stenzler: Elementarbuch der Sanskrit-Sprache* über alle 7 Zielformate.
+
 ## [1.1.0] - 2026-09-26
 
 ### Added
