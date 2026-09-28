@@ -34,14 +34,96 @@
 {% endif %}
 
 <div class="card">
-  <h2>🏛️ Die 3 Primär-Artefakte</h2>
+  <h2>🏛️ Zielformate & Artefakte</h2>
   <table>
     <thead><tr><th>Artefakt</th><th>Format</th><th>Datei & Größe</th><th>Aktionen</th></tr></thead>
     <tbody>
-      <!-- 1. Generisches TEI-P5 XML -->
+      <!-- 1. Reflowable EPUB 3 eBook -->
+      <tr style="background: rgba(59, 130, 246, 0.06);">
+        <td><strong>1. Reflowable EPUB 3 eBook</strong><br><small class="text-muted">E-Reader & Mobilgeräte (eingebettete Unicode-Schriften: Devanagari & Libertine)</small></td>
+        <td><span class="badge" style="background:#2563eb;color:#fff;">EPUB 3</span></td>
+        <td>
+          {% if info.epub %}
+            <code>{{ info.epub.name }}</code> ({{ info.epub.size_kb }} KB)
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if info.epub %}
+            <a href="/download/books/{{ job }}/{{ info.epub.name }}" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;background:#2563eb;color:#fff;">⬇ Download EPUB</a>
+          {% else %}
+            <span class="text-muted">Noch nicht generiert</span>
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- 2. Perfektes Sandwich-PDF (Weg B - Mistral Aligned) -->
+      {% set sandwich = info.pdfs | selectattr("kind", "equalto", "sandwich") | first | default(none) %}
+      {% set pathb = info.pdfs | selectattr("kind", "equalto", "pathb") | first | default(none) %}
+      {% if pathb %}
+      <tr style="background: rgba(16, 185, 129, 0.08);">
+        <td><strong>2. Perfektes Sandwich (Weg B)</strong><br><small class="text-muted">Originalscan + KI-ausgerichtete Mistral-Textebene (0 Rauschzeilen)</small></td>
+        <td><span class="badge" style="background:#059669;color:#fff;">PDF (Weg B)</span></td>
+        <td>
+          <code>{{ pathb.name }}</code> ({{ pathb.size_kb }} KB)
+        </td>
+        <td>
+          <a href="/browse/pdf/{{ job }}/{{ pathb.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
+          <a href="/download/pdf/{{ job }}/{{ pathb.name }}" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;background:#059669;color:#fff;">⬇ Download</a>
+          <a href="/jobs/{{ job }}/edit" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">✏️ Editor</a>
+        </td>
+      </tr>
+      {% endif %}
+
+      <!-- 3. Neusatz-PDF (Typst) -->
+      {% set digital = info.pdfs | selectattr("kind", "equalto", "digital") | first | default(none) %}
       <tr>
-        <td><strong>1. Generisches TEI-P5</strong><br><small class="text-muted">Digital Humanities & Archivstandard</small></td>
-        <td><span class="badge" style="background:#0284c7;color:#fff;">XML</span></td>
+        <td><strong>3. Digitales Neusatz-PDF</strong><br><small class="text-muted">Moderner Vektorsatz (Typst A5 wissenschaftliches Buchlayout)</small></td>
+        <td><span class="badge" style="background:#9333ea;color:#fff;">PDF (Typst)</span></td>
+        <td>
+          {% if digital %}
+            <code>{{ digital.name }}</code> ({{ digital.size_kb }} KB)
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if digital %}
+            <a href="/browse/pdf/{{ job }}/{{ digital.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
+            <a href="/download/pdf/{{ job }}/{{ digital.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
+          {% else %}
+            <span class="text-muted">Noch nicht generiert</span>
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- 4. 1:1 Sandwich-PDF (Tesseract Basis) -->
+      <tr>
+        <td><strong>4. 1:1 Sandwich-PDF (Tesseract Basis)</strong><br><small class="text-muted">Originalscan + native OCRmyPDF / Tesseract-Ebene</small></td>
+        <td><span class="badge" style="background:#16a34a;color:#fff;">Sandwich-PDF</span></td>
+        <td>
+          {% if sandwich %}
+            <code>{{ sandwich.name }}</code> ({{ sandwich.size_kb }} KB)
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if sandwich %}
+            <a href="/browse/pdf/{{ job }}/{{ sandwich.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
+            <a href="/download/pdf/{{ job }}/{{ sandwich.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
+            <a href="/jobs/{{ job }}/edit" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;">✏️ Path B Editor</a>
+          {% else %}
+            <span class="text-muted">Noch nicht generiert</span>
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- 5. Generisches TEI-P5 XML -->
+      <tr>
+        <td><strong>5. Generisches TEI-P5 XML</strong><br><small class="text-muted">Langzeitarchivierung & Bibliotheksstandard (50+ Jahre)</small></td>
+        <td><span class="badge" style="background:#0284c7;color:#fff;">TEI-P5</span></td>
         <td>
           {% if info.tei_xml %}
             <code>{{ info.tei_xml.name }}</code> ({{ info.tei_xml.size_kb }} KB)
@@ -59,58 +141,42 @@
         </td>
       </tr>
 
-      <!-- 2. 1:1 Sandwich-PDF -->
-      {% set sandwich = info.pdfs | selectattr("kind", "equalto", "sandwich") | first | default(none) %}
-      {% set pathb = info.pdfs | selectattr("kind", "equalto", "pathb") | first | default(none) %}
+      <!-- 6. Hierarchischer AST (book.json) -->
       <tr>
-        <td><strong>2. 1:1 Sandwich-PDF (Tesseract Basis)</strong><br><small class="text-muted">Originalscan + Tesseract OCR-Hintergrund</small></td>
-        <td><span class="badge" style="background:#16a34a;color:#fff;">PDF</span></td>
+        <td><strong>6. Hierarchischer AST (Single Source of Truth)</strong><br><small class="text-muted">Strukturierte Buchrepräsentation mit Bounding Boxes & Geometrie</small></td>
+        <td><span class="badge" style="background:#d97706;color:#fff;">JSON AST</span></td>
         <td>
-          {% if sandwich %}
-            <code>{{ sandwich.name }}</code> ({{ sandwich.size_kb }} KB)
+          {% if info.book_json %}
+            <code>{{ info.book_json.name }}</code> ({{ info.book_json.size_kb }} KB)
           {% else %}
             <span class="text-muted">—</span>
           {% endif %}
         </td>
         <td>
-          {% if sandwich %}
-            <a href="/jobs/{{ job }}/edit" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;">✏️ Path B Editor</a>
-            <a href="/download/pdf/{{ job }}/{{ sandwich.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
+          {% if info.book_json %}
+            <a href="/browse/books/{{ job }}/{{ info.book_json.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 JSON anzeigen</a>
+            <a href="/download/books/{{ job }}/{{ info.book_json.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
           {% else %}
             <span class="text-muted">Noch nicht generiert</span>
           {% endif %}
         </td>
       </tr>
 
-      {% if pathb %}
-      <tr style="background: rgba(16, 185, 129, 0.08);">
-        <td><strong>2b. Perfektes Sandwich (Weg B)</strong><br><small class="text-muted">Originalscan + KI-ausgerichtete Mistral-Textebene</small></td>
-        <td><span class="badge" style="background:#059669;color:#fff;">PDF (Weg B)</span></td>
-        <td>
-          <code>{{ pathb.name }}</code> ({{ pathb.size_kb }} KB)
-        </td>
-        <td>
-          <a href="/download/pdf/{{ job }}/{{ pathb.name }}" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;background:#059669;color:#fff;">⬇ Download (Weg B)</a>
-        </td>
-      </tr>
-      {% endif %}
-
-      <!-- 3. Neusatz-PDF (Typst) -->
-      {% set digital = info.pdfs | selectattr("kind", "equalto", "digital") | first | default(none) %}
+      <!-- 7. Konsolidiertes Markdown (book.md) -->
       <tr>
-        <td><strong>3. Neusatz-PDF</strong><br><small class="text-muted">Moderner Vektorsatz (Typst)</small></td>
-        <td><span class="badge" style="background:#9333ea;color:#fff;">PDF</span></td>
+        <td><strong>7. Konsolidiertes Markdown</strong><br><small class="text-muted">Bereinigter UTF-8 Fließtext für KI- und Sprachverarbeitung</small></td>
+        <td><span class="badge" style="background:#475569;color:#fff;">Markdown</span></td>
         <td>
-          {% if digital %}
-            <code>{{ digital.name }}</code> ({{ digital.size_kb }} KB)
+          {% if info.book_md %}
+            <code>{{ info.book_md.name }}</code> ({{ info.book_md.size_kb }} KB)
           {% else %}
             <span class="text-muted">—</span>
           {% endif %}
         </td>
         <td>
-          {% if digital %}
-            <a href="/browse/pdf/{{ job }}/{{ digital.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
-            <a href="/download/pdf/{{ job }}/{{ digital.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
+          {% if info.book_md %}
+            <a href="/browse/books/{{ job }}/{{ info.book_md.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
+            <a href="/download/books/{{ job }}/{{ info.book_md.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
           {% else %}
             <span class="text-muted">Noch nicht generiert</span>
           {% endif %}
@@ -119,17 +185,8 @@
     </tbody>
   </table>
 
-  {% if info.book_files %}
-  <div style="margin-top:1.2rem;padding-top:0.8rem;border-top:1px solid #334155;">
-    <strong>📚 Konsolidierte Buchdaten:</strong>
-    {% for bf in info.book_files %}
-      <a href="/browse/books/{{ job }}/{{ bf }}" class="pill" target="_blank" style="margin-right:0.4rem;">📄 {{ bf }}</a>
-    {% endfor %}
-  </div>
-  {% endif %}
-
   {% if info.sidecar %}
-  <p style="margin-top:0.5rem;"><a href="/browse/pdf/{{ job }}/{{ info.sidecar }}" class="pill">📄 {{ info.sidecar }} (Sidecar)</a></p>
+  <p style="margin-top:1rem;"><a href="/browse/pdf/{{ job }}/{{ info.sidecar }}" class="pill" target="_blank">📄 {{ info.sidecar }} (Unformatierter OCR-Textstrom)</a></p>
   {% endif %}
 </div>
 
