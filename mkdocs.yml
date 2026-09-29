@@ -52,6 +52,7 @@ plugins:
             Speicherstruktur: Storage Layout
             n8n Integration: n8n Integration
             Fallstudie (Böhtlingk 1887): Case Study (Böhtlingk 1887)
+            Fallstudie (Bṛhadāraṇyaka I.4): Case Study (Bṛhadāraṇyaka I.4)
             Zielformate & Dualität: Target Formats & Dual Layout
 
 nav:
@@ -64,6 +65,7 @@ nav:
   - Speicherstruktur: STORAGE.md
   - n8n Integration: N8N.md
   - Fallstudie (Böhtlingk 1887): case-study.md
+  - Fallstudie (Bṛhadāraṇyaka I.4): case-study-bau.md
 
 markdown_extensions:
   - admonition
