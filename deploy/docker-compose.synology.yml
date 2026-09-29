@@ -1,0 +1,43 @@
+name: alexandria
+
+services:
+  ui:
+    image: alexandria-ui:latest
+    container_name: alexandria_ui
+    restart: unless-stopped
+    environment:
+      - DATA_DIR=/data
+      - N8N_WEBHOOK_URL=http://alexandria_n8n:5678/webhook/alexandria/ocr
+    volumes:
+      - ./data/input:/data/input
+      - ./data/processing:/data/processing
+      - ./data/output:/data/output
+      - ./ui:/app
+      - ./scripts:/app/scripts
+    networks:
+      - proxy-net
+    labels:
+      - "traefik.enable=true"
+
+      # 1. Öffentliche Landingpage (Landingpage, Statics, Health, Docs, Login Redirect)
+      # Priority 200 (übersteuert die allgemeine *.org Regex-Umleitung in Traefik!)
+      - "traefik.http.routers.alex-public.rule=(Host(`alex.birchville.org`) || Host(`alex.birchville.cc`)) && (Path(`/`) || PathPrefix(`/static`) || PathPrefix(`/health`) || PathPrefix(`/landing`) || PathPrefix(`/login`))"
+      - "traefik.http.routers.alex-public.entrypoints=web"
+      - "traefik.http.routers.alex-public.priority=200"
+      - "traefik.http.routers.alex-public.service=alex-service"
+
+      # 2. Geschütztes Portal (Upload, Dashboard, Jobs, Editor, API)
+      # Priority 100 mit Authelia Forward-Auth (2FA SSO)
+      - "traefik.http.routers.alex-portal.rule=Host(`alex.birchville.org`) || Host(`alex.birchville.cc`)"
+      - "traefik.http.routers.alex-portal.entrypoints=web"
+      - "traefik.http.routers.alex-portal.priority=100"
+      - "traefik.http.routers.alex-portal.middlewares=authelia@docker"
+      - "traefik.http.routers.alex-portal.service=alex-service"
+
+      # Service Definition
+      - "traefik.http.services.alex-service.loadbalancer.server.port=8080"
+      - "com.centurylinklabs.watchtower.enable=false"
+
+networks:
+  proxy-net:
+    external: true
