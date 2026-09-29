@@ -1,62 +1,104 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — AlexandriaSandwich{% endblock %}
+{% block title %}Job-Dashboard — AlexandriaSandwich{% endblock %}
 {% block content %}
-<h1>Dashboard</h1>
-<p class="text-muted">OCR Pipeline Jobs — Übersicht über alle Dokumente und Verarbeitungsstände.</p>
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <span class="badge badge-gold" style="margin-bottom: 0.5rem;">Pipeline Monitoring</span>
+    <h1 style="font-size: 2.2rem; margin-bottom: 0.3rem;">OCR Job-Dashboard</h1>
+    <p style="color: var(--text-muted);">Übersicht aller verarbeiteten Bücher, Konfidenz-Audits und erzeugten PDF-Sandwiches.</p>
+  </div>
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="/upload" class="btn btn-primary">
+      <span>➕</span> Neuer Upload
+    </a>
+  </div>
+</div>
+
+<!-- Quick Stats Bar -->
+{% set total_pages = jobs|map(attribute='pages_total')|select('defined')|sum %}
+{% set total_mistral = jobs|map(attribute='mistral_ok')|select('defined')|sum %}
+{% set total_cost = jobs|map(attribute='mistral_cost_usd')|select('defined')|sum %}
+<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+  <div class="card" style="margin-bottom: 0; padding: 1.25rem;">
+    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">Registrierte Jobs</div>
+    <div style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-top: 0.2rem;">{{ jobs|length }}</div>
+  </div>
+  <div class="card" style="margin-bottom: 0; padding: 1.25rem;">
+    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">Seiten Gesamt</div>
+    <div style="font-size: 2rem; font-weight: 800; color: var(--gold-light); margin-top: 0.2rem;">{{ total_pages }}</div>
+  </div>
+  <div class="card" style="margin-bottom: 0; padding: 1.25rem;">
+    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">Mistral AI Fallbacks</div>
+    <div style="font-size: 2rem; font-weight: 800; color: var(--blue-light); margin-top: 0.2rem;">{{ total_mistral }}</div>
+  </div>
+  <div class="card" style="margin-bottom: 0; padding: 1.25rem;">
+    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">Mistral Fremdkosten</div>
+    <div style="font-size: 2rem; font-weight: 800; color: #34d399; margin-top: 0.2rem;">${{ "%.3f"|format(total_cost) }}</div>
+  </div>
+</div>
 
 <div class="card">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-    <h2 style="margin:0;">Jobs ({{ jobs|length }})</h2>
-    <a href="/upload" class="btn">+ Neuer Upload</a>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2 style="font-size: 1.25rem; margin: 0;">Alle Buch-Projekte</h2>
   </div>
+
   {% if jobs %}
-  <table>
-    <thead>
-      <tr>
-        <th>Job</th>
-        <th>Status</th>
-        <th>Seiten</th>
-        <th>Pass / Fail</th>
-        <th>Mistral</th>
-        <th>Fremdkosten</th>
-        <th>Confidence ≥</th>
-        <th>PDF</th>
-        <th>Geändert</th>
-        <th>Aktion</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for j in jobs %}
-      <tr>
-        <td><a href="/jobs/{{ j.name }}"><strong>{{ j.name }}</strong></a></td>
-        <td>
-          {% if j.status == "PASS" %}<span class="badge badge-pass">✓ PASS</span>
-          {% elif j.status == "FAIL" %}<span class="badge badge-fail">✗ FAIL</span>
-          {% else %}<span class="badge badge-neutral">—</span>{% endif %}
-        </td>
-        <td>{{ j.pages_total if j.pages_total else j.input_pages }}</td>
-        <td>{{ j.pass|default(0) }} / {{ j.fail|default(0) }}</td>
-        <td>{{ j.mistral_ok|default(0) }}</td>
-        <td>
-          <strong style="color:{% if j.mistral_cost_usd|default(0) > 0 %}#1e40af{% else %}#64748b{% endif %};">
-            ${{ "%.3f"|format(j.mistral_cost_usd|default(0.0)) }}
-          </strong>
-        </td>
-        <td>{{ j.threshold|default("—") }}%</td>
-        <td>{% if j.has_pdf %}✅{% else %}—{% endif %}</td>
-        <td class="text-muted">{{ j.modified|default("—") }}</td>
-        <td>
-          <form method="post" action="/jobs/{{ j.name }}/trigger" style="display:inline;"
-                onsubmit="return confirm('Job {{ j.name }} starten?');">
-            <button type="submit" class="btn btn-secondary" style="padding:0.3rem 0.8rem;font-size:0.85rem;">▶ Start</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Job-Kennung</th>
+          <th>Status</th>
+          <th>Seiten</th>
+          <th>Pass / Fail</th>
+          <th>Mistral AI</th>
+          <th>Fremdkosten</th>
+          <th>Konfidenz ≥</th>
+          <th>Sandwich</th>
+          <th>Geändert</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for j in jobs %}
+        <tr>
+          <td>
+            <a href="/jobs/{{ j.name }}" style="font-family: var(--font-heading); font-weight: 700; color: var(--gold-light);">
+              {{ j.name }}
+            </a>
+          </td>
+          <td>
+            {% if j.status == "PASS" %}<span class="badge badge-pass">✓ PASS</span>
+            {% elif j.status == "FAIL" %}<span class="badge badge-fail">✗ FAIL</span>
+            {% else %}<span class="badge badge-blue">—</span>{% endif %}
+          </td>
+          <td>{{ j.pages_total if j.pages_total else j.input_pages }}</td>
+          <td><span style="color: #34d399;">{{ j.pass|default(0) }}</span> / <span style="color: #f87171;">{{ j.fail|default(0) }}</span></td>
+          <td>{{ j.mistral_ok|default(0) }}</td>
+          <td>
+            <strong style="color: {% if j.mistral_cost_usd|default(0) > 0 %}#60a5fa{% else %}var(--text-dim){% endif %};">
+              ${{ "%.3f"|format(j.mistral_cost_usd|default(0.0)) }}
+            </strong>
+          </td>
+          <td>{{ j.threshold|default("—") }}%</td>
+          <td>{% if j.has_pdf %}<span title="PDF-Sandwich vorhanden">✅ PDF</span>{% else %}<span style="color:var(--text-dim);">—</span>{% endif %}</td>
+          <td style="color: var(--text-dim); font-size: 0.82rem;">{{ j.modified|default("—") }}</td>
+          <td>
+            <form method="post" action="/jobs/{{ j.name }}/trigger" style="display:inline;"
+                  onsubmit="return confirm('Job {{ j.name }} starten?');">
+              <button type="submit" class="btn btn-secondary btn-sm">▶ Start</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
-  <p class="text-muted">Noch keine Jobs. Lade Dokumente über <a href="/upload">Upload</a> hoch.</p>
+  <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+    <p style="font-size: 1.1rem; margin-bottom: 1rem;">Noch keine OCR-Jobs angelegt.</p>
+    <a href="/upload" class="btn btn-primary">Jetzt erstes Buch hochladen</a>
+  </div>
   {% endif %}
 </div>
 {% endblock %}

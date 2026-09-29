@@ -82,10 +82,38 @@ def _safe_path(base, user_path):
     return resolved
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
+async def landing(request: Request):
+    jobs = _list_jobs()
+    total_pages = sum(j.get("pages_total", j.get("input_pages", 0)) for j in jobs)
+    total_mistral = sum(j.get("mistral_ok", 0) for j in jobs)
+    return templates.TemplateResponse(request, "landing.html", {
+        "jobs": jobs[:6],
+        "total_jobs": len(jobs),
+        "total_pages": total_pages,
+        "total_mistral": total_mistral
+    })
+
+
+@app.api_route("/dashboard", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def dashboard(request: Request):
     jobs = _list_jobs()
     return templates.TemplateResponse(request, "dashboard.html", {"jobs": jobs})
+
+
+@app.api_route("/portal", methods=["GET", "HEAD"])
+async def portal_redirect():
+    return RedirectResponse(url="/dashboard", status_code=302)
+
+
+@app.api_route("/login", methods=["GET", "HEAD"])
+async def login_redirect():
+    return RedirectResponse(url="https://auth.birchville.cc/?rd=https://alex.birchville.cc/upload", status_code=302)
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health():
+    return {"status": "ok", "service": "AlexandriaSandwich", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 logger = logging.getLogger("alexandria_ui")
