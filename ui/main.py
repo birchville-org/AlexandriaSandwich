@@ -180,7 +180,7 @@ async def upload_submit(
     request: Request,
     job: str = Form(...),
     lang: str = Form("deu+eng"),
-    threshold: int = Form(85),
+    threshold: int = Form(100),
     limit: int = Form(0),
     dpi: int = Form(300),
     no_mistral: bool = Form(False),

@@ -88,8 +88,13 @@ Der Gesamtprozess gliedert sich in sechs aufeinanderfolgende Schritte:
 - **Primäre Engine:** Tesseract OCR führt die Erkennung lokal auf der Compute-Node aus und gibt standardisiertes `hOCR` (HTML-basiertes OCR-Format mit Bounding Boxes) sowie TSV-Daten aus.
 - **Qualitätsprüfung:** Das Skript `quality_check.py` parst die Konfidenzwerte der einzelnen Wörter (0 bis 100 %).
 - **Regel:**
-  - Mittlere Konfidenz >= 85 %: Seite gilt als erfolgreich erkannt.
-  - Mittlere Konfidenz < 85 %: Quality Gate schlägt an; die Seite wird für den KI-Fallback markiert.
+  - Mittlere Konfidenz >= Schwelle: Seite gilt als `PASS` (kostenfreie lokale Tesseract-Verarbeitung).
+  - Mittlere Konfidenz < Schwelle: Quality Gate schlägt an (`FAIL`); die Seite wird an Mistral Document AI übergeben.
+- **Entscheidungshilfe zur Schwellwert-Wahl:**
+  - **100 % (Empfohlen für wissenschaftliche Editionen):** Maximale semantische Wiedergabetreue für Typst-Neusatz & EPUB 3. Eliminiert Tesseract-Fehlerfragmente vollständig (Kosten: 0,004 $ pro Seite, ca. 1,00 $ pro 250 Seiten).
+  - **85 % (Standard für moderne Drucke ab 1950):** Tesseract verarbeitet saubere Seiten lokal und kostenlos; Mistral wird nur für Ausreißer oder Tabellen gerufen (spart bis zu 90 % der API-Kosten).
+  - **85 % oder tiefer (Massendigitalisierung 100.000+ Seiten):** Signifikanter Kostenhebel (400 $ statt 4.000 $ pro 100k Seiten) und Vermeidung von Cloud-Rate-Limits.
+  - **`--no-mistral` (Sensible Akten & Air-Gap):** 100 % offline, volle Datenhoheit und DSGVO-Konformität auf dem lokalen Server.
 
 ---
 
