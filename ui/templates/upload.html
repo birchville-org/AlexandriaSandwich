@@ -191,18 +191,144 @@
         </select>
       </div>
       <div class="form-group">
-        <label for="threshold">Confidence-Schwelle (%)</label>
-        <input type="number" id="threshold" name="threshold" value="85" min="0" max="100">
-      </div>
-      <div class="form-group">
         <label for="limit">Seiten-Limit (0 = alle Seiten)</label>
         <input type="number" id="limit" name="limit" value="0" min="0">
       </div>
     </div>
-    <div class="form-group checkbox-group">
-      <input type="checkbox" id="no_mistral" name="no_mistral" value="true">
-      <label for="no_mistral">Mistral-Fallback deaktivieren (nur Tesseract)</label>
+
+    <!-- Qualitätsmodus & OCR-Strategie Presets -->
+    <div style="margin-top:1.5rem; margin-bottom:1rem;">
+      <label style="display:block; font-weight:700; margin-bottom:0.6rem; font-size:1.05rem;">
+        🎯 Qualitätsmodus &amp; OCR-Strategie wählen:
+      </label>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+        
+        <!-- Preset 100% -->
+        <div class="strategy-card" id="strat-100" onclick="setStrategy(100, false)" style="cursor:pointer; background:rgba(217,119,6,0.18); border:2px solid #d97706; border-radius:8px; padding:0.9rem; transition:all 0.2s ease;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+            <span style="font-weight:700; color:#fbbf24; font-size:1.02rem;">🏆 100 % Maximum Quality</span>
+            <span class="badge" style="background:#b45309; color:#fff; font-size:0.72rem;">Empfohlen</span>
+          </div>
+          <p style="font-size:0.84rem; margin:0.3rem 0; color:#e2e8f0; line-height:1.4;">
+            <strong>100% Mistral AI OCR.</strong> Höchste editorische Texttreue für Typst &amp; EPUB 3. Keine Tesseract-OCR-Artefakte.
+          </p>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.4rem; margin-top:0.4rem;">
+            <span>Historisch, Fraktur, Sanskrit</span>
+            <strong style="color:#60a5fa;">0,004 $ / Seite</strong>
+          </div>
+        </div>
+
+        <!-- Preset 85% -->
+        <div class="strategy-card" id="strat-85" onclick="setStrategy(85, false)" style="cursor:pointer; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:0.9rem; transition:all 0.2s ease;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+            <span style="font-weight:700; color:#34d399; font-size:1.02rem;">⚡ 85 % Hybrid &amp; Budget</span>
+            <span class="badge" style="background:rgba(16,185,129,0.2); color:#34d399; font-size:0.72rem;">Standard</span>
+          </div>
+          <p style="font-size:0.84rem; margin:0.3rem 0; color:#e2e8f0; line-height:1.4;">
+            <strong>Tesseract (kostenlos) + Fallback.</strong> Saubere Seiten kosten 0,00 $. Mistral übernimmt nur Problemseiten.
+          </p>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.4rem; margin-top:0.4rem;">
+            <span>Moderne Drucke (ab 1950)</span>
+            <strong style="color:#34d399;">Spart bis zu 90 %</strong>
+          </div>
+        </div>
+
+        <!-- Preset 0% / Offline -->
+        <div class="strategy-card" id="strat-local" onclick="setStrategy(0, true)" style="cursor:pointer; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:0.9rem; transition:all 0.2s ease;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+            <span style="font-weight:700; color:#93c5fd; font-size:1.02rem;">🔒 100 % Lokal &amp; Air-Gap</span>
+            <span class="badge" style="background:rgba(37,99,235,0.2); color:#93c5fd; font-size:0.72rem;">0,00 $ Cloud</span>
+          </div>
+          <p style="font-size:0.84rem; margin:0.3rem 0; color:#e2e8f0; line-height:1.4;">
+            <strong>Nur Tesseract (Offline).</strong> Keine Cloud-Calls. Vollständige DSGVO-Datenhoheit auf dem Server.
+          </p>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.4rem; margin-top:0.4rem;">
+            <span>Sensible Akten, Nachlässe</span>
+            <strong style="color:#93c5fd;">0,00 $ Fremdkosten</strong>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Feinabstimmung & Statusanzeige -->
+      <div style="display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:0.7rem 1rem;">
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <label for="threshold" style="font-size:0.9rem; font-weight:600; margin:0;">Confidence-Schwelle (%):</label>
+          <input type="number" id="threshold" name="threshold" value="100" min="0" max="100" style="width:75px; padding:0.3rem 0.5rem; text-align:center; font-weight:bold;">
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <input type="checkbox" id="no_mistral" name="no_mistral" value="true" style="margin:0;">
+          <label for="no_mistral" style="font-size:0.88rem; margin:0; cursor:pointer;">Mistral-Fallback deaktivieren (nur Tesseract)</label>
+        </div>
+        <div id="modeStatusBadge" style="font-size:0.85rem; color:#fbbf24; margin-left:auto; font-weight:600;">
+          Modus: 100 % Mistral AI (Maximale Textqualität)
+        </div>
+      </div>
     </div>
+
+    <!-- Aufklappbare Entscheidungshilfe & Kostenlogik -->
+    <details class="decision-guide" style="background:rgba(15,23,42,0.7); border:1px solid rgba(217,119,6,0.35); border-radius:8px; padding:0.8rem 1.2rem; margin-top:1rem; margin-bottom:1.5rem;">
+      <summary style="cursor:pointer; font-weight:600; color:#fbbf24; display:flex; align-items:center; gap:0.5rem; user-select:none; font-size:0.95rem;">
+        <span>💡 <strong>Entscheidungshilfe &amp; Kostenlogik:</strong> Wann soll ein Nutzer unter 100 % gehen? (Klicken zum Aufklappen)</span>
+      </summary>
+      <div style="margin-top:1rem; font-size:0.9rem; line-height:1.6; color:#cbd5e1;">
+        <p style="margin-bottom:0.8rem;">
+          Für anspruchsvolle wissenschaftliche Editionen will man typischerweise eine maximal genaue Wiedergabe. Bei Büchern mit historischem Satz, Fraktur, Tabellen oder Fremdsprachen (wie Sanskrit) ist <strong>100 % Confidence</strong> die fachlich empfohlene Wahl, da die Mistral-Gebühren mit <strong>0,004 $ pro Seite</strong> (ca. 1,00 $ für ein 250-Seiten-Buch) extrem gering sind.
+        </p>
+        <p style="margin-bottom:0.8rem;">
+          <strong>Warum existiert dennoch die Möglichkeit, unter 100 % zu gehen? Es gibt vier konkrete Praxisszenarien:</strong>
+        </p>
+
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; margin-bottom:1rem; font-size:0.85rem;">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.15); text-align:left;">
+                <th style="padding:0.5rem 0.6rem;">Szenario / Projektart</th>
+                <th style="padding:0.5rem 0.6rem;">Empfohlene Schwelle</th>
+                <th style="padding:0.5rem 0.6rem;">Technischer &amp; ökonomischer Grund</th>
+                <th style="padding:0.5rem 0.6rem;">Fremdkosten</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                <td style="padding:0.5rem 0.6rem;"><strong>1. Historische Editionen, Wörterbücher, Fraktur, Polyglossie</strong><br><small class="text-muted">z.B. Böhtlingk 1887, Devanāgarī, mehrspaltig</small></td>
+                <td style="padding:0.5rem 0.6rem;"><span class="badge" style="background:#b45309; color:#fff;">100 %</span></td>
+                <td style="padding:0.5rem 0.6rem;">Vollständige semantische Erkennung via Mistral. Verhindert OCR-Rauschen und Fragmentfehler in Typst-PDF, EPUB 3 und TEI-P5.</td>
+                <td style="padding:0.5rem 0.6rem; color:#60a5fa;">0,004 $ / Seite<br>(~1,00 $ für 250 S.)</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                <td style="padding:0.5rem 0.6rem;"><strong>2. Moderne Drucke (ab ca. 1950)</strong><br><small class="text-muted">Saubere Antiqua-Schrift, 1-spaltig, guter Kontrast</small></td>
+                <td style="padding:0.5rem 0.6rem;"><span class="badge" style="background:#059669; color:#fff;">85 %</span></td>
+                <td style="padding:0.5rem 0.6rem;">Tesseract erzielt lokal kostenlos &gt; 99 % Zeichengenauigkeit. Mistral springt nur bei Problemseiten, Tabellen oder Bildlegenden ein.</td>
+                <td style="padding:0.5rem 0.6rem; color:#34d399;">0,00 $ für &gt; 90 % der Seiten</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                <td style="padding:0.5rem 0.6rem;"><strong>3. Massendigitalisierung &amp; Retrokonversion</strong><br><small class="text-muted">Bibliotheksbestände mit 100.000 bis 1.000.000 Seiten</small></td>
+                <td style="padding:0.5rem 0.6rem;"><span class="badge" style="background:#059669; color:#fff;">85 % oder tiefer</span></td>
+                <td style="padding:0.5rem 0.6rem;">Kostenhebel im Großen (400 $ statt 4.000 $ pro 100k Seiten). Verhindert Cloud-API-Rate-Limits und den Upload von Terabytes an Bilddaten.</td>
+                <td style="padding:0.5rem 0.6rem; color:#34d399;">Ersparnis von tausenden Euro</td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem 0.6rem;"><strong>4. Sensible Akten, Nachlässe &amp; Air-Gap-Betrieb</strong><br><small class="text-muted">Datenschutz (DSGVO), vertrauliche Dokumente</small></td>
+                <td style="padding:0.5rem 0.6rem;"><span class="badge" style="background:#2563eb; color:#fff;">Nur Tesseract</span></td>
+                <td style="padding:0.5rem 0.6rem;">Vollständige Datenhoheit auf dem lokalen Server. Es werden keine Scans oder Daten an externe Cloud-APIs übertragen.</td>
+                <td style="padding:0.5rem 0.6rem; color:#93c5fd;">0,00 $ (100 % lokal)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background:rgba(2,6,23,0.7); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:0.75rem 1rem; margin-top:0.8rem;">
+          <h4 style="margin:0 0 0.4rem 0; color:#fbbf24; font-size:0.92rem;">ℹ️ Warum läuft Tesseract bei 100 % Schwellwert im Hintergrund trotzdem mit?</h4>
+          <p style="margin:0; font-size:0.85rem; color:#cbd5e1;">
+            Mistral Document AI liefert strukturierte Semantik und Markdown, erzeugt jedoch <strong>keine Pixel-Wortkoordinaten (Bounding Boxes)</strong> auf dem Original-Scan. 
+            In Schritt 4 erzeugt <code>OCRmyPDF</code> (Tesseract) daher das unsichtbare geometrische Vektor-Gitter für das <strong>1:1 Sandwich-PDF (Weg B)</strong>. 
+            In Schritt 5 (<code>align_mistral_pdf.py</code>) ersetzt die Pipeline den Tesseract-Text direkt im PDF durch die exakten Mistral-Worttokens an genau diesen Bildpositionen. 
+            <strong>Tesseract liefert somit die Geometrie, Mistral die Semantik.</strong>
+          </p>
+        </div>
+      </div>
+    </details>
     <div class="form-group checkbox-group">
       <input type="checkbox" id="trigger" name="trigger" value="true" checked>
       <label for="trigger">Pipeline nach Upload automatisch starten</label>
@@ -314,5 +440,75 @@ uploadForm.addEventListener('submit', () => {
     uploadProgress.style.display = 'block';
   }
 });
+
+// Qualitätsmodus Presets & Live-Kopplung
+function setStrategy(thresholdVal, noMistralVal) {
+  const thresholdInput = document.getElementById('threshold');
+  const noMistralInput = document.getElementById('no_mistral');
+  if (thresholdInput) thresholdInput.value = thresholdVal;
+  if (noMistralInput) noMistralInput.checked = noMistralVal;
+  updateStrategyHighlights();
+}
+
+function updateStrategyHighlights() {
+  const thresholdInput = document.getElementById('threshold');
+  const noMistralInput = document.getElementById('no_mistral');
+  const badge = document.getElementById('modeStatusBadge');
+  if (!thresholdInput || !noMistralInput) return;
+
+  const t = parseInt(thresholdInput.value, 10);
+  const noM = noMistralInput.checked;
+
+  const c100 = document.getElementById('strat-100');
+  const c85 = document.getElementById('strat-85');
+  const cLocal = document.getElementById('strat-local');
+
+  [c100, c85, cLocal].forEach(c => {
+    if (c) {
+      c.style.borderColor = 'rgba(255,255,255,0.12)';
+      c.style.background = 'rgba(15,23,42,0.6)';
+    }
+  });
+
+  if (noM) {
+    if (cLocal) {
+      cLocal.style.borderColor = '#3b82f6';
+      cLocal.style.background = 'rgba(37,99,235,0.2)';
+    }
+    if (badge) {
+      badge.textContent = 'Modus: 100 % Lokal (Nur Tesseract, 0,00 $ Cloud)';
+      badge.style.color = '#93c5fd';
+    }
+  } else if (t >= 95) {
+    if (c100) {
+      c100.style.borderColor = '#d97706';
+      c100.style.background = 'rgba(217,119,6,0.2)';
+    }
+    if (badge) {
+      badge.textContent = 'Modus: 100 % Mistral AI (Maximale Qualität, 0,004 $/Seite)';
+      badge.style.color = '#fbbf24';
+    }
+  } else if (t >= 70 && t <= 94) {
+    if (c85) {
+      c85.style.borderColor = '#10b981';
+      c85.style.background = 'rgba(16,185,129,0.2)';
+    }
+    if (badge) {
+      badge.textContent = 'Modus: Hybrid (Pass >= ' + t + ' % kostenlos, Fallback Mistral)';
+      badge.style.color = '#34d399';
+    }
+  } else {
+    if (badge) {
+      badge.textContent = 'Modus: Individuell (' + t + ' %, Mistral aktiv)';
+      badge.style.color = '#cbd5e1';
+    }
+  }
+}
+
+const thresholdEl = document.getElementById('threshold');
+const noMistralEl = document.getElementById('no_mistral');
+if (thresholdEl) thresholdEl.addEventListener('input', updateStrategyHighlights);
+if (noMistralEl) noMistralEl.addEventListener('change', updateStrategyHighlights);
+updateStrategyHighlights();
 </script>
 {% endblock %}
