@@ -1,0 +1,1732 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Automatisierte Buch-Digitalisierung mit Hybrid-OCR, TEI-P5, Sandwich-PDF & Typst Neusatz.">
+      
+      
+        <meta name="author" content="AlexandriaSandwich Team">
+      
+      
+        <link rel="canonical" href="https://birchville-org.github.io/AlexandriaSandwich/INSTALLATION/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../WIKI_VERFAHREN/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="de">
+        
+          <link rel="alternate" href="../en/INSTALLATION/" hreflang="en">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Installation - AlexandriaSandwich</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#installationsanleitung-alexandriasandwich" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href=".." title="AlexandriaSandwich" class="md-header__button md-logo" aria-label="AlexandriaSandwich" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AlexandriaSandwich
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Installation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Wechsel zu dunklem Modus"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Wechsel zu dunklem Modus" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Wechsel zu hellem Modus"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Wechsel zu hellem Modus" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Sprache wechseln">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="de" class="md-select__link">
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../en/INSTALLATION/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/birchville-org/AlexandriaSandwich" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    birchville-org/AlexandriaSandwich
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Startseite
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../WIKI_VERFAHREN/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Verfahren
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../TARGET_FORMATS/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Zielformate & Dualität
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../CORRECTION_PATHS/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Korrekturpfade
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../DEPLOY/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Deployment
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../STORAGE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Speicherstruktur
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../N8N/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  n8n Integration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../case-study/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Fallstudie (Böhtlingk 1887)
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../case-study-bau/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Fallstudie (Bṛhadāraṇyaka I.4)
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AlexandriaSandwich" class="md-nav__button md-logo" aria-label="AlexandriaSandwich" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AlexandriaSandwich
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/birchville-org/AlexandriaSandwich" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    birchville-org/AlexandriaSandwich
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startseite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-architekturubersicht" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Architekturübersicht
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-externe-abhangigkeiten-systembibliotheken" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Externe Abhängigkeiten &amp; Systembibliotheken
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Externe Abhängigkeiten &amp; Systembibliotheken">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-worker-container-alexandria_worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Worker-Container (alexandria_worker)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 Worker-Container (alexandria_worker)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python-pakete-im-worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python-Pakete im Worker:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-web-ui-container-alexandria_ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Web-UI-Container (alexandria_ui)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-orchestrator-alexandria_n8n" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Orchestrator (alexandria_n8n)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-host-voraussetzungen-dateisystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Host-Voraussetzungen &amp; Dateisystem
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Host-Voraussetzungen &amp; Dateisystem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-betriebssystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Betriebssystem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-speicherpfade-anlegen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Speicherpfade anlegen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-berechtigungen-fur-docker-ohne-sudo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Berechtigungen für Docker ohne sudo
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-schritt-fur-schritt-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Schritt-für-Schritt Installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Schritt-für-Schritt Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schritt-1-repository-klonen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 1: Repository klonen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schritt-2-umgebungskonfiguration-env" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 2: Umgebungskonfiguration (.env)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schritt-3-docker-netzwerk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 3: Docker-Netzwerk
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schritt-4-worker-container-starten" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 4: Worker-Container starten
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schritt-5-optional-vollstandiger-stack-ui-n8n-via-compose-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 5: Optional — Vollständiger Stack (UI + n8n) via Compose-Profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-lokale-entwicklungsumgebung-ohne-docker-z-b-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Lokale Entwicklungsumgebung ohne Docker (z. B. macOS)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Lokale Entwicklungsumgebung ohne Docker (z. B. macOS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-homebrew-abhangigkeiten-installieren" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Homebrew-Abhängigkeiten installieren
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-python-umgebung-einrichten" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Python-Umgebung einrichten
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-pipeline-lokal-ausfuhren" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pipeline lokal ausführen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-end-to-end-funktionstest-smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. End-to-End Funktionstest (Smoke Test)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../WIKI_VERFAHREN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verfahren
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TARGET_FORMATS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zielformate & Dualität
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CORRECTION_PATHS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Korrekturpfade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEPLOY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../STORAGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Speicherstruktur
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../N8N/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    n8n Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Böhtlingk 1887)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study-bau/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Bṛhadāraṇyaka I.4)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-architekturubersicht" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Architekturübersicht
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-externe-abhangigkeiten-systembibliotheken" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Externe Abhängigkeiten &amp; Systembibliotheken
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Externe Abhängigkeiten &amp; Systembibliotheken">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-worker-container-alexandria_worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Worker-Container (alexandria_worker)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 Worker-Container (alexandria_worker)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python-pakete-im-worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python-Pakete im Worker:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-web-ui-container-alexandria_ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Web-UI-Container (alexandria_ui)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-orchestrator-alexandria_n8n" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Orchestrator (alexandria_n8n)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-host-voraussetzungen-dateisystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Host-Voraussetzungen &amp; Dateisystem
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Host-Voraussetzungen &amp; Dateisystem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-betriebssystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Betriebssystem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-speicherpfade-anlegen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Speicherpfade anlegen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-berechtigungen-fur-docker-ohne-sudo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Berechtigungen für Docker ohne sudo
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-schritt-fur-schritt-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Schritt-für-Schritt Installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Schritt-für-Schritt Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schritt-1-repository-klonen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 1: Repository klonen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schritt-2-umgebungskonfiguration-env" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 2: Umgebungskonfiguration (.env)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schritt-3-docker-netzwerk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 3: Docker-Netzwerk
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schritt-4-worker-container-starten" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 4: Worker-Container starten
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schritt-5-optional-vollstandiger-stack-ui-n8n-via-compose-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schritt 5: Optional — Vollständiger Stack (UI + n8n) via Compose-Profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-lokale-entwicklungsumgebung-ohne-docker-z-b-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Lokale Entwicklungsumgebung ohne Docker (z. B. macOS)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Lokale Entwicklungsumgebung ohne Docker (z. B. macOS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-homebrew-abhangigkeiten-installieren" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Homebrew-Abhängigkeiten installieren
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-python-umgebung-einrichten" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Python-Umgebung einrichten
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-pipeline-lokal-ausfuhren" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pipeline lokal ausführen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-end-to-end-funktionstest-smoke-test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. End-to-End Funktionstest (Smoke Test)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/birchville-org/AlexandriaSandwich/edit/master/docs/de/INSTALLATION.md" title="Seite editieren" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="installationsanleitung-alexandriasandwich">Installationsanleitung: AlexandriaSandwich</h1>
+<p>Diese Anleitung beschreibt die vollständige Installation, Systemabhängigkeiten und Konfiguration der AlexandriaSandwich-Pipeline für Produktions- und Entwicklungsumgebungen.</p>
+<hr />
+<h2 id="1-architekturubersicht">1. Architekturübersicht</h2>
+<p>Das System besteht aus drei eng gekoppelten Schichten:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>               ┌────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>               │                     Host-System                        │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>               │   Storage: /data/{input, processing, output}           │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>               │   App:     /opt/alexandria/                            │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>               └───────────────────────────┬────────────────────────────┘
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                                           │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>         ┌─────────────────────────────────┼─────────────────────────────────┐
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>         │                                 │                                 │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>         ▼                                 ▼                                 ▼
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>┌───────────────────┐             ┌───────────────────┐             ┌───────────────────┐
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│   alexandria_ui   │             │  alexandria_n8n   │             │ alexandria_worker │
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│   Port: 8080      │ ──────────► │  Port: 5678       │ ──────────► │ CLI-Harness       │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│   FastAPI / HTML5 │  (Webhook)  │  n8n Orchestrator │(docker exec)│ OCR, Typst, TEI   │
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>└───────────────────┘             └───────────────────┘             └───────────────────┘
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>         ▲                                                                   │
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>         └───────────────────────────────────────────────────────────────────┘
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>                       Erzeugte Artefakte: TEI-P5, Sandwich-PDF, Neusatz-PDF
+</code></pre></div>
+<p>Alle drei Container kommunizieren über das gemeinsame Docker-Netzwerk <strong><code>alexandria_default</code></strong>.</p>
+<hr />
+<h2 id="2-externe-abhangigkeiten-systembibliotheken">2. Externe Abhängigkeiten &amp; Systembibliotheken</h2>
+<h3 id="21-worker-container-alexandria_worker">2.1 Worker-Container (<code>alexandria_worker</code>)</h3>
+<p>Basis: <code>ubuntu:24.04</code> (Multi-Arch: AMD64 &amp; ARM64).</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Kategorie</th>
+<th style="text-align: left;">Programm / Bibliothek</th>
+<th style="text-align: left;">Mindestversion / Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Bildvorverarbeitung</strong></td>
+<td style="text-align: left;"><code>unpaper</code></td>
+<td style="text-align: left;">6.1+ (Entzerrung, Randbereinigung, Entflecken)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>imagemagick</code></td>
+<td style="text-align: left;">7.x / 6.x (Deskew, Kontrastspreizung, Konvertierung)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>OCR Engines</strong></td>
+<td style="text-align: left;"><code>tesseract-ocr</code></td>
+<td style="text-align: left;">5.3+ (Lokale Open-Source-Texterkennung)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>tesseract-ocr-deu</code></td>
+<td style="text-align: left;">Deutsche Fraktur-/Antiqua-Traineddata</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>tesseract-ocr-eng</code></td>
+<td style="text-align: left;">Englische Sprachmodelle</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><em>(optional)</em> Sprachdaten</td>
+<td style="text-align: left;"><code>tesseract-ocr-san</code> (Sanskrit), <code>fra</code>, <code>ita</code>, <code>lat</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>PDF-Tools &amp; Kompression</strong></td>
+<td style="text-align: left;"><code>poppler-utils</code></td>
+<td style="text-align: left;"><code>pdftoppm</code>, <code>pdfinfo</code>, <code>pdftotext</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>qpdf</code></td>
+<td style="text-align: left;">Linearisierung und PDF-Strukturprüfung</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>ghostscript</code></td>
+<td style="text-align: left;">PostScript/PDF-Rasterisierung</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>pngquant</code></td>
+<td style="text-align: left;">Verlustbehaftete PNG-Kompression</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>jbig2</code> / <code>jbig2dec</code></td>
+<td style="text-align: left;">JBIG2-Monochrom-Kompression für Sandwich-Ebenen</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Neusatz (Typografie)</strong></td>
+<td style="text-align: left;"><code>typst</code></td>
+<td style="text-align: left;"><strong>0.11.1+</strong> (Moderner Rust-basierter Vektorsatz)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>fonts-linuxlibertine</code></td>
+<td style="text-align: left;">Klassische Buchantiqua (Linux Libertine O)</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>fonts-dejavu-core</code></td>
+<td style="text-align: left;">Serifen- &amp; Sans-Fallbacks</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><code>fonts-noto-core</code></td>
+<td style="text-align: left;">Unicode-Abdeckung für Sonderzeichen &amp; Diakritika</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Python-Laufzeit</strong></td>
+<td style="text-align: left;"><code>python3</code> (3.12+), <code>pip</code></td>
+<td style="text-align: left;">Laufzeitumgebung der Pipeline-Skripte</td>
+</tr>
+</tbody>
+</table>
+<h4 id="python-pakete-im-worker">Python-Pakete im Worker:</h4>
+<ul>
+<li><code>ocrmypdf</code> (16.x / 17.x): Erzeugung standardkonformer Sandwich-PDFs (Text Rendering Mode 3).</li>
+<li><code>img2pdf</code> (0.5+): Verlustfreie Einbettung von Rasterbildern in PDF-Container.</li>
+<li><code>mistralai</code> (1.x / 2.x): API-Client für LLM-Vision-Fallback bei niedriger Tesseract-Konfidenz.</li>
+<li><code>pikepdf</code> &amp; <code>lxml</code>: Low-Level-Manipulation von PDF-Objektbäumen und hOCR/XML.</li>
+</ul>
+<hr />
+<h3 id="22-web-ui-container-alexandria_ui">2.2 Web-UI-Container (<code>alexandria_ui</code>)</h3>
+<p>Basis: <code>python:3.12-slim</code>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paket</th>
+<th style="text-align: left;">Version</th>
+<th style="text-align: left;">Zweck</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>fastapi</code></td>
+<td style="text-align: left;">0.115+</td>
+<td style="text-align: left;">Asynchrones Backend für Dashboard, Upload und REST-API</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>uvicorn[standard]</code></td>
+<td style="text-align: left;">0.30+</td>
+<td style="text-align: left;">ASGI-Webserver</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>jinja2</code></td>
+<td style="text-align: left;">3.1+</td>
+<td style="text-align: left;">HTML5-Templates (QA Viewer, Dashboard, Job Detail)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>httpx</code></td>
+<td style="text-align: left;">0.27+</td>
+<td style="text-align: left;">Asynchroner HTTP-Client für n8n-Webhook-Trigger</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>python-multipart</code></td>
+<td style="text-align: left;">0.0.9+</td>
+<td style="text-align: left;">Datei-Upload via Formular</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>poppler-utils</code></td>
+<td style="text-align: left;">OS-Paket</td>
+<td style="text-align: left;">PDF-Seitenrasterung für Path B Editor</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="23-orchestrator-alexandria_n8n">2.3 Orchestrator (<code>alexandria_n8n</code>)</h3>
+<p>Basis: <code>docker.n8n.io/n8nio/n8n:latest</code>.</p>
+<ul>
+<li><strong>Docker-CLI (<code>/usr/bin/docker</code>)</strong>: Vom Host eingebunden, um <code>docker exec</code> in den Worker abzusetzen.</li>
+<li><strong>Docker-Socket (<code>/var/run/docker.sock</code>)</strong>: Zur Steuerung der Container.</li>
+<li><strong>Environment</strong>: <code>NODES_EXCLUDE=[]</code> (zwingend erforderlich, damit der Node <code>ExecuteCommand</code> in n8n v2 aktiviert ist).</li>
+</ul>
+<hr />
+<h2 id="3-host-voraussetzungen-dateisystem">3. Host-Voraussetzungen &amp; Dateisystem</h2>
+<h3 id="31-betriebssystem">3.1 Betriebssystem</h3>
+<ul>
+<li>Getestet auf: <strong>Ubuntu 22.04 / 24.04 LTS (x86_64)</strong> sowie <strong>macOS Sonoma/Sequoia (Apple Silicon / ARM64)</strong>.</li>
+<li>Docker Engine &gt;= 24.0 und Docker Compose v2.</li>
+</ul>
+<h3 id="32-speicherpfade-anlegen">3.2 Speicherpfade anlegen</h3>
+<p>Auf dem Server müssen folgende Verzeichnisse existieren und Schreibrechte besitzen:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/data/input<span class="w"> </span>/data/processing<span class="w"> </span>/data/output
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="nv">$USER</span>:<span class="nv">$USER</span><span class="w"> </span>/data
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/opt/alexandria
+</code></pre></div>
+<h3 id="33-berechtigungen-fur-docker-ohne-sudo">3.3 Berechtigungen für Docker ohne sudo</h3>
+<p>Der Deployment-Benutzer muss Mitglied der Gruppe <code>docker</code> sein:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>docker<span class="w"> </span><span class="nv">$USER</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>newgrp<span class="w"> </span>docker
+</code></pre></div></p>
+<hr />
+<h2 id="4-schritt-fur-schritt-installation">4. Schritt-für-Schritt Installation</h2>
+<h3 id="schritt-1-repository-klonen">Schritt 1: Repository klonen</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/marcodem/AlexandriaSandwich.git<span class="w"> </span>/opt/alexandria
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">cd</span><span class="w"> </span>/opt/alexandria
+</code></pre></div>
+<h3 id="schritt-2-umgebungskonfiguration-env">Schritt 2: Umgebungskonfiguration (<code>.env</code>)</h3>
+<p>Erstelle <code>.env</code> (Dateirechte <code>600</code>):
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># Optional: MISTRAL_API_KEY und Pfade anpassen</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>.env
+</code></pre></div></p>
+<p>Beispielinhalt:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Mistral API-Schlüssel für OCR-Fallback (optional, falls Fallback genutzt wird)</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">MISTRAL_API_KEY</span><span class="o">=</span>dein_mistral_api_key_hier
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Pipeline-Standards</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nv">OCR_LANG</span><span class="o">=</span>deu+eng
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nv">OCR_CONFIDENCE_THRESHOLD</span><span class="o">=</span><span class="m">85</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nv">DATA_DIR</span><span class="o">=</span>./data
+</code></pre></div></p>
+<h3 id="schritt-3-docker-netzwerk">Schritt 3: Docker-Netzwerk</h3>
+<p>Das gemeinsame Netzwerk <strong><code>alexandria_default</code></strong> wird von Docker Compose automatisch verwaltet. Ein manueller Eingriff ist nicht erforderlich (bei Bedarf: <code>docker network create alexandria_default || true</code>).</p>
+<h3 id="schritt-4-worker-container-starten">Schritt 4: Worker-Container starten</h3>
+<p>Der OCR-Worker kann direkt über das Wurzel-Composefile gestartet werden (baut automatisch das lokale Image):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--build<span class="w"> </span>ocr_worker
+</code></pre></div>
+<p>Verifikation:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>alexandria_worker<span class="w"> </span>typst<span class="w"> </span>--version
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># Ausgabe: typst 0.11.1 (...)</span>
+</code></pre></div></p>
+<h3 id="schritt-5-optional-vollstandiger-stack-ui-n8n-via-compose-profile">Schritt 5: Optional — Vollständiger Stack (UI + n8n) via Compose-Profile</h3>
+<p>Statt einzelne Compose-Dateien zu kopieren, stehen Compose-Profile bereit:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Nur UI starten:</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>--profile<span class="w"> </span>ui<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--build
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Nur n8n Orchestrator starten:</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>docker<span class="w"> </span>compose<span class="w"> </span>--profile<span class="w"> </span>n8n<span class="w"> </span>up<span class="w"> </span>-d
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># Den gesamten Stack (Worker + UI + n8n) auf einmal starten:</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>docker<span class="w"> </span>compose<span class="w"> </span>--profile<span class="w"> </span>all<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>--build
+</code></pre></div>
+<p>Workflow in n8n aktivieren (falls n8n genutzt wird):
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># 1. Workflow importieren</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>alexandria_n8n<span class="w"> </span>n8n<span class="w"> </span>import:workflow<span class="w"> </span>--input<span class="o">=</span>/opt/alexandria/workflows/n8n_ocr_pipeline.json
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># 2. Workflow aktivieren/publizieren</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>alexandria_n8n<span class="w"> </span>n8n<span class="w"> </span>publish:workflow<span class="w"> </span>--id<span class="o">=</span>alexandria-pipeline
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># 3. Container neu starten, damit Trigger scharfgeschaltet wird</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>docker<span class="w"> </span>restart<span class="w"> </span>alexandria_n8n
+</code></pre></div></p>
+<p>Verifikation:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:8080/health
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="c1"># Ausgabe: {"status":"ok","data_dir":"/data","n8n_url":"http://alexandria_n8n:5678/webhook/alexandria/ocr"}</span>
+</code></pre></div></p>
+<hr />
+<h2 id="5-lokale-entwicklungsumgebung-ohne-docker-z-b-macos">5. Lokale Entwicklungsumgebung ohne Docker (z. B. macOS)</h2>
+<p>Soll die Pipeline oder die UI direkt lokal auf macOS entwickelt werden:</p>
+<h3 id="1-homebrew-abhangigkeiten-installieren">1. Homebrew-Abhängigkeiten installieren</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>brew<span class="w"> </span>install<span class="w"> </span>tesseract<span class="w"> </span>tesseract-lang<span class="w"> </span>unpaper<span class="w"> </span>imagemagick<span class="w"> </span>poppler<span class="w"> </span>qpdf<span class="w"> </span>typst
+</code></pre></div>
+<h3 id="2-python-umgebung-einrichten">2. Python-Umgebung einrichten</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>ui/requirements.txt
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>pip<span class="w"> </span>install<span class="w"> </span>ocrmypdf<span class="w"> </span>img2pdf<span class="w"> </span>mistralai
+</code></pre></div>
+<h3 id="3-pipeline-lokal-ausfuhren">3. Pipeline lokal ausführen</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>./scripts/run_pipeline.sh<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>--job<span class="w"> </span>mein_buch<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span>--input<span class="w"> </span>./data/input<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--processing<span class="w"> </span>./data/processing<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span>--output<span class="w"> </span>./data/output<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span>--no-mistral
+</code></pre></div>
+<hr />
+<h2 id="6-end-to-end-funktionstest-smoke-test">6. End-to-End Funktionstest (Smoke Test)</h2>
+<p>Zur Absicherung der Gesamtkette:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># 1. Testbild ablegen</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/data/input/smoke_test
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>cp<span class="w"> </span>/opt/alexandria/docker/worker/test.png<span class="w"> </span>/data/input/smoke_test/page_01.png<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>convert<span class="w"> </span>-size<span class="w"> </span>800x200<span class="w"> </span>xc:white<span class="w"> </span>-fill<span class="w"> </span>black<span class="w"> </span>-pointsize<span class="w"> </span><span class="m">24</span><span class="w"> </span>-annotate<span class="w"> </span>+50+100<span class="w"> </span><span class="s2">"Alexandria Pipeline Test"</span><span class="w"> </span>/data/input/smoke_test/page_01.png
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="c1"># 2. Durchlauf über Web-UI oder cURL starten</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8080/jobs/smoke_test/trigger
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="c1"># 3. Erzeugte Artefakte prüfen</span>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>ls<span class="w"> </span>-lh<span class="w"> </span>/data/output/pdf/smoke_test.sandwich.pdf
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>ls<span class="w"> </span>-lh<span class="w"> </span>/data/output/tei/smoke_test.tei.xml
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>ls<span class="w"> </span>-lh<span class="w"> </span>/data/output/pdf/smoke_test.digital.pdf
+</code></pre></div>
+<p>Alle drei Primär-Artefakte müssen in <code>/data/output/</code> vorliegen und über das Dashboard unter <code>http://&lt;host&gt;:8080/jobs/smoke_test</code> einsehbar sein.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Zurück zum Seitenanfang
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
