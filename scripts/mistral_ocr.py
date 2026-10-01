@@ -62,16 +62,53 @@ def build_document(path: Path) -> dict:
     }
 
 
+import urllib.error
+import urllib.request
+
+
 def get_client(api_key: str):
     # mistralai 1.x exported Mistral at top-level; 2.x nests under mistralai.client
     try:
         from mistralai.client import Mistral  # type: ignore
+        return Mistral(api_key=api_key)
     except ImportError:
         try:
             from mistralai import Mistral  # type: ignore
-        except ImportError as exc:
-            die(f"mistralai SDK not installed: {exc}")
-    return Mistral(api_key=api_key)
+            return Mistral(api_key=api_key)
+        except ImportError:
+            return None
+
+
+def _process_http(api_key: str, kwargs: dict) -> dict:
+    url = "https://api.mistral.ai/v1/ocr"
+    data_bytes = json.dumps(kwargs).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data_bytes,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "AlexandriaSandwich-MistralOCR/1.0",
+        },
+        method="POST",
+    )
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            with urllib.request.urlopen(req, timeout=120.0) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            err_msg = exc.read().decode("utf-8", errors="replace")
+            if exc.code == 429 or "rate_limit" in err_msg.lower():
+                wait_sec = 2 * (attempt + 1)
+                time.sleep(wait_sec)
+                continue
+            die(f"Mistral OCR HTTP error {exc.code}: {err_msg}", code=1)
+        except Exception as exc:
+            if attempt == max_retries - 1:
+                die(f"Mistral OCR HTTP request failed: {exc}", code=1)
+            time.sleep(2)
+    die("Mistral OCR failed after retries", code=1)
 
 
 def response_to_dict(resp: Any) -> dict:
@@ -124,24 +161,27 @@ def process_with_mistral(
         kwargs["pages"] = pages
 
     print(f"Sende {image_path} an Mistral OCR ({model})...", file=sys.stderr)
-    max_retries = 5
-    resp = None
-    for attempt in range(max_retries):
-        try:
-            resp = client.ocr.process(**kwargs)
-            break
-        except Exception as exc:  # noqa: BLE001
-            err_str = str(exc)
-            if "429" in err_str or "rate_limit" in err_str.lower() or "too many" in err_str.lower():
-                wait_sec = 2 * (attempt + 1)
-                print(f"Rate limited on {image_path.name} (attempt {attempt+1}/{max_retries}), retrying in {wait_sec}s...", file=sys.stderr)
-                time.sleep(wait_sec)
-                if attempt == max_retries - 1:
-                    die(f"Mistral OCR request failed after {max_retries} attempts: {exc}", code=1)
-            else:
-                die(f"Mistral OCR request failed: {exc}", code=1)
+    if client is None:
+        payload = _process_http(key, kwargs)
+    else:
+        max_retries = 5
+        resp = None
+        for attempt in range(max_retries):
+            try:
+                resp = client.ocr.process(**kwargs)
+                break
+            except Exception as exc:  # noqa: BLE001
+                err_str = str(exc)
+                if "429" in err_str or "rate_limit" in err_str.lower() or "too many" in err_str.lower():
+                    wait_sec = 2 * (attempt + 1)
+                    print(f"Rate limited on {image_path.name} (attempt {attempt+1}/{max_retries}), retrying in {wait_sec}s...", file=sys.stderr)
+                    time.sleep(wait_sec)
+                    if attempt == max_retries - 1:
+                        die(f"Mistral OCR request failed after {max_retries} attempts: {exc}", code=1)
+                else:
+                    die(f"Mistral OCR request failed: {exc}", code=1)
 
-    payload = response_to_dict(resp)
+        payload = response_to_dict(resp)
     markdown = extract_markdown(payload)
     return {
         "source": str(image_path),
