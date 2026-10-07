@@ -12,7 +12,7 @@
     </a>
     {% if info.pdfs %}
     <a href="/jobs/{{ job }}/edit" class="btn btn-sm btn-secondary">
-      ✏️ Weg B Text-Editor
+      ✏️ PDF-Textlayer-Editor
     </a>
     {% endif %}
   </div>
@@ -186,13 +186,13 @@
         </td>
       </tr>
 
-      <!-- 2. Perfektes Sandwich-PDF (Weg B - Mistral Aligned) -->
+      <!-- 2. KI-synchronisiertes Sandwich-PDF (Mistral Aligned) -->
       {% set sandwich = info.pdfs | selectattr("kind", "equalto", "sandwich") | first | default(none) %}
       {% set pathb = info.pdfs | selectattr("kind", "equalto", "pathb") | first | default(none) %}
       {% if pathb %}
       <tr style="background: rgba(16, 185, 129, 0.08);">
-        <td><strong>2. Perfektes Sandwich (Weg B)</strong><br><small class="text-muted">Originalscan + KI-ausgerichtete Mistral-Textebene (0 Rauschzeilen)</small></td>
-        <td><span class="badge" style="background:#059669;color:#fff;">PDF (Weg B)</span></td>
+        <td><strong>2. KI-synchronisiertes Sandwich-PDF</strong><br><small class="text-muted">Originalscan + KI-bereinigte Mistral-Textebene (0 Rauschzeilen, wortgenau ausgerichtet)</small></td>
+        <td><span class="badge" style="background:#059669;color:#fff;">Sandwich (KI-Textlayer)</span></td>
         <td>
           <code>{{ pathb.name }}</code> ({{ pathb.size_kb }} KB)
         </td>
@@ -241,7 +241,7 @@
           {% if sandwich %}
             <a href="/browse/pdf/{{ job }}/{{ sandwich.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
             <a href="/download/pdf/{{ job }}/{{ sandwich.name }}" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">⬇ Download</a>
-            <a href="/jobs/{{ job }}/edit" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;">✏️ Path B Editor</a>
+            <a href="/jobs/{{ job }}/edit" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;">✏️ Textlayer-Editor</a>
           {% else %}
             <span class="text-muted">Noch nicht generiert</span>
           {% endif %}

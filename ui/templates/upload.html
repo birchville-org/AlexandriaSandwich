@@ -126,8 +126,8 @@
       <small class="text-muted">Mit eingebetteten Vektor-Schriften (*Devanagari* &amp; *Libertine*)</small>
     </div>
     <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
-      <span class="badge" style="background:#059669;color:#fff;">PDF Weg B</span><br>
-      <strong>Perfektes Sandwich</strong><br>
+      <span class="badge" style="background:#059669;color:#fff;">Sandwich (KI-Textlayer)</span><br>
+      <strong>KI-synchronisiertes Sandwich</strong><br>
       <small class="text-muted">Faksimile + Mistral-Token-Alignment (0 Rauschzeilen)</small>
     </div>
     <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
@@ -322,7 +322,7 @@
           <h4 style="margin:0 0 0.4rem 0; color:#fbbf24; font-size:0.92rem;">ℹ️ Warum läuft Tesseract bei 100 % Schwellwert im Hintergrund trotzdem mit?</h4>
           <p style="margin:0; font-size:0.85rem; color:#cbd5e1;">
             Mistral Document AI liefert strukturierte Semantik und Markdown, erzeugt jedoch <strong>keine Pixel-Wortkoordinaten (Bounding Boxes)</strong> auf dem Original-Scan. 
-            In Schritt 4 erzeugt <code>OCRmyPDF</code> (Tesseract) daher das unsichtbare geometrische Vektor-Gitter für das <strong>1:1 Sandwich-PDF (Weg B)</strong>. 
+            In Schritt 4 erzeugt <code>OCRmyPDF</code> (Tesseract) daher das unsichtbare geometrische Vektor-Gitter für das <strong>KI-synchronisierte Sandwich-PDF</strong>. 
             In Schritt 5 (<code>align_mistral_pdf.py</code>) ersetzt die Pipeline den Tesseract-Text direkt im PDF durch die exakten Mistral-Worttokens an genau diesen Bildpositionen. 
             <strong>Tesseract liefert somit die Geometrie, Mistral die Semantik.</strong>
           </p>
