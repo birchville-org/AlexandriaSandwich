@@ -69,8 +69,8 @@ def _list_jobs():
     return sorted(jobs.values(), key=lambda j: j.get("modified", ""), reverse=True)
 
 
-def _trigger_n8n(job, lang="deu+eng", threshold=85, limit=0, no_mistral=False):
-    payload = {"job": job, "pull": False, "push": False, "lang": lang, "threshold": threshold, "limit": limit, "no_mistral": no_mistral}
+def _trigger_n8n(job, lang="deu+eng", threshold=100, limit=0, no_mistral=False, skip_preprocess=False):
+    payload = {"job": job, "pull": False, "push": False, "lang": lang, "threshold": threshold, "limit": limit, "no_mistral": no_mistral, "skip_preprocess": skip_preprocess}
     urls_to_try = [N8N_WEBHOOK_URL]
     if FALLBACK_N8N_URL and FALLBACK_N8N_URL != N8N_WEBHOOK_URL:
         urls_to_try.append(FALLBACK_N8N_URL)
@@ -444,7 +444,7 @@ def _get_job_progress(job: str) -> dict[str, Any]:
     s3_running = not s3_done and len(qc_files) > 0
     s3_prog = 100 if s3_done else (round((len(qc_files) / pages_total) * 100) if pages_total else 0)
     s3_dur = round(max(1.5, pages_total * 1.0), 1)
-    threshold = rep_data.get("threshold", 85)
+    threshold = rep_data.get("threshold", 100)
     stages.append({
         "id": 3,
         "name": "Tesseract OCR & Konfidenz-Gate",
@@ -559,6 +559,11 @@ def _get_job_progress(job: str) -> dict[str, Any]:
         "completed_stages": completed_stages,
         "total_stages": len(stages),
         "current_stage": current_stage,
+        "current_threshold": rep_data.get("threshold", 100),
+        "current_lang": rep_data.get("lang", "deu+eng"),
+        "current_pass": pass_n,
+        "current_fail": fail_n,
+        "current_mistral_ok": mistral_ok,
         "estimated_total_seconds": total_sec,
         "estimated_total_str": f"{int(total_sec // 60)} Min. {int(total_sec % 60)} s" if total_sec >= 60 else f"{round(total_sec, 1)} s",
         "stages": stages
@@ -836,16 +841,19 @@ async def job_status_api(job: str):
 @app.post("/jobs/{job}/trigger")
 async def trigger_job(request: Request, job: str):
     lang = "deu+eng"
-    threshold = 85
+    threshold = 100
     limit = 0
     no_mistral = False
+
+    skip_preprocess = False
 
     # 1. Query Params
     qp = request.query_params
     if "lang" in qp: lang = qp["lang"]
     if "threshold" in qp: threshold = int(qp["threshold"])
     if "limit" in qp: limit = int(qp["limit"])
-    if "no_mistral" in qp: no_mistral = qp["no_mistral"].lower() in ("1", "true", "yes")
+    if "no_mistral" in qp: no_mistral = qp["no_mistral"].lower() in ("1", "true", "yes", "on")
+    if "skip_preprocess" in qp: skip_preprocess = qp["skip_preprocess"].lower() in ("1", "true", "yes", "on")
 
     # 2. Form or JSON Body
     ct = request.headers.get("content-type", "")
@@ -856,6 +864,7 @@ async def trigger_job(request: Request, job: str):
             threshold = int(body.get("threshold", threshold))
             limit = int(body.get("limit", limit))
             no_mistral = bool(body.get("no_mistral", no_mistral))
+            skip_preprocess = bool(body.get("skip_preprocess", skip_preprocess))
         except Exception:
             pass
     elif "application/x-www-form-urlencoded" in ct or "multipart/form-data" in ct:
@@ -864,14 +873,32 @@ async def trigger_job(request: Request, job: str):
             if "lang" in form: lang = str(form["lang"])
             if "threshold" in form: threshold = int(form["threshold"])
             if "limit" in form: limit = int(form["limit"])
-            if "no_mistral" in form: no_mistral = str(form["no_mistral"]).lower() in ("1", "true", "yes")
+            if "no_mistral" in form: no_mistral = str(form["no_mistral"]).lower() in ("1", "true", "yes", "on")
+            if "skip_preprocess" in form: skip_preprocess = str(form["skip_preprocess"]).lower() in ("1", "true", "yes", "on")
         except Exception:
             pass
 
-    resp = await asyncio.to_thread(_trigger_n8n, job, lang=lang, threshold=threshold, limit=limit, no_mistral=no_mistral)
+    resp = await asyncio.to_thread(
+        _trigger_n8n,
+        job,
+        lang=lang,
+        threshold=threshold,
+        limit=limit,
+        no_mistral=no_mistral,
+        skip_preprocess=skip_preprocess
+    )
+
+    redirect_target = request.query_params.get("redirect", "")
+    if not redirect_target:
+        ref = request.headers.get("referer", "")
+        if "/status" in ref:
+            redirect_target = f"/status?job={job}"
+        else:
+            redirect_target = f"/jobs/{job}"
+
     accept = request.headers.get("accept", "")
-    if "text/html" in accept:
-        return RedirectResponse(url=f"/status?job={job}", status_code=303)
+    if "text/html" in accept or redirect_target:
+        return RedirectResponse(url=redirect_target, status_code=303)
     return JSONResponse(resp)
 
 
