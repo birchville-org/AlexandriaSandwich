@@ -129,10 +129,10 @@ def get_job_progress(job):
     s7_dur = round(max(2.0, min(12.0, pages_total * 0.3 + 3.0)), 1)
     pathb_kb = round(pathb_pdf.stat().st_size / 1024, 1) if pathb_pdf.exists() else 0
     stages.append({
-        'id': 7, 'name': 'Weg B Token-Ausrichtung (Mistral in PDF)',
+        'id': 7, 'name': 'KI-Textlayer-Synchronisation (In-PDF)',
         'status': 'completed' if s7_done else 'pending',
         'progress': 100 if s7_done else 0,
-        'info': f"Korrigiertes Path B PDF ({pathb_kb} KB)" if pathb_pdf.exists() else "Präzisions-Ersetzung im PDF Stream",
+        'info': f"KI-präzisiertes Sandwich-PDF ({pathb_kb} KB)" if pathb_pdf.exists() else "Präzisions-Ersetzung im PDF Stream",
         'duration_str': f"{s7_dur} s" if s7_done else f"~{s7_dur} s",
         'seconds': s7_dur
     })

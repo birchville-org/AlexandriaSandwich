@@ -503,17 +503,17 @@ def _get_job_progress(job: str) -> dict[str, Any]:
         "seconds": s6_dur
     })
 
-    # 7. Weg B Token-Ausrichtung
+    # 7. KI-Textlayer-Synchronisation (In-PDF)
     s7_done = pathb_pdf.exists() or has_report
     s7_dur = round(max(2.0, min(12.0, pages_total * 0.3 + 3.0)), 1)
     pathb_kb = round(pathb_pdf.stat().st_size / 1024, 1) if pathb_pdf.exists() else 0
     stages.append({
         "id": 7,
-        "name": "Weg B Token-Ausrichtung (In-PDF)",
+        "name": "KI-Textlayer-Synchronisation (In-PDF)",
         "tool": "align_mistral_pdf.py",
         "status": "completed" if s7_done else "pending",
         "progress": 100 if s7_done else 0,
-        "info": f"Korrigiertes Path B PDF ({pathb_kb} KB)" if pathb_pdf.exists() else "Präzisions-Token-Austausch im PDF Content-Stream",
+        "info": f"KI-präzisiertes Sandwich-PDF ({pathb_kb} KB)" if pathb_pdf.exists() else "Präzisions-Token-Austausch im PDF Content-Stream",
         "duration_str": f"{s7_dur} s" if s7_done else f"~{s7_dur} s",
         "seconds": s7_dur
     })
@@ -1007,7 +1007,7 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)
 
 
-# ── Path B Editor: text extraction, preview, correction ────────────────
+# ── PDF Textlayer-Editor: text extraction, preview, correction ────────────────
 import subprocess
 import sys as _sys
 import tempfile
@@ -1039,7 +1039,7 @@ async def job_edit(job: str, request: Request):
         })
     if not _HAS_PATHB:
         return templates.TemplateResponse(request, "editor.html", {
-            "job": job, "error": f"Path B Modul nicht verfügbar: {_PATHB_ERR}", "pages": [], "corrections_template": {}, "info": None
+            "job": job, "error": f"PDF-Textlayer-Modul nicht verfügbar: {_PATHB_ERR}", "pages": [], "corrections_template": {}, "info": None
         })
     try:
         text = _pdftotext(pdf)
@@ -1110,7 +1110,7 @@ async def job_correct(job: str, body: dict = None):
     if pdf is None:
         return JSONResponse({"ok": False, "error": "no sandwich PDF"}, status_code=404)
     if not _HAS_PATHB:
-        return JSONResponse({"ok": False, "error": f"Path B module not available: {_PATHB_ERR}"}, status_code=500)
+        return JSONResponse({"ok": False, "error": f"PDF-Textlayer-Modul nicht verfügbar: {_PATHB_ERR}"}, status_code=500)
 
     corrections = (body or {}).get("corrections", {})
     if not isinstance(corrections, dict):
