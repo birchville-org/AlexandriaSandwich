@@ -9,12 +9,12 @@
 #
 set -euo pipefail
 
-NAS_HOST="${AS_NAS_HOST:-nas.local}"
-NAS_USER="${AS_NAS_USER:-admin}"
-NAS_BASE="${AS_NAS_BASE:-/volume1/alexandria}"
+NAS_HOST="${AS_NAS_HOST:-192.168.1.8}"
+NAS_USER="${AS_NAS_USER:-marco}"
+NAS_BASE="${AS_NAS_BASE:-/volume1/docker/alexandria/data}"
 LOCAL_DATA="${AS_LOCAL_DATA:-/data}"
-RSH="${AS_RSH:-ssh}"
-RSYNC_OPTS=( -aH --info=stats2,progress2 --human-readable )
+RSH="${AS_RSH:-ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new}"
+RSYNC_OPTS=( -aH --info=stats2,progress2 --human-readable --rsync-path=/usr/bin/rsync )
 
 log() { printf '%s\n' "$*" >&2; }
 die() { log "Error: $*"; exit 2; }

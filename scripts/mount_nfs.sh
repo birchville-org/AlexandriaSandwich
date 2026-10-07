@@ -9,9 +9,9 @@
 #
 set -euo pipefail
 
-NAS_HOST="${AS_NAS_HOST:-nas.local}"
+NAS_HOST="${AS_NAS_HOST:-192.168.1.8}"
 # NFS export base on NAS (may equal AS_NAS_BASE or differ, e.g. /export/alexandria)
-NAS_NFS_BASE="${AS_NAS_NFS_BASE:-${AS_NAS_BASE:-/volume1/alexandria}}"
+NAS_NFS_BASE="${AS_NAS_NFS_BASE:-${AS_NAS_BASE:-/volume1/docker/alexandria/data}}"
 LOCAL_DATA="${AS_LOCAL_DATA:-/data}"
 NFS_OPTS="${AS_NFS_OPTS:-rw,soft,intr,timeo=50,_netdev,nofail}"
 
