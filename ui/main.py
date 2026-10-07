@@ -834,11 +834,44 @@ async def job_status_api(job: str):
 
 
 @app.post("/jobs/{job}/trigger")
-async def trigger_job(request: Request, job: str, lang: str = "deu+eng", threshold: int = 85, limit: int = 0, no_mistral: bool = False):
-    resp = _trigger_n8n(job, lang=lang, threshold=threshold, limit=limit, no_mistral=no_mistral)
+async def trigger_job(request: Request, job: str):
+    lang = "deu+eng"
+    threshold = 85
+    limit = 0
+    no_mistral = False
+
+    # 1. Query Params
+    qp = request.query_params
+    if "lang" in qp: lang = qp["lang"]
+    if "threshold" in qp: threshold = int(qp["threshold"])
+    if "limit" in qp: limit = int(qp["limit"])
+    if "no_mistral" in qp: no_mistral = qp["no_mistral"].lower() in ("1", "true", "yes")
+
+    # 2. Form or JSON Body
+    ct = request.headers.get("content-type", "")
+    if "application/json" in ct:
+        try:
+            body = await request.json()
+            lang = body.get("lang", lang)
+            threshold = int(body.get("threshold", threshold))
+            limit = int(body.get("limit", limit))
+            no_mistral = bool(body.get("no_mistral", no_mistral))
+        except Exception:
+            pass
+    elif "application/x-www-form-urlencoded" in ct or "multipart/form-data" in ct:
+        try:
+            form = await request.form()
+            if "lang" in form: lang = str(form["lang"])
+            if "threshold" in form: threshold = int(form["threshold"])
+            if "limit" in form: limit = int(form["limit"])
+            if "no_mistral" in form: no_mistral = str(form["no_mistral"]).lower() in ("1", "true", "yes")
+        except Exception:
+            pass
+
+    resp = await asyncio.to_thread(_trigger_n8n, job, lang=lang, threshold=threshold, limit=limit, no_mistral=no_mistral)
     accept = request.headers.get("accept", "")
     if "text/html" in accept:
-        return RedirectResponse(url=f"/jobs/{job}", status_code=303)
+        return RedirectResponse(url=f"/status?job={job}", status_code=303)
     return JSONResponse(resp)
 
 

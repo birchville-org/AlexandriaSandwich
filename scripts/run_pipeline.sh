@@ -81,7 +81,11 @@ fi
 
 JOB_INPUT="${INPUT_DIR}/${JOB_NAME}"
 if [[ ! -d "$JOB_INPUT" ]]; then
-  JOB_INPUT="$INPUT_DIR"
+  if compgen -G "${INPUT_DIR}/${JOB_NAME}.*" >/dev/null; then
+    JOB_INPUT="$INPUT_DIR"
+  else
+    die "Input directory for job '$JOB_NAME' not found: $JOB_INPUT"
+  fi
 fi
 
 if [[ "$SKIP_PREPROCESS" -eq 1 ]]; then
