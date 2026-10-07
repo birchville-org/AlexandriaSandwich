@@ -56,7 +56,7 @@
             <strong>{{ sj.name }}</strong> ({{ sj.pages }} Seiten, bereitgestellt am {{ sj.modified }})
             <form action="/jobs/{{ sj.name }}/trigger" method="post" style="display: inline-block; margin-left: 0.8rem;">
               <input type="hidden" name="lang" value="deu+eng">
-              <input type="hidden" name="threshold" value="85">
+              <input type="hidden" name="threshold" value="100">
               <button type="submit" class="btn btn-sm btn-primary" style="padding: 0.2rem 0.6rem; font-size: 0.78rem;">
                 ▶️ Pipeline jetzt starten
               </button>
@@ -115,20 +115,125 @@
       <div>Gesamtdauer: <strong id="progressTotalDur" style="color: var(--gold-light);">{{ status_data.featured_progress.estimated_total_str }}</strong></div>
     </div>
 
-    <div id="jobActionContainer">
+    <div id="jobActionContainer" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+      <button type="button" class="btn btn-sm btn-gold" id="btnToggleRerun" onclick="toggleRerunPanel()">
+        <span>⚙️</span> Neu starten mit Parametern
+      </button>
       {% if status_data.featured_progress.status_type == 'waiting' %}
         <form action="/jobs/{{ status_data.featured_job }}/trigger" method="post" style="display: inline-block;">
           <input type="hidden" name="lang" value="deu+eng">
-          <input type="hidden" name="threshold" value="85">
+          <input type="hidden" name="threshold" value="100">
           <button type="submit" class="btn btn-sm btn-primary">
-            ▶️ Pipeline für '{{ status_data.featured_job }}' jetzt starten
+            ▶️ Pipeline starten
           </button>
         </form>
       {% endif %}
-      <a id="btnJobDetailLink" href="/jobs/{{ status_data.featured_job }}" class="btn btn-sm btn-secondary" style="margin-left: 0.4rem;">
+      <a id="btnJobDetailLink" href="/jobs/{{ status_data.featured_job }}" class="btn btn-sm btn-secondary">
         📁 Job-Artefakte
       </a>
     </div>
+  </div>
+
+  <!-- Inline Parameter Configuration & Re-Run Panel -->
+  <div id="inlineRerunPanel" class="rerun-panel" style="display: none;">
+    <div class="rerun-panel-header">
+      <div class="rerun-panel-title">
+        <span>⚙️</span> Job '<span id="rerunJobName">{{ status_data.featured_job }}</span>' mit geänderten Parametern neu ausführen
+      </div>
+      <button type="button" class="btn btn-sm btn-secondary" onclick="toggleRerunPanel()" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;">✕ Schließen</button>
+    </div>
+
+    <form id="statusRerunForm" method="post" action="/jobs/{{ status_data.featured_job }}/trigger?redirect=/status?job={{ status_data.featured_job }}">
+      <div class="param-grid">
+        <!-- 1. Konfidenz-Schwellenwert (Threshold) -->
+        <div class="param-field">
+          <div class="param-label">
+            <span>Konfidenz-Schwellenwert (Gate):
+              <span class="param-help-trigger" data-tooltip="Standard 100 %: Alle Seiten via Mistral AI (maximale Qualität). Niedrigere Werte (z. B. 85 %) sparen API-Kosten bei sauberen Antiqua-Drucken.">ⓘ</span>
+            </span>
+            <span class="param-slider-val" id="statusThresholdDisplay">{{ status_data.featured_progress.current_threshold|default(100)|int }} %</span>
+          </div>
+          <div class="param-slider-wrap">
+            <input type="range" class="param-slider" id="statusThresholdRange" name="threshold" min="50" max="100" step="1"
+                   value="{{ status_data.featured_progress.current_threshold|default(100)|int }}" oninput="onStatusThresholdChange(this.value)">
+          </div>
+          <div class="quick-pills">
+            <button type="button" class="quick-pill {% if status_data.featured_progress.current_threshold|default(100)|int == 75 %}active{% endif %}" onclick="setStatusThreshold(75)" title="75%: Spart maximale Cloud-Kosten bei großen Beständen">75% (Sparsam)</button>
+            <button type="button" class="quick-pill {% if status_data.featured_progress.current_threshold|default(100)|int == 85 %}active{% endif %}" onclick="setStatusThreshold(85)" title="85%: Ausgewogener Hybrid-Modus für moderne Drucke">85% (Hybrid)</button>
+            <button type="button" class="quick-pill {% if status_data.featured_progress.current_threshold|default(100)|int == 90 %}active{% endif %}" onclick="setStatusThreshold(90)" title="90%: Höhere Sicherheit bei gutem Erhaltungszustand">90% (Scharf)</button>
+            <button type="button" class="quick-pill {% if status_data.featured_progress.current_threshold|default(100)|int == 95 %}active{% endif %}" onclick="setStatusThreshold(95)" title="95%: Nahezu alle kritischen Seiten an Mistral">95% (Präzise)</button>
+            <button type="button" class="quick-pill {% if status_data.featured_progress.current_threshold|default(100)|int == 100 %}active{% endif %}" onclick="setStatusThreshold(100)" title="100%: Jede Seite via Mistral AI für makellose Typst/EPUB Editionen">100% (Alle Mistral AI)</button>
+          </div>
+          <div style="font-size: 0.73rem; color: var(--text-dim); margin-top: 0.25rem;">
+            Seiten mit Tesseract-Konfidenz unter diesem Wert lösen den Mistral AI Cloud Fallback aus.
+          </div>
+
+          <!-- Expandable Guidance Box -->
+          <details class="threshold-guide">
+            <summary>💡 Wann macht ein tieferer Wert (z. B. 85 % oder 75 %) Sinn?</summary>
+            <div class="threshold-guide-content">
+              <div class="guide-item">
+                <div class="guide-item-title">👑 100 % (Standard &amp; Empfehlung):</div>
+                <span>Jede Seite wird durch Mistral AI verarbeitet ($0,004/Seite). Ideal für historische Editionen, Fraktur, Sanskrit/Devanagari, vergilbte Vorlagen oder wenn makellose Typst-, TEI- und EPUB-Ausgaben ohne OCR-Rauschen gefordert sind.</span>
+              </div>
+              <div class="guide-item">
+                <div class="guide-item-title">⚡ 85 % – 90 % (Hybrid / Budget-Optimierung):</div>
+                <span>Lokales Tesseract übernimmt saubere Seiten kostenlos ($0,00). Mistral springt nur bei Problemseiten ein. <em>Sinnvoll bei:</em> Neuzeitlichen Drucken (ab 1950) mit gestochen scharfer Antiqua-Schrift. Spart 80–95 % der API-Kosten.</span>
+              </div>
+              <div class="guide-item">
+                <div class="guide-item-title">📦 70 % – 75 % (Sparmodus / Massenbestand):</div>
+                <span>Nur gravierende OCR-Ausfälle lösen Cloud-Kosten aus. <em>Sinnvoll bei:</em> Großen Beständen (1.000+ Seiten), bei denen primär ein durchsuchbares Sandwich-PDF (Suchindex) genügt und leichte OCR-Ungenauigkeiten toleriert werden.</span>
+              </div>
+              <div class="guide-item">
+                <div class="guide-item-title">🛡️ 0 % / Nur lokal:</div>
+                <span>Aktivieren Sie die Option „Nur lokales Tesseract“ für 100 % Offline-Verarbeitung ohne jegliche Fremdkosten.</span>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- 2. OCR-Sprachen -->
+        <div class="param-field">
+          <div class="param-label">
+            <span>OCR-Sprachen:</span>
+          </div>
+          <input type="text" class="param-input" id="statusLangInput" name="lang" value="{{ status_data.featured_progress.current_lang|default('deu+eng') }}" required>
+          <div class="quick-pills">
+            <button type="button" class="quick-pill" onclick="setStatusLang('deu+eng')">deu+eng (Deutsch/Englisch)</button>
+            <button type="button" class="quick-pill" onclick="setStatusLang('deu+eng+san')">deu+eng+san (+Sanskrit)</button>
+            <button type="button" class="quick-pill" onclick="setStatusLang('san')">san (Reines Sanskrit)</button>
+          </div>
+        </div>
+
+        <!-- 3. Ausführungsoptionen -->
+        <div class="param-field">
+          <div class="param-label">
+            <span>Optionen:</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.2rem;">
+            <label class="param-checkbox" title="Bereits entzerrte 300-DPI-Bilder wiederverwenden; überspringt Deskew und Unpaper">
+              <input type="checkbox" name="skip_preprocess" id="statusSkipPreprocess" value="1" checked>
+              <span>⚡ Vorverarbeitung wiederverwenden (Schneller Re-Run)</span>
+            </label>
+            <label class="param-checkbox" title="Keine Anfragen an Mistral AI senden; 100% kostenlose lokale Verarbeitung">
+              <input type="checkbox" name="no_mistral" id="statusNoMistral" value="1">
+              <span>🛡️ Nur lokales Tesseract (0,00 $)</span>
+            </label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label for="statusLimitInput" style="font-size: 0.8rem; color: var(--text-muted);">Seitenlimit:</label>
+              <input type="number" id="statusLimitInput" name="limit" value="0" min="0" max="999" class="param-input" style="width: 70px; padding: 0.25rem 0.5rem; font-size: 0.82rem;">
+              <span style="font-size: 0.75rem; color: var(--text-dim);">(0 = alle Seiten)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+        <button type="submit" class="btn btn-sm btn-primary" style="font-weight: 600;">
+          🚀 Pipeline mit neuen Parametern starten
+        </button>
+      </div>
+    </form>
   </div>
 
   <!-- 8 Pipeline Substeps List -->
@@ -496,6 +601,45 @@
 let autoRefreshTimer = null;
 let currentSelectedJob = "{{ status_data.featured_job|default('') }}";
 
+function toggleRerunPanel() {
+  const panel = document.getElementById("inlineRerunPanel");
+  const btn = document.getElementById("btnToggleRerun");
+  if (!panel) return;
+  if (panel.style.display === "none" || !panel.style.display) {
+    panel.style.display = "block";
+    if (btn) btn.classList.add("active");
+  } else {
+    panel.style.display = "none";
+    if (btn) btn.classList.remove("active");
+  }
+}
+
+function onStatusThresholdChange(val) {
+  const disp = document.getElementById("statusThresholdDisplay");
+  if (disp) disp.textContent = val + " %";
+  document.querySelectorAll("#inlineRerunPanel .quick-pills button.quick-pill").forEach(el => {
+    const oc = el.getAttribute("onclick") || "";
+    if (oc.includes("setStatusThreshold(" + val + ")")) {
+      el.classList.add("active");
+    } else if (oc.includes("setStatusThreshold")) {
+      el.classList.remove("active");
+    }
+  });
+}
+
+function setStatusThreshold(val) {
+  const range = document.getElementById("statusThresholdRange");
+  if (range) {
+    range.value = val;
+    onStatusThresholdChange(val);
+  }
+}
+
+function setStatusLang(val) {
+  const input = document.getElementById("statusLangInput");
+  if (input) input.value = val;
+}
+
 function selectJobByName(name) {
   const sel = document.getElementById("jobSelect");
   if (sel) {
@@ -549,24 +693,42 @@ function renderJobProgress(prog) {
   // Actions
   const actionContainer = document.getElementById("jobActionContainer");
   if (actionContainer) {
-    let html = '';
+    let html = `
+      <button type="button" class="btn btn-sm btn-gold" id="btnToggleRerun" onclick="toggleRerunPanel()">
+        <span>⚙️</span> Neu starten mit Parametern
+      </button>
+    `;
     if (prog.status_type === 'waiting') {
       html += `
         <form action="/jobs/${encodeURIComponent(prog.job)}/trigger" method="post" style="display: inline-block;">
-          <input type="hidden" name="lang" value="deu+eng">
-          <input type="hidden" name="threshold" value="85">
+          <input type="hidden" name="lang" value="${prog.current_lang || 'deu+eng'}">
+          <input type="hidden" name="threshold" value="${prog.current_threshold || 100}">
           <button type="submit" class="btn btn-sm btn-primary">
-            ▶️ Pipeline für '${prog.job}' jetzt starten
+            ▶️ Pipeline starten
           </button>
         </form>
       `;
     }
     html += `
-      <a href="/jobs/${encodeURIComponent(prog.job)}" class="btn btn-sm btn-secondary" style="margin-left: 0.4rem;">
+      <a href="/jobs/${encodeURIComponent(prog.job)}" class="btn btn-sm btn-secondary">
         📁 Job-Artefakte
       </a>
     `;
     actionContainer.innerHTML = html;
+  }
+
+  // Synchronize Rerun Panel form target and current values
+  const rerunName = document.getElementById("rerunJobName");
+  if (rerunName) rerunName.textContent = prog.job;
+
+  const rerunForm = document.getElementById("statusRerunForm");
+  if (rerunForm) rerunForm.action = `/jobs/${encodeURIComponent(prog.job)}/trigger?redirect=/status?job=${encodeURIComponent(prog.job)}`;
+
+  if (prog.current_threshold) {
+    setStatusThreshold(prog.current_threshold);
+  }
+  if (prog.current_lang) {
+    setStatusLang(prog.current_lang);
   }
 
   // Stepper Items
