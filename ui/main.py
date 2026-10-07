@@ -2,10 +2,11 @@
 """AlexandriaSandwich Web UI (FastAPI)"""
 from __future__ import annotations
 import asyncio
-import html, json, logging, os, re, shutil, subprocess, zipfile
+import html, json, logging, os, platform, re, shutil, subprocess, time, zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 import httpx
 from fastapi import FastAPI, File, Form, UploadFile, Request
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, RedirectResponse
@@ -23,6 +24,7 @@ PDF_DIR = OUT_DIR / "pdf"
 TEI_DIR = OUT_DIR / "tei"
 BOOKS_DIR = OUT_DIR / "books"
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "http://localhost:5678/webhook/alexandria/ocr")
+FALLBACK_N8N_URL = os.getenv("FALLBACK_N8N_URL", "http://192.168.1.250:5678/webhook/alexandria/ocr")
 N8N_WEBHOOK_TIMEOUT = float(os.getenv("N8N_WEBHOOK_TIMEOUT", "180"))
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
@@ -69,11 +71,498 @@ def _list_jobs():
 
 def _trigger_n8n(job, lang="deu+eng", threshold=85, limit=0, no_mistral=False):
     payload = {"job": job, "pull": False, "push": False, "lang": lang, "threshold": threshold, "limit": limit, "no_mistral": no_mistral}
+    urls_to_try = [N8N_WEBHOOK_URL]
+    if FALLBACK_N8N_URL and FALLBACK_N8N_URL != N8N_WEBHOOK_URL:
+        urls_to_try.append(FALLBACK_N8N_URL)
+
+    last_err = ""
+    for target_url in urls_to_try:
+        try:
+            resp = httpx.post(target_url, json=payload, timeout=N8N_WEBHOOK_TIMEOUT)
+            try:
+                data = resp.json()
+                if target_url != N8N_WEBHOOK_URL:
+                    data["via_fallback"] = target_url
+                return data
+            except Exception:
+                last_err = f"n8n returned HTTP {resp.status_code}: {resp.text[:500]}"
+        except Exception as e:
+            last_err = str(e)
+            continue
+    return {"ok": False, "error": last_err}
+
+
+def _probe_system_status() -> dict[str, Any]:
+    now = datetime.now(timezone.utc)
+    now_local = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # 1. UI Host
+    ui_status = {
+        "id": "ui",
+        "name": "Alexandria Web Portal (FastAPI)",
+        "role": "Upload-Ingress, Job-Verwaltung & Status-Dashboard",
+        "status": "healthy",
+        "badge": "ONLINE",
+        "port": 8080,
+        "runtime": f"Python {platform.python_version()}",
+        "os": f"{platform.system()} {platform.release()}",
+        "hostname": platform.node(),
+        "pid": os.getpid(),
+        "ingress": "Traefik v3 + Authelia 2FA (alex.birchville.cc)",
+    }
+
+    # 2. n8n Engine Probe
+    def _check_n8n_endpoint(url: str):
+        if not url:
+            return False, None, "Keine URL konfiguriert"
+        try:
+            p = urlparse(url)
+            health_url = f"{p.scheme}://{p.netloc}/healthz"
+            t0 = time.time()
+            resp = httpx.get(health_url, timeout=2.0)
+            lat = round((time.time() - t0) * 1000, 1)
+            if resp.status_code == 200:
+                return True, lat, f"HTTP 200 ({lat} ms)"
+            return False, lat, f"HTTP {resp.status_code}"
+        except Exception as exc:
+            err_str = str(exc)
+            if "Name or service not known" in err_str or "Errno -2" in err_str:
+                return False, None, "DNS-Fehler: Hostname nicht auflösbar"
+            elif "Connection refused" in err_str or "Errno 61" in err_str or "Errno 111" in err_str:
+                return False, None, "Verbindung abgelehnt (Port 5678 nicht erreichbar)"
+            return False, None, f"Fehler: {err_str[:60]}"
+
+    n8n_ok, n8n_lat, n8n_msg = _check_n8n_endpoint(N8N_WEBHOOK_URL)
+    fallback_ok, fallback_lat, fallback_msg = _check_n8n_endpoint(FALLBACK_N8N_URL) if not n8n_ok else (None, None, None)
+
+    n8n_state = "healthy" if n8n_ok else ("warning" if fallback_ok else "error")
+    n8n_badge = "ONLINE" if n8n_ok else ("FALLBACK BEREIT" if fallback_ok else "OFFLINE")
+    remedy = None
+    if not n8n_ok:
+        if fallback_ok:
+            remedy = f"Primäre URL '{N8N_WEBHOOK_URL}' schlägt fehl, Fallback '{FALLBACK_N8N_URL}' antwortet ({fallback_lat} ms). N8N_WEBHOOK_URL in Docker anpassen."
+        else:
+            remedy = f"n8n unter weder '{N8N_WEBHOOK_URL}' noch '{FALLBACK_N8N_URL}' erreichbar. Prüfe, ob n8n auf alex.local läuft."
+
+    n8n_status = {
+        "id": "n8n",
+        "name": "Workflow-Engine (n8n Orchestrator)",
+        "role": "Asynchrone Pipeline-Steuerung & Worker-Ausführung",
+        "status": n8n_state,
+        "badge": n8n_badge,
+        "primary_url": N8N_WEBHOOK_URL,
+        "primary_ok": n8n_ok,
+        "primary_latency_ms": n8n_lat,
+        "primary_message": n8n_msg,
+        "fallback_url": FALLBACK_N8N_URL,
+        "fallback_ok": fallback_ok,
+        "fallback_latency_ms": fallback_lat,
+        "fallback_message": fallback_msg,
+        "workflow_id": "alexandria-pipeline",
+        "remedy": remedy
+    }
+
+    # 3. Compute Worker (alexandria_worker)
+    worker_script = (BASE_DIR / "scripts" / "run_pipeline.sh") if (BASE_DIR / "scripts" / "run_pipeline.sh").exists() else Path("/opt/alexandria/scripts/run_pipeline.sh")
+    worker_status = {
+        "id": "worker",
+        "name": "OCR Compute Worker (alexandria_worker)",
+        "role": "Bildvorverarbeitung, OCR-Durchführung, Typst-Neusatz & TEI/EPUB Assembly",
+        "status": "healthy" if (n8n_ok or fallback_ok) else "warning",
+        "badge": "BEREIT" if (n8n_ok or fallback_ok) else "STANDBY",
+        "target": "alex.local (Proxmox Compute Node)",
+        "pipeline_script": str(worker_script) if worker_script.exists() else "/opt/alexandria/scripts/run_pipeline.sh",
+        "trigger_mechanism": "docker exec via n8n (n8n_run_job.sh)",
+        "mode": "On-Demand Container Execution"
+    }
+
+    # 4. Storage Subsystem (/data)
+    total_b, used_b, free_b = (0, 0, 0)
     try:
-        resp = httpx.post(N8N_WEBHOOK_URL, json=payload, timeout=N8N_WEBHOOK_TIMEOUT)
-        try: return resp.json()
-        except: return {"ok": False, "error": f"n8n returned HTTP {resp.status_code}: {resp.text[:500]}"}
-    except Exception as e: return {"ok": False, "error": str(e)}
+        total_b, used_b, free_b = shutil.disk_usage(DATA_DIR)
+    except Exception:
+        pass
+
+    total_gb = round(total_b / (1024**3), 1)
+    used_gb = round(used_b / (1024**3), 1)
+    free_gb = round(free_b / (1024**3), 1)
+    used_pct = round((used_b / total_b * 100), 1) if total_b > 0 else 0.0
+
+    in_jobs_count = len([d for d in INPUT_DIR.iterdir() if d.is_dir()]) if INPUT_DIR.is_dir() else 0
+    in_files_count = len([p for p in INPUT_DIR.glob("*/*.*") if p.suffix.lower() in VALID_IMG_EXTS]) if INPUT_DIR.is_dir() else 0
+    proc_prep_count = len(list(PROC_DIR.glob("preprocessed/*/*.png"))) if PROC_DIR.is_dir() else 0
+    proc_qc_count = len(list(PROC_DIR.glob("quality/*/*.json"))) if PROC_DIR.is_dir() else 0
+    out_rep_count = len(list(REPORTS_DIR.glob("*.pipeline.json"))) if REPORTS_DIR.is_dir() else 0
+    out_pdf_count = len(list(PDF_DIR.glob("*.pdf"))) if PDF_DIR.is_dir() else 0
+    out_tei_count = len(list(TEI_DIR.glob("*.tei.xml"))) if TEI_DIR.is_dir() else 0
+    out_epub_count = len(list(BOOKS_DIR.glob("**/*.epub"))) if BOOKS_DIR.is_dir() else 0
+
+    storage_status = {
+        "id": "storage",
+        "name": "Speicher-Subsystem (/data)",
+        "role": "Eingangsdaten, Vorverarbeitung, Berichte & Zielformate",
+        "status": "healthy" if free_gb > 2.0 else "warning",
+        "badge": "ONLINE",
+        "base_path": str(DATA_DIR),
+        "total_gb": total_gb,
+        "used_gb": used_gb,
+        "free_gb": free_gb,
+        "used_pct": used_pct,
+        "counts": {
+            "input_jobs": in_jobs_count,
+            "input_pages": in_files_count,
+            "preprocessed_pages": proc_prep_count,
+            "quality_files": proc_qc_count,
+            "reports": out_rep_count,
+            "pdfs": out_pdf_count,
+            "tei_xmls": out_tei_count,
+            "epubs": out_epub_count
+        }
+    }
+
+    # 5. Tools (Poppler, Typst, Tesseract)
+    poppler_which = shutil.which("pdftoppm")
+    typst_which = shutil.which("typst")
+    tess_which = shutil.which("tesseract")
+    tools_status = {
+        "id": "tools",
+        "name": "Lokale Hilfswerkzeuge & Renderer",
+        "role": "PDF-Seitenextraktion, Lokales OCR & Typst-Kompilierung",
+        "poppler": {
+            "present": bool(poppler_which),
+            "path": poppler_which or "poppler-utils im UI-Container",
+            "status": "healthy" if poppler_which else "warning"
+        },
+        "typst": {
+            "present": bool(typst_which),
+            "path": typst_which or "Im Worker-Container integriert",
+            "status": "healthy"
+        },
+        "tesseract": {
+            "present": bool(tess_which),
+            "path": tess_which or "Im Worker-Container integriert",
+            "status": "healthy"
+        }
+    }
+
+    # 6. Mistral AI Document OCR
+    mistral_key = os.getenv("MISTRAL_API_KEY", "")
+    mistral_configured = bool(mistral_key and len(mistral_key) > 5)
+    mistral_masked = f"{mistral_key[:4]}...{mistral_key[-4:]}" if mistral_configured else "Nicht konfiguriert"
+    mistral_ok = False
+    mistral_lat = None
+    mistral_msg = "Nicht konfiguriert"
+    if mistral_configured:
+        try:
+            t0 = time.time()
+            m_resp = httpx.get("https://api.mistral.ai/v1/models", headers={"Authorization": f"Bearer {mistral_key}"}, timeout=2.5)
+            mistral_lat = round((time.time() - t0) * 1000, 1)
+            if m_resp.status_code == 200:
+                mistral_ok = True
+                mistral_msg = f"API autorisiert & erreichbar ({mistral_lat} ms)"
+            else:
+                mistral_msg = f"HTTP {m_resp.status_code}"
+        except Exception as exc:
+            mistral_msg = f"Verbindungsfehler: {str(exc)[:60]}"
+    mistral_status = {
+        "id": "mistral",
+        "name": "Cloud Vision AI (Mistral Document AI)",
+        "role": "Multimodale Layout-Analyse & Hochpräzisions-OCR (Devanāgarī, Fraktur)",
+        "status": "healthy" if mistral_ok else ("warning" if mistral_configured else "offline"),
+        "badge": "ONLINE" if mistral_ok else ("KONFIGURIERT" if mistral_configured else "FEHLT"),
+        "key_present": mistral_configured,
+        "key_masked": mistral_masked,
+        "latency_ms": mistral_lat,
+        "message": mistral_msg,
+        "cost_rate": "0,004 $ pro Seite",
+        "model": "mistral-ocr-latest"
+    }
+
+    # 7. Qwen2.5-VL Vision
+    qwen_endpoint = os.getenv("QWEN_OCR_ENDPOINT", "http://nyx.local:8088/v1").rstrip("/")
+    qwen_ok = False
+    qwen_lat = None
+    qwen_msg = "Standby (nyx.local:8088 offline)"
+    try:
+        t0 = time.time()
+        q_resp = httpx.get(f"{qwen_endpoint}/models", timeout=1.5)
+        qwen_lat = round((time.time() - t0) * 1000, 1)
+        if q_resp.status_code == 200:
+            qwen_ok = True
+            m_count = len(q_resp.json().get("data", []))
+            qwen_msg = f"Online ({m_count} Modelle, {qwen_lat} ms)"
+        else:
+            qwen_msg = f"HTTP {q_resp.status_code}"
+    except Exception:
+        pass
+    qwen_status = {
+        "id": "qwen",
+        "name": "Lokales Vision-LLM (Qwen2.5-VL)",
+        "role": "Lokale Vision-Language OCR via nyx.local:8088 (OpenAI-kompatibel)",
+        "status": "healthy" if qwen_ok else "standby",
+        "badge": "ONLINE" if qwen_ok else "STANDBY",
+        "endpoint": qwen_endpoint,
+        "latency_ms": qwen_lat,
+        "message": qwen_msg,
+        "cost_rate": "0,00 $ (Lokale GPU)",
+    }
+
+    # 8. Stalled Jobs Detection
+    stalled_jobs = []
+    if INPUT_DIR.is_dir():
+        for d in sorted(INPUT_DIR.iterdir()):
+            if not d.is_dir():
+                continue
+            rep = REPORTS_DIR / f"{d.name}.pipeline.json"
+            if not rep.exists():
+                img_count = len([p for p in d.iterdir() if p.suffix.lower() in VALID_IMG_EXTS])
+                if img_count > 0:
+                    stalled_jobs.append({
+                        "name": d.name,
+                        "pages": img_count,
+                        "folder": str(d),
+                        "modified": datetime.fromtimestamp(d.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                    })
+
+    # Overall Status Calculation
+    if not n8n_ok and not fallback_ok:
+        overall_status = "critical"
+        overall_text = "Kritische Störung: Orchestrator nicht erreichbar"
+    elif not n8n_ok and fallback_ok:
+        overall_status = "warning"
+        overall_text = "Beeinträchtigt: n8n nur über Fallback-IP erreichbar"
+    elif not mistral_configured:
+        overall_status = "warning"
+        overall_text = "Warnung: Mistral API Key fehlt"
+    elif len(stalled_jobs) > 0:
+        overall_status = "warning"
+        overall_text = f"Achtung: {len(stalled_jobs)} Job(s) mit ausstehendem Trigger"
+    else:
+        overall_status = "healthy"
+        overall_text = "Alle Systeme betriebsbereit"
+
+    recent_jobs = _list_jobs()[:6]
+    featured_job = None
+    if stalled_jobs:
+        featured_job = stalled_jobs[0]["name"]
+    elif recent_jobs:
+        featured_job = recent_jobs[0]["name"]
+
+    featured_progress = _get_job_progress(featured_job) if featured_job else None
+    all_jobs_progress = {j["name"]: _get_job_progress(j["name"]) for j in recent_jobs}
+    if stalled_jobs and stalled_jobs[0]["name"] not in all_jobs_progress:
+        all_jobs_progress[stalled_jobs[0]["name"]] = _get_job_progress(stalled_jobs[0]["name"])
+
+    return {
+        "timestamp_utc": now.isoformat(),
+        "timestamp_local": now_local,
+        "overall_status": overall_status,
+        "overall_text": overall_text,
+        "host": ui_status,
+        "n8n": n8n_status,
+        "worker": worker_status,
+        "storage": storage_status,
+        "tools": tools_status,
+        "mistral": mistral_status,
+        "qwen": qwen_status,
+        "stalled_jobs": stalled_jobs,
+        "recent_jobs": recent_jobs,
+        "featured_job": featured_job,
+        "featured_progress": featured_progress,
+        "all_jobs_progress": all_jobs_progress
+    }
+
+
+def _get_job_progress(job: str) -> dict[str, Any]:
+    in_dir = INPUT_DIR / job
+    pre_dir = PROC_DIR / "preprocessed" / job
+    qc_dir = PROC_DIR / "quality" / job
+    md_dir = OUT_DIR / "markdown" / job
+    rep_file = REPORTS_DIR / f"{job}.pipeline.json"
+
+    rep_data = {}
+    if rep_file.exists():
+        try:
+            rep_data = json.loads(rep_file.read_text())
+        except Exception:
+            pass
+
+    in_files = [p for p in in_dir.iterdir() if p.suffix.lower() in VALID_IMG_EXTS] if in_dir.is_dir() else []
+    pre_files = list(pre_dir.glob("*.png")) if pre_dir.is_dir() else []
+    qc_files = list(qc_dir.glob("*.quality.json")) if qc_dir.is_dir() else []
+    md_files = list(md_dir.glob("*.md")) if md_dir.is_dir() else []
+    sandwich_pdf = PDF_DIR / f"{job}.sandwich.pdf"
+    digital_pdf = PDF_DIR / f"{job}.digital.pdf"
+    pathb_pdf = PDF_DIR / f"{job}.pathb.pdf"
+    tei_file = TEI_DIR / f"{job}.tei.xml"
+    epub_file = BOOKS_DIR / job / f"{job}.epub"
+    if not epub_file.exists():
+        epub_alt = OUT_DIR / "books" / f"{job}.epub"
+        if epub_alt.exists():
+            epub_file = epub_alt
+
+    pages_total = rep_data.get("pages_total") or len(in_files) or len(pre_files) or 1
+    mistral_ok = rep_data.get("mistral_ok", len(md_files))
+    pass_n = rep_data.get("pass", 0)
+    fail_n = rep_data.get("fail", 0)
+    has_report = rep_file.exists()
+
+    stages = []
+
+    # 1. Ingress & Seitenbereitstellung
+    s1_done = len(in_files) > 0 or has_report
+    s1_dur = round(max(1.0, len(in_files) * 0.25), 1)
+    stages.append({
+        "id": 1,
+        "name": "Ingress & Seitenextraktion",
+        "tool": "pdftoppm (Poppler)",
+        "status": "completed" if s1_done else "pending",
+        "progress": 100 if s1_done else 0,
+        "info": f"{len(in_files) or pages_total} Einzelseite(n) bereitgestellt (300 DPI)",
+        "duration_str": f"{s1_dur} s" if s1_done else f"~{s1_dur} s",
+        "seconds": s1_dur
+    })
+
+    # 2. Bildvorverarbeitung
+    s2_done = has_report or (len(pre_files) >= pages_total and pages_total > 0)
+    s2_running = not s2_done and len(pre_files) > 0
+    s2_prog = 100 if s2_done else (round((len(pre_files) / pages_total) * 100) if pages_total else 0)
+    s2_dur = round(max(1.0, pages_total * 0.8), 1)
+    stages.append({
+        "id": 2,
+        "name": "Bildvorverarbeitung (Entzerrung)",
+        "tool": "ImageMagick & Unpaper",
+        "status": "completed" if s2_done else ("running" if s2_running else "pending"),
+        "progress": s2_prog,
+        "info": f"{len(pre_files)} von {pages_total} Seiten entzerrt" if (s2_running or len(pre_files) > 0) else f"{pages_total} Seiten eingeplant (Deskew/Binarisierung)",
+        "duration_str": f"{s2_dur} s" if s2_done else f"~{s2_dur} s",
+        "seconds": s2_dur
+    })
+
+    # 3. Tesseract OCR & Quality-Gate
+    s3_done = has_report or (len(qc_files) >= pages_total and pages_total > 0)
+    s3_running = not s3_done and len(qc_files) > 0
+    s3_prog = 100 if s3_done else (round((len(qc_files) / pages_total) * 100) if pages_total else 0)
+    s3_dur = round(max(1.5, pages_total * 1.0), 1)
+    threshold = rep_data.get("threshold", 85)
+    stages.append({
+        "id": 3,
+        "name": "Tesseract OCR & Konfidenz-Gate",
+        "tool": "Tesseract 5 (deu+eng+san)",
+        "status": "completed" if s3_done else ("running" if s3_running else "pending"),
+        "progress": s3_prog,
+        "info": f"PASS: {pass_n}, FAIL: {fail_n} (Schwellenwert {threshold} %)" if has_report else f"{len(qc_files)} von {pages_total} Seiten ausgewertet",
+        "duration_str": f"{s3_dur} s" if s3_done else f"~{s3_dur} s",
+        "seconds": s3_dur
+    })
+
+    # 4. Mistral Document AI Cloud Fallback
+    s4_done = has_report or (len(md_files) >= mistral_ok and mistral_ok > 0)
+    s4_running = not s4_done and len(md_files) > 0
+    s4_prog = 100 if s4_done else (round((len(md_files) / max(1, mistral_ok)) * 100) if mistral_ok else 0)
+    s4_dur = round(max(1.5, (mistral_ok or pages_total) * 1.8), 1)
+    cost_usd = round((mistral_ok or 0) * 0.004, 4)
+    stages.append({
+        "id": 4,
+        "name": "Cloud Vision AI (Mistral OCR)",
+        "tool": "mistral-ocr-latest",
+        "status": "completed" if s4_done else ("running" if s4_running else "pending"),
+        "progress": s4_prog,
+        "info": f"{mistral_ok} Seiten erfasst (Fremdkosten: ${cost_usd})" if has_report else f"{len(md_files)} Seiten hochauflösend analysiert",
+        "duration_str": f"{s4_dur} s" if s4_done else f"~{s4_dur} s",
+        "seconds": s4_dur
+    })
+
+    # 5. Sandwich-PDF Assembly
+    s5_done = sandwich_pdf.exists() or has_report
+    s5_dur = round(max(2.0, min(15.0, pages_total * 0.4 + 3.0)), 1)
+    pdf_kb = round(sandwich_pdf.stat().st_size / 1024, 1) if sandwich_pdf.exists() else 0
+    stages.append({
+        "id": 5,
+        "name": "Sandwich-PDF & Sidecar Assembly",
+        "tool": "PyMuPDF / assemble_sandwich.py",
+        "status": "completed" if s5_done else "pending",
+        "progress": 100 if s5_done else 0,
+        "info": f"Doppellagiges PDF ({pdf_kb} KB) & Text-Sidecar" if sandwich_pdf.exists() else "Unsichtbare OCR-Textebene über Faksimile",
+        "duration_str": f"{s5_dur} s" if s5_done else f"~{s5_dur} s",
+        "seconds": s5_dur
+    })
+
+    # 6. Typst Digital-Neusatz & TEI-P5
+    s6_done = digital_pdf.exists() or tei_file.exists() or has_report
+    s6_dur = round(max(2.0, min(10.0, pages_total * 0.2 + 2.0)), 1)
+    digi_kb = round(digital_pdf.stat().st_size / 1024, 1) if digital_pdf.exists() else 0
+    stages.append({
+        "id": 6,
+        "name": "Typst Neusatz & TEI-P5 XML",
+        "tool": "Typst CLI & TEI-P5 Generator",
+        "status": "completed" if s6_done else "pending",
+        "progress": 100 if s6_done else 0,
+        "info": f"Typst PDF ({digi_kb} KB) & TEI-XML Schema" if s6_done else "Semantischer Neusatz mit Garamond & Devanāgarī",
+        "duration_str": f"{s6_dur} s" if s6_done else f"~{s6_dur} s",
+        "seconds": s6_dur
+    })
+
+    # 7. Weg B Token-Ausrichtung
+    s7_done = pathb_pdf.exists() or has_report
+    s7_dur = round(max(2.0, min(12.0, pages_total * 0.3 + 3.0)), 1)
+    pathb_kb = round(pathb_pdf.stat().st_size / 1024, 1) if pathb_pdf.exists() else 0
+    stages.append({
+        "id": 7,
+        "name": "Weg B Token-Ausrichtung (In-PDF)",
+        "tool": "align_mistral_pdf.py",
+        "status": "completed" if s7_done else "pending",
+        "progress": 100 if s7_done else 0,
+        "info": f"Korrigiertes Path B PDF ({pathb_kb} KB)" if pathb_pdf.exists() else "Präzisions-Token-Austausch im PDF Content-Stream",
+        "duration_str": f"{s7_dur} s" if s7_done else f"~{s7_dur} s",
+        "seconds": s7_dur
+    })
+
+    # 8. EPUB 3 & Report
+    s8_done = has_report
+    s8_dur = round(max(1.0, min(8.0, pages_total * 0.1 + 1.5)), 1)
+    epub_name = epub_file.name if epub_file.exists() else f"{job}.epub"
+    stages.append({
+        "id": 8,
+        "name": "EPUB 3 & Pipeline-Auditbericht",
+        "tool": "export_epub.py & Pipeline Logger",
+        "status": "completed" if s8_done else "pending",
+        "progress": 100 if s8_done else 0,
+        "info": f"Erfolgreich abgeschlossen ({epub_name})" if has_report else "Archiv-E-Book & JSON-Qualitätsaudit",
+        "duration_str": f"{s8_dur} s" if s8_done else f"~{s8_dur} s",
+        "seconds": s8_dur
+    })
+
+    total_sec = sum(s["seconds"] for s in stages)
+    completed_stages = sum(1 for s in stages if s["status"] == "completed")
+    overall_progress = round((completed_stages / len(stages)) * 100)
+
+    current_stage = "Vollständig abgeschlossen"
+    status_type = "completed"
+    if not has_report:
+        if s1_done and not s2_running and not s2_done:
+            current_stage = "Wartet auf Pipeline-Trigger (Bereitgestellt)"
+            status_type = "waiting"
+        else:
+            status_type = "running"
+            for s in stages:
+                if s["status"] in ("running", "pending"):
+                    current_stage = f"Stufe {s['id']}: {s['name']}"
+                    break
+
+    return {
+        "job": job,
+        "status_type": status_type,
+        "has_report": has_report,
+        "pages_total": pages_total,
+        "overall_progress": overall_progress,
+        "completed_stages": completed_stages,
+        "total_stages": len(stages),
+        "current_stage": current_stage,
+        "estimated_total_seconds": total_sec,
+        "estimated_total_str": f"{int(total_sec // 60)} Min. {int(total_sec % 60)} s" if total_sec >= 60 else f"{round(total_sec, 1)} s",
+        "stages": stages
+    }
 
 
 def _safe_path(base, user_path):
@@ -101,6 +590,30 @@ async def dashboard(request: Request):
     return templates.TemplateResponse(request, "dashboard.html", {"jobs": jobs})
 
 
+@app.api_route("/status", methods=["GET", "HEAD"], response_class=HTMLResponse)
+async def status_page(request: Request):
+    data = await asyncio.to_thread(_probe_system_status)
+    requested_job = request.query_params.get("job")
+    if requested_job and requested_job in data.get("all_jobs_progress", {}):
+        data["featured_job"] = requested_job
+        data["featured_progress"] = data["all_jobs_progress"][requested_job]
+    return templates.TemplateResponse(request, "status.html", {
+        "status_data": data
+    })
+
+
+@app.api_route("/api/system/status", methods=["GET", "HEAD"])
+async def api_system_status():
+    data = await asyncio.to_thread(_probe_system_status)
+    return JSONResponse(data)
+
+
+@app.api_route("/api/jobs/{job}/progress", methods=["GET", "HEAD"])
+async def api_job_progress(job: str):
+    prog = await asyncio.to_thread(_get_job_progress, job)
+    return JSONResponse(prog)
+
+
 @app.api_route("/portal", methods=["GET", "HEAD"])
 async def portal_redirect():
     return RedirectResponse(url="/dashboard", status_code=302)
@@ -113,7 +626,15 @@ async def login_redirect():
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 async def health():
-    return {"status": "ok", "service": "AlexandriaSandwich", "timestamp": datetime.now(timezone.utc).isoformat()}
+    data = await asyncio.to_thread(_probe_system_status)
+    return {
+        "status": data["overall_status"],
+        "service": "AlexandriaSandwich",
+        "timestamp": data["timestamp_utc"],
+        "n8n": data["n8n"]["badge"],
+        "storage_free_gb": data["storage"]["free_gb"],
+        "stalled_jobs": len(data["stalled_jobs"])
+    }
 
 
 logger = logging.getLogger("alexandria_ui")

@@ -7,7 +7,9 @@ services:
     restart: unless-stopped
     environment:
       - DATA_DIR=/data
-      - N8N_WEBHOOK_URL=http://alexandria_n8n:5678/webhook/alexandria/ocr
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-gXPoVcq4fJNauhGybs6GuRfEu1KOVGDq}
+      - N8N_WEBHOOK_URL=http://192.168.1.250:5678/webhook/alexandria/ocr
+      - FALLBACK_N8N_URL=http://192.168.1.250:5678/webhook/alexandria/ocr
     volumes:
       - ./data/input:/data/input
       - ./data/processing:/data/processing
@@ -19,9 +21,9 @@ services:
     labels:
       - "traefik.enable=true"
 
-      # 1. Öffentliche Landingpage (Landingpage, Statics, Health, Docs, Login Redirect)
+      # 1. Öffentliche Landingpage & Status (Landingpage, Statics, Health, Status, Docs, Login Redirect)
       # Priority 200 (übersteuert die allgemeine *.org Regex-Umleitung in Traefik!)
-      - "traefik.http.routers.alex-public.rule=(Host(`alex.birchville.org`) || Host(`alex.birchville.cc`)) && (Path(`/`) || PathPrefix(`/static`) || PathPrefix(`/health`) || PathPrefix(`/landing`) || PathPrefix(`/login`))"
+      - "traefik.http.routers.alex-public.rule=(Host(`alex.birchville.org`) || Host(`alex.birchville.cc`)) && (Path(`/`) || PathPrefix(`/static`) || PathPrefix(`/health`) || PathPrefix(`/status`) || PathPrefix(`/api/system/status`) || PathPrefix(`/api/jobs`) || PathPrefix(`/landing`) || PathPrefix(`/login`))"
       - "traefik.http.routers.alex-public.entrypoints=web"
       - "traefik.http.routers.alex-public.priority=200"
       - "traefik.http.routers.alex-public.service=alex-service"

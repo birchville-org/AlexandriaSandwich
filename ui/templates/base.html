@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}AlexandriaSandwich — Dual-Layer Digital Preservation{% endblock %}</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=20261007">
+  <link rel="icon" type="image/png" href="/static/birchville_logo.png">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%22><text y=%22.9em%22 font-size=%2290%22>🥪</text></svg>">
   {% block head %}{% endblock %}
 </head>
@@ -12,7 +13,7 @@
   <!-- Header / Navigation -->
   <header class="site-header">
     <a href="/" class="brand-container">
-      <div class="brand-logo-icon">🥪</div>
+      <img src="/static/birchville_logo.png" alt="Birchville" class="brand-logo-img">
       <div class="brand-title">Alexandria<span>Sandwich</span></div>
     </a>
 
@@ -21,12 +22,16 @@
         <li><a href="/" class="nav-link">Übersicht</a></li>
         <li><a href="/upload" class="nav-link">Upload-Portal</a></li>
         <li><a href="/dashboard" class="nav-link">Job-Dashboard</a></li>
+        <li><a href="/status" class="nav-link">System-Status</a></li>
         <li><a href="https://birchville-org.github.io/brhadaranyaka/" target="_blank" class="nav-link">BĀU I.4 ↗</a></li>
         <li><a href="https://birchville-org.github.io/boethlingk/" target="_blank" class="nav-link">Böhtlingk 1889 ↗</a></li>
       </ul>
     </nav>
 
     <div class="nav-actions">
+      <a href="/status" class="status-indicator-badge" title="System-Status anzeigen">
+        <span class="status-dot"></span> Status
+      </a>
       <a href="/upload" class="btn btn-primary btn-sm">
         <span>📤</span> Upload
       </a>

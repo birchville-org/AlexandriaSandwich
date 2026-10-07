@@ -1,0 +1,692 @@
+{% extends "base.html" %}
+{% block title %}System-Status &amp; Pipeline-Topologie — AlexandriaSandwich{% endblock %}
+
+{% block content %}
+<div class="status-hero">
+  <div class="status-hero-header">
+    <div>
+      <h1 style="font-size: 1.85rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 10px;">
+        <span>📊</span> System-Status &amp; Pipeline-Topologie
+      </h1>
+      <p style="font-size: 0.95rem; margin: 0; color: var(--text-muted);">
+        Echtzeit-Infrastruktur-Diagnose der AlexandriaSandwich Digital Preservation Pipeline
+      </p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+      <div id="overallBadge" class="status-badge-lg {{ status_data.overall_status }}">
+        <span class="status-dot {{ status_data.overall_status }}"></span>
+        <span id="overallBadgeText">{{ status_data.overall_text }}</span>
+      </div>
+
+      <button id="btnRefresh" class="btn btn-secondary btn-sm" onclick="refreshStatus(true)" title="Aktuellen Status aller Komponenten neu ermitteln">
+        <span id="refreshIcon">🔄</span> Aktualisieren
+      </button>
+
+      <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-dim); cursor: pointer; user-select: none;">
+        <input type="checkbox" id="autoRefreshCheck" checked onchange="toggleAutoRefresh(this.checked)">
+        Auto (30s)
+      </label>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.82rem; color: var(--text-dim);">
+    <div>Host: <strong id="hostName" style="color: var(--text-main);">{{ status_data.host.hostname }}</strong></div>
+    <div>Plattform: <strong style="color: var(--text-main);">{{ status_data.host.os }}</strong></div>
+    <div>Runtime: <strong style="color: var(--text-main);">{{ status_data.host.runtime }}</strong></div>
+    <div>PID: <strong style="color: var(--text-main);">{{ status_data.host.pid }}</strong></div>
+    <div>Geprüft: <strong id="lastCheckedTime" style="color: var(--gold-light);">{{ status_data.timestamp_local }}</strong></div>
+  </div>
+</div>
+
+{% if status_data.stalled_jobs %}
+<div class="alert alert-error" style="border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.12); margin-bottom: 2rem;">
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+    <div>
+      <h3 style="margin: 0 0 0.4rem 0; color: #fca5a5; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+        <span>⚠️</span> {{ status_data.stalled_jobs|length }} Job(s) mit ausstehender Pipeline-Verarbeitung erkannt
+      </h3>
+      <p style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #fecaca;">
+        Dateien liegen im Bereitstellungsverzeichnis <code>/data/input/</code> vor, wurden jedoch noch nicht von der Pipeline verarbeitet (z. B. durch vorübergehend blockierten Webhook-Trigger).
+      </p>
+
+      <ul style="margin: 0 0 0.5rem 1.2rem; font-size: 0.9rem; color: #fff;">
+        {% for sj in status_data.stalled_jobs %}
+          <li style="margin-bottom: 0.35rem;">
+            <strong>{{ sj.name }}</strong> ({{ sj.pages }} Seiten, bereitgestellt am {{ sj.modified }})
+            <form action="/jobs/{{ sj.name }}/trigger" method="post" style="display: inline-block; margin-left: 0.8rem;">
+              <input type="hidden" name="lang" value="deu+eng">
+              <input type="hidden" name="threshold" value="85">
+              <button type="submit" class="btn btn-sm btn-primary" style="padding: 0.2rem 0.6rem; font-size: 0.78rem;">
+                ▶️ Pipeline jetzt starten
+              </button>
+            </form>
+            <a href="/jobs/{{ sj.name }}" class="btn btn-sm btn-secondary" style="padding: 0.2rem 0.6rem; font-size: 0.78rem; margin-left: 0.4rem;">
+              📁 Details
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- 1. Real-Time Job Progress & Substep Timelines -->
+{% if status_data.featured_progress %}
+<div class="job-progress-card" id="jobProgressSection">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.25rem;">
+        <h2 style="font-size: 1.35rem; margin: 0; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <span>⏳</span> Job-Stand &amp; Teilschritt-Zeitleiste
+        </h2>
+        <span id="currentJobStatusBadge" class="badge {% if status_data.featured_progress.status_type == 'completed' %}badge-pass{% elif status_data.featured_progress.status_type == 'running' %}badge-gold{% else %}badge-fail{% endif %}">
+          {{ status_data.featured_progress.current_stage }}
+        </span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
+        Echtzeit-Stand der 8 Verarbeitungsstufen mit gemessenen und geschätzten Einzellaufzeiten
+      </p>
+    </div>
+
+    <!-- Job Selector Dropdown -->
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <label for="jobSelect" style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">Job auswählen:</label>
+      <select id="jobSelect" onchange="onJobSelectChange(this.value)" style="padding: 0.45rem 0.85rem; background: rgba(11, 15, 23, 0.85); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: #fff; font-size: 0.88rem; min-width: 220px;">
+        {% for j_name, j_prog in status_data.all_jobs_progress.items() %}
+          <option value="{{ j_name }}" {% if j_name == status_data.featured_job %}selected{% endif %}>
+            {{ j_name }} ({{ j_prog.pages_total }} S. &middot; {{ j_prog.overall_progress }}%)
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <!-- Overall Progress Bar -->
+  <div class="overall-progress-bar">
+    <div id="overallProgressFill" class="overall-progress-fill" style="width: {{ status_data.featured_progress.overall_progress }}%;"></div>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+      <div>Fortschritt: <strong id="progressPctText" style="color: var(--gold-light);">{{ status_data.featured_progress.overall_progress }} %</strong> (<span id="progressStagesText">{{ status_data.featured_progress.completed_stages }} von {{ status_data.featured_progress.total_stages }} Stufen</span>)</div>
+      <div>Seiten: <strong id="progressPagesTotal">{{ status_data.featured_progress.pages_total }}</strong></div>
+      <div>Gesamtdauer: <strong id="progressTotalDur" style="color: var(--gold-light);">{{ status_data.featured_progress.estimated_total_str }}</strong></div>
+    </div>
+
+    <div id="jobActionContainer">
+      {% if status_data.featured_progress.status_type == 'waiting' %}
+        <form action="/jobs/{{ status_data.featured_job }}/trigger" method="post" style="display: inline-block;">
+          <input type="hidden" name="lang" value="deu+eng">
+          <input type="hidden" name="threshold" value="85">
+          <button type="submit" class="btn btn-sm btn-primary">
+            ▶️ Pipeline für '{{ status_data.featured_job }}' jetzt starten
+          </button>
+        </form>
+      {% endif %}
+      <a id="btnJobDetailLink" href="/jobs/{{ status_data.featured_job }}" class="btn btn-sm btn-secondary" style="margin-left: 0.4rem;">
+        📁 Job-Artefakte
+      </a>
+    </div>
+  </div>
+
+  <!-- 8 Pipeline Substeps List -->
+  <div class="job-stepper-list" id="stepperList">
+    {% for s in status_data.featured_progress.stages %}
+    <div class="job-stepper-item {{ s.status }}" id="stageItem_{{ s.id }}">
+      <div class="stepper-num {{ s.status }}">
+        {% if s.status == 'completed' %}✓{% elif s.status == 'running' %}⚙{% else %}{{ s.id }}{% endif %}
+      </div>
+      <div class="stepper-main">
+        <div class="stepper-title">
+          <span>Stufe {{ s.id }}: {{ s.name }}</span>
+          <span class="badge" style="font-size: 0.72rem; padding: 0.15rem 0.5rem; background: rgba(255,255,255,0.06); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1);">{{ s.tool }}</span>
+        </div>
+        <div class="stepper-info">{{ s.info }}</div>
+      </div>
+      <div class="stepper-meta">
+        <span class="stepper-duration">{{ s.duration_str }}</span>
+        <span class="badge {% if s.status == 'completed' %}badge-pass{% elif s.status == 'running' %}badge-gold{% else %}badge-secondary{% endif %}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
+          {% if s.status == 'completed' %}Abgeschlossen{% elif s.status == 'running' %}In Bearbeitung{% else %}Ausstehend{% endif %}
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- 2. Pipeline Architecture Flow -->
+<div class="pipeline-flow-wrap">
+  <div class="pipeline-flow-title">
+    <span>🧭</span> Pipeline-Architektur &amp; Datenfluss
+  </div>
+
+  <div class="pipeline-flow">
+    <!-- Node 1 -->
+    <div class="pipeline-node">
+      <div class="pipeline-node-stage">Stufe 1 &middot; Ingress</div>
+      <div class="pipeline-node-title">
+        <span>Web-Portal</span>
+        <span class="status-dot {{ status_data.host.status }}"></span>
+      </div>
+      <div class="pipeline-node-desc">
+        FastAPI Web-Interface, Multi-Page PDF Extraktion (pdftoppm), Jobverwaltung &amp; Path B Editor.
+      </div>
+      <div class="pipeline-node-meta">
+        <span class="badge badge-pass">Port 8080</span>
+        <span style="color: var(--text-dim);">Traefik / SSO</span>
+      </div>
+    </div>
+
+    <!-- Node 2 -->
+    <div class="pipeline-node">
+      <div class="pipeline-node-stage">Stufe 2 &middot; Steuerung</div>
+      <div class="pipeline-node-title">
+        <span>n8n Engine</span>
+        <span class="status-dot {{ status_data.n8n.status }}"></span>
+      </div>
+      <div class="pipeline-node-desc">
+        Workflow-Orchestrierung (alexandria-pipeline), asynchrone Trigger-Warteschlange &amp; Fehlerbehandlung.
+      </div>
+      <div class="pipeline-node-meta">
+        <span class="badge {% if status_data.n8n.status == 'healthy' %}badge-pass{% elif status_data.n8n.status == 'warning' %}badge-gold{% else %}badge-fail{% endif %}">
+          {{ status_data.n8n.badge }}
+        </span>
+        <span style="color: var(--text-dim);" id="flowN8nLat">
+          {% if status_data.n8n.primary_latency_ms %}{{ status_data.n8n.primary_latency_ms }} ms{% elif status_data.n8n.fallback_latency_ms %}{{ status_data.n8n.fallback_latency_ms }} ms{% else %}Offline{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <!-- Node 3 -->
+    <div class="pipeline-node">
+      <div class="pipeline-node-stage">Stufe 3 &middot; Compute</div>
+      <div class="pipeline-node-title">
+        <span>Worker Node</span>
+        <span class="status-dot {{ status_data.worker.status }}"></span>
+      </div>
+      <div class="pipeline-node-desc">
+        alexandria_worker Container auf alex.local (Proxmox). Führt run_pipeline.sh aus.
+      </div>
+      <div class="pipeline-node-meta">
+        <span class="badge badge-gold">{{ status_data.worker.badge }}</span>
+        <span style="color: var(--text-dim);">alex.local</span>
+      </div>
+    </div>
+
+    <!-- Node 4 -->
+    <div class="pipeline-node">
+      <div class="pipeline-node-stage">Stufe 4 &middot; OCR Hybrid</div>
+      <div class="pipeline-node-title">
+        <span>OCR Engines</span>
+        <span class="status-dot {% if status_data.mistral.status == 'healthy' %}healthy{% else %}warning{% endif %}"></span>
+      </div>
+      <div class="pipeline-node-desc">
+        Tesseract 5 (Lokal 0,00 $), Mistral Document AI (Cloud 0,004 $) &amp; optionales Qwen2.5-VL.
+      </div>
+      <div class="pipeline-node-meta">
+        <span class="badge badge-gold">Hybrid</span>
+        <span style="color: var(--text-dim);">deu+eng+san</span>
+      </div>
+    </div>
+
+    <!-- Node 5 -->
+    <div class="pipeline-node">
+      <div class="pipeline-node-stage">Stufe 5 &middot; Output</div>
+      <div class="pipeline-node-title">
+        <span>Artefakt-Speicher</span>
+        <span class="status-dot {{ status_data.storage.status }}"></span>
+      </div>
+      <div class="pipeline-node-desc">
+        Sandwich-PDF, Typst-PDFs, TEI-XML, EPUB 3 &amp; Pipeline-Reports in <code>/data/output</code>.
+      </div>
+      <div class="pipeline-node-meta">
+        <span class="badge badge-pass">{{ status_data.storage.free_gb }} GB frei</span>
+        <span style="color: var(--text-dim);">{{ status_data.storage.counts.pdfs }} PDFs</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Detailed Component Matrix -->
+<div style="margin-bottom: 1.25rem;">
+  <h2 style="font-size: 1.35rem; display: flex; align-items: center; gap: 8px;">
+    <span>🧩</span> Komponenten-Matrix &amp; Schnittstellen
+  </h2>
+</div>
+
+<div class="component-grid">
+  <!-- Card 1: Web Portal -->
+  <div class="component-card">
+    <div class="component-card-header">
+      <div>
+        <div class="component-card-title">Alexandria Web Portal</div>
+        <div class="component-card-role">{{ status_data.host.role }}</div>
+      </div>
+      <span class="badge badge-pass">ONLINE</span>
+    </div>
+
+    <div class="kv-list">
+      <div class="kv-row"><span class="kv-key">Service</span><span class="kv-val">FastAPI + Uvicorn</span></div>
+      <div class="kv-row"><span class="kv-key">Port / Bind</span><span class="kv-val">0.0.0.0:8080</span></div>
+      <div class="kv-row"><span class="kv-key">Host-Knoten</span><span class="kv-val">{{ status_data.host.hostname }}</span></div>
+      <div class="kv-row"><span class="kv-key">Ingress-Proxy</span><span class="kv-val">Traefik v3 + Authelia 2FA</span></div>
+      <div class="kv-row"><span class="kv-key">Öffentliche URL</span><span class="kv-val">https://alex.birchville.cc</span></div>
+      <div class="kv-row"><span class="kv-key">PDF Extraktion</span><span class="kv-val">{% if status_data.tools.poppler.present %}✅ pdftoppm aktiv{% else %}⚠️ pdftoppm fehlt{% endif %}</span></div>
+    </div>
+  </div>
+
+  <!-- Card 2: n8n Orchestrator -->
+  <div class="component-card" style="{% if status_data.n8n.status != 'healthy' %}border-color: rgba(245, 158, 11, 0.4);{% endif %}">
+    <div class="component-card-header">
+      <div>
+        <div class="component-card-title">n8n Workflow Engine</div>
+        <div class="component-card-role">{{ status_data.n8n.role }}</div>
+      </div>
+      <span class="badge {% if status_data.n8n.status == 'healthy' %}badge-pass{% elif status_data.n8n.status == 'warning' %}badge-gold{% else %}badge-fail{% endif %}" id="n8nBadge">
+        {{ status_data.n8n.badge }}
+      </span>
+    </div>
+
+    <div class="kv-list">
+      <div class="kv-row">
+        <span class="kv-key">Konfigurierte URL</span>
+        <span class="kv-val" style="font-family: var(--font-mono); font-size: 0.78rem;">{{ status_data.n8n.primary_url }}</span>
+      </div>
+      <div class="kv-row">
+        <span class="kv-key">Status Primär-URL</span>
+        <span class="kv-val" id="n8nPrimaryStatus">
+          {% if status_data.n8n.primary_ok %}
+            <span style="color: #34d399;">✅ {{ status_data.n8n.primary_message }}</span>
+          {% else %}
+            <span style="color: #f87171;">❌ {{ status_data.n8n.primary_message }}</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="kv-row">
+        <span class="kv-key">Fallback-URL</span>
+        <span class="kv-val" style="font-family: var(--font-mono); font-size: 0.78rem;">{{ status_data.n8n.fallback_url }}</span>
+      </div>
+      <div class="kv-row">
+        <span class="kv-key">Status Fallback-Host</span>
+        <span class="kv-val" id="n8nFallbackStatus">
+          {% if status_data.n8n.fallback_ok %}
+            <span style="color: #34d399;">✅ {{ status_data.n8n.fallback_message }}</span>
+          {% else %}
+            <span style="color: var(--text-dim);">Standby / Nicht benötigt</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="kv-row"><span class="kv-key">Workflow-ID</span><span class="kv-val">alexandria-pipeline</span></div>
+    </div>
+
+    {% if status_data.n8n.remedy %}
+    <div style="margin-top: auto; padding: 0.65rem 0.85rem; background: rgba(245, 158, 11, 0.1); border-radius: var(--radius-sm); border: 1px solid rgba(245, 158, 11, 0.25); font-size: 0.8rem; color: #fde68a;">
+      💡 <strong>Hinweis:</strong> {{ status_data.n8n.remedy }}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Card 3: Storage Subsystem -->
+  <div class="component-card">
+    <div class="component-card-header">
+      <div>
+        <div class="component-card-title">Speicher-Subsystem</div>
+        <div class="component-card-role">{{ status_data.storage.role }}</div>
+      </div>
+      <span class="badge badge-pass">AKTIV</span>
+    </div>
+
+    <div>
+      <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.35rem;">
+        <span>Speicherbelegung ({{ status_data.storage.base_path }})</span>
+        <strong>{{ status_data.storage.used_gb }} GB / {{ status_data.storage.total_gb }} GB ({{ status_data.storage.used_pct }}%)</strong>
+      </div>
+      <div class="disk-bar-track">
+        <div class="disk-bar-fill {% if status_data.storage.used_pct > 90 %}danger{% elif status_data.storage.used_pct > 75 %}warning{% endif %}" style="width: {{ status_data.storage.used_pct }}%;"></div>
+      </div>
+      <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 0.3rem;">
+        Noch <strong>{{ status_data.storage.free_gb }} GB</strong> verfügbar
+      </div>
+    </div>
+
+    <div class="kv-list" style="margin-top: 1rem;">
+      <div class="kv-row"><span class="kv-key">Bereitgestellte Jobs</span><span class="kv-val">{{ status_data.storage.counts.input_jobs }}</span></div>
+      <div class="kv-row"><span class="kv-key">Eingangsseiten (Bilder)</span><span class="kv-val">{{ status_data.storage.counts.input_pages }}</span></div>
+      <div class="kv-row"><span class="kv-key">Fertige Pipeline-Reports</span><span class="kv-val">{{ status_data.storage.counts.reports }}</span></div>
+      <div class="kv-row"><span class="kv-key">Generierte PDFs (Sandwich/Typst)</span><span class="kv-val">{{ status_data.storage.counts.pdfs }}</span></div>
+      <div class="kv-row"><span class="kv-key">Archivierte TEI-XML / EPUB 3</span><span class="kv-val">{{ status_data.storage.counts.tei_xmls }} / {{ status_data.storage.counts.epubs }}</span></div>
+    </div>
+  </div>
+
+  <!-- Card 4: OCR Compute Worker -->
+  <div class="component-card">
+    <div class="component-card-header">
+      <div>
+        <div class="component-card-title">OCR Compute Worker</div>
+        <div class="component-card-role">{{ status_data.worker.role }}</div>
+      </div>
+      <span class="badge badge-gold">{{ status_data.worker.badge }}</span>
+    </div>
+
+    <div class="kv-list">
+      <div class="kv-row"><span class="kv-key">Container</span><span class="kv-val">alexandria_worker</span></div>
+      <div class="kv-row"><span class="kv-key">Compute-Knoten</span><span class="kv-val">{{ status_data.worker.target }}</span></div>
+      <div class="kv-row"><span class="kv-key">Pipeline-Skript</span><span class="kv-val" style="font-family: var(--font-mono); font-size: 0.78rem;">run_pipeline.sh</span></div>
+      <div class="kv-row"><span class="kv-key">Ausführungsmodus</span><span class="kv-val">{{ status_data.worker.mode }}</span></div>
+      <div class="kv-row"><span class="kv-key">Orchestrierung</span><span class="kv-val">{{ status_data.worker.trigger_mechanism }}</span></div>
+    </div>
+  </div>
+
+  <!-- Card 5: Mistral Document AI -->
+  <div class="component-card">
+    <div class="component-card-header">
+      <div>
+        <div class="component-card-title">Mistral Document AI</div>
+        <div class="component-card-role">{{ status_data.mistral.role }}</div>
+      </div>
+      <span class="badge {% if status_data.mistral.status == 'healthy' %}badge-pass{% else %}badge-gold{% endif %}" id="mistralBadge">
+        {{ status_data.mistral.badge }}
+      </span>
+    </div>
+
+    <div class="kv-list">
+      <div class="kv-row"><span class="kv-key">Modell</span><span class="kv-val">{{ status_data.mistral.model }}</span></div>
+      <div class="kv-row"><span class="kv-key">API-Schlüssel</span><span class="kv-val" style="font-family: var(--font-mono);">{{ status_data.mistral.key_masked }}</span></div>
+      <div class="kv-row">
+        <span class="kv-key">Konnektivität</span>
+        <span class="kv-val" id="mistralStatus">
+          {% if status_data.mistral.status == 'healthy' %}
+            <span style="color: #34d399;">✅ {{ status_data.mistral.message }}</span>
+          {% else %}
+            <span style="color: #fbbf24;">⚠️ {{ status_data.mistral.message }}</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="kv-row"><span class="kv-key">Fremdkosten-Tarif</span><span class="kv-val">{{ status_data.mistral.cost_rate }}</span></div>
+      <div class="kv-row"><span class="kv-key">Verwendung</span><span class="kv-val">Automatisch bei Tesseract-Konfidenz &lt; Schwellenwert</span></div>
+    </div>
+  </div>
+
+  <!-- Card 6: Local Vision Qwen2.5-VL -->
+  <div class="component-card">
+    <div class="component-card-header">
+      <div>
+        <div class="component-card-title">Qwen2.5-VL Vision (Lokal)</div>
+        <div class="component-card-role">{{ status_data.qwen.role }}</div>
+      </div>
+      <span class="badge {% if status_data.qwen.status == 'healthy' %}badge-pass{% else %}badge-secondary{% endif %}" id="qwenBadge">
+        {{ status_data.qwen.badge }}
+      </span>
+    </div>
+
+    <div class="kv-list">
+      <div class="kv-row"><span class="kv-key">Inferenz-Host</span><span class="kv-val" style="font-family: var(--font-mono); font-size: 0.8rem;">{{ status_data.qwen.endpoint }}</span></div>
+      <div class="kv-row">
+        <span class="kv-key">Verbindungsstatus</span>
+        <span class="kv-val" id="qwenStatus">{{ status_data.qwen.message }}</span>
+      </div>
+      <div class="kv-row"><span class="kv-key">Kosten</span><span class="kv-val">{{ status_data.qwen.cost_rate }}</span></div>
+      <div class="kv-row"><span class="kv-key">Rolle</span><span class="kv-val">Lokale GPU-Alternative für hochpräzise Transkription</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Recent Jobs & Activity -->
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+    <h3 style="margin: 0; font-size: 1.2rem;">⏱️ Alle Pipeline-Jobs</h3>
+    <a href="/dashboard" class="btn btn-secondary btn-sm">Vollständiges Job-Dashboard öffnen &rarr;</a>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Job-Name</th>
+          <th>Seiten</th>
+          <th>Status</th>
+          <th>Mistral Seiten</th>
+          <th>Fremdkosten</th>
+          <th>Zuletzt geändert</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for j in status_data.recent_jobs %}
+        <tr>
+          <td>
+            <strong><a href="/jobs/{{ j.name }}">{{ j.name }}</a></strong>
+          </td>
+          <td>{{ j.pages_total|default(j.input_pages) }}</td>
+          <td>
+            <span class="badge {% if j.status == 'PASS' %}badge-pass{% elif j.status == 'FAIL' %}badge-fail{% else %}badge-gold{% endif %}">
+              {{ j.status }}
+            </span>
+          </td>
+          <td>{{ j.mistral_ok|default(0) }}</td>
+          <td>${{ "%.4f"|format(j.mistral_cost_usd|default(0.0)) }}</td>
+          <td style="color: var(--text-dim); font-size: 0.85rem;">{{ j.modified|default('-') }}</td>
+          <td>
+            <button onclick="selectJobByName('{{ j.name }}')" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;">
+              Stand prüfen
+            </button>
+            <a href="/jobs/{{ j.name }}" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.78rem; margin-left: 0.3rem;">
+              Details
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+            Keine Jobs vorhanden.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let autoRefreshTimer = null;
+let currentSelectedJob = "{{ status_data.featured_job|default('') }}";
+
+function selectJobByName(name) {
+  const sel = document.getElementById("jobSelect");
+  if (sel) {
+    sel.value = name;
+    onJobSelectChange(name);
+  }
+}
+
+async function onJobSelectChange(jobName) {
+  currentSelectedJob = jobName;
+  await updateJobProgress(jobName);
+}
+
+async function updateJobProgress(jobName) {
+  if (!jobName) return;
+  try {
+    const res = await fetch(`/api/jobs/${encodeURIComponent(jobName)}/progress`);
+    if (!res.ok) return;
+    const prog = await res.json();
+    renderJobProgress(prog);
+  } catch (e) {
+    console.warn("Could not fetch job progress:", e);
+  }
+}
+
+function renderJobProgress(prog) {
+  // Status Badge
+  const badge = document.getElementById("currentJobStatusBadge");
+  if (badge) {
+    badge.className = `badge ${prog.status_type === 'completed' ? 'badge-pass' : (prog.status_type === 'running' ? 'badge-gold' : 'badge-fail')}`;
+    badge.textContent = prog.current_stage;
+  }
+
+  // Progress Bar
+  const fill = document.getElementById("overallProgressFill");
+  if (fill) fill.style.width = `${prog.overall_progress}%`;
+
+  // Stats Text
+  const pctText = document.getElementById("progressPctText");
+  if (pctText) pctText.textContent = `${prog.overall_progress} %`;
+
+  const stagesText = document.getElementById("progressStagesText");
+  if (stagesText) stagesText.textContent = `${prog.completed_stages} von ${prog.total_stages} Stufen`;
+
+  const pagesTotal = document.getElementById("progressPagesTotal");
+  if (pagesTotal) pagesTotal.textContent = prog.pages_total;
+
+  const totalDur = document.getElementById("progressTotalDur");
+  if (totalDur) totalDur.textContent = prog.estimated_total_str;
+
+  // Actions
+  const actionContainer = document.getElementById("jobActionContainer");
+  if (actionContainer) {
+    let html = '';
+    if (prog.status_type === 'waiting') {
+      html += `
+        <form action="/jobs/${encodeURIComponent(prog.job)}/trigger" method="post" style="display: inline-block;">
+          <input type="hidden" name="lang" value="deu+eng">
+          <input type="hidden" name="threshold" value="85">
+          <button type="submit" class="btn btn-sm btn-primary">
+            ▶️ Pipeline für '${prog.job}' jetzt starten
+          </button>
+        </form>
+      `;
+    }
+    html += `
+      <a href="/jobs/${encodeURIComponent(prog.job)}" class="btn btn-sm btn-secondary" style="margin-left: 0.4rem;">
+        📁 Job-Artefakte
+      </a>
+    `;
+    actionContainer.innerHTML = html;
+  }
+
+  // Stepper Items
+  const list = document.getElementById("stepperList");
+  if (list && prog.stages) {
+    list.innerHTML = prog.stages.map(s => `
+      <div class="job-stepper-item ${s.status}" id="stageItem_${s.id}">
+        <div class="stepper-num ${s.status}">
+          ${s.status === 'completed' ? '✓' : (s.status === 'running' ? '⚙' : s.id)}
+        </div>
+        <div class="stepper-main">
+          <div class="stepper-title">
+            <span>Stufe ${s.id}: ${s.name}</span>
+            <span class="badge" style="font-size: 0.72rem; padding: 0.15rem 0.5rem; background: rgba(255,255,255,0.06); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1);">${s.tool}</span>
+          </div>
+          <div class="stepper-info">${s.info}</div>
+        </div>
+        <div class="stepper-meta">
+          <span class="stepper-duration">${s.duration_str}</span>
+          <span class="badge ${s.status === 'completed' ? 'badge-pass' : (s.status === 'running' ? 'badge-gold' : 'badge-secondary')}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
+            ${s.status === 'completed' ? 'Abgeschlossen' : (s.status === 'running' ? 'In Bearbeitung' : 'Ausstehend')}
+          </span>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+async function refreshStatus(manual = false) {
+  const btn = document.getElementById("btnRefresh");
+  const icon = document.getElementById("refreshIcon");
+  if (btn && icon) {
+    icon.style.display = "inline-block";
+    icon.style.animation = "spin 0.8s linear infinite";
+    btn.disabled = true;
+  }
+
+  try {
+    const res = await fetch("/api/system/status");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // Update Overall Badge
+    const overallBadge = document.getElementById("overallBadge");
+    const overallText = document.getElementById("overallBadgeText");
+    if (overallBadge && overallText) {
+      overallBadge.className = `status-badge-lg ${data.overall_status}`;
+      overallText.textContent = data.overall_text;
+      const dot = overallBadge.querySelector(".status-dot");
+      if (dot) dot.className = `status-dot ${data.overall_status}`;
+    }
+
+    // Update timestamps
+    const lastChecked = document.getElementById("lastCheckedTime");
+    if (lastChecked) lastChecked.textContent = data.timestamp_local;
+
+    // Update n8n details
+    const n8nBadge = document.getElementById("n8nBadge");
+    if (n8nBadge) {
+      n8nBadge.className = `badge ${data.n8n.status === 'healthy' ? 'badge-pass' : (data.n8n.status === 'warning' ? 'badge-gold' : 'badge-fail')}`;
+      n8nBadge.textContent = data.n8n.badge;
+    }
+    const n8nPrimary = document.getElementById("n8nPrimaryStatus");
+    if (n8nPrimary) {
+      n8nPrimary.innerHTML = data.n8n.primary_ok
+        ? `<span style="color: #34d399;">✅ ${data.n8n.primary_message}</span>`
+        : `<span style="color: #f87171;">❌ ${data.n8n.primary_message}</span>`;
+    }
+    const flowN8nLat = document.getElementById("flowN8nLat");
+    if (flowN8nLat) {
+      flowN8nLat.textContent = data.n8n.primary_latency_ms
+        ? `${data.n8n.primary_latency_ms} ms`
+        : (data.n8n.fallback_latency_ms ? `${data.n8n.fallback_latency_ms} ms` : 'Offline');
+    }
+
+    // Update Mistral details
+    const mistralStatus = document.getElementById("mistralStatus");
+    if (mistralStatus) {
+      mistralStatus.innerHTML = data.mistral.status === 'healthy'
+        ? `<span style="color: #34d399;">✅ ${data.mistral.message}</span>`
+        : `<span style="color: #fbbf24;">⚠️ ${data.mistral.message}</span>`;
+    }
+
+    // Update Qwen details
+    const qwenStatus = document.getElementById("qwenStatus");
+    if (qwenStatus) qwenStatus.textContent = data.qwen.message;
+
+    // Refresh active job progress
+    if (currentSelectedJob) {
+      await updateJobProgress(currentSelectedJob);
+    }
+  } catch (err) {
+    console.warn("Status fetch failed:", err);
+  } finally {
+    if (btn && icon) {
+      icon.style.animation = "";
+      btn.disabled = false;
+    }
+  }
+}
+
+function toggleAutoRefresh(enabled) {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+  }
+  if (enabled) {
+    autoRefreshTimer = setInterval(() => refreshStatus(false), 30000);
+  }
+}
+
+// Start auto-refresh by default
+document.addEventListener("DOMContentLoaded", () => {
+  toggleAutoRefresh(true);
+});
+</script>
+<style>
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
