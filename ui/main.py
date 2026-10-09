@@ -627,36 +627,7 @@ def _probe_system_status() -> dict[str, Any]:
         "model": "mistral-ocr-latest"
     }
 
-    # 7. Qwen2.5-VL Vision
-    qwen_endpoint = os.getenv("QWEN_OCR_ENDPOINT", "http://nyx.local:8088/v1").rstrip("/")
-    qwen_ok = False
-    qwen_lat = None
-    qwen_msg = "Standby (nyx.local:8088 offline)"
-    try:
-        t0 = time.time()
-        q_resp = httpx.get(f"{qwen_endpoint}/models", timeout=1.5)
-        qwen_lat = round((time.time() - t0) * 1000, 1)
-        if q_resp.status_code == 200:
-            qwen_ok = True
-            m_count = len(q_resp.json().get("data", []))
-            qwen_msg = f"Online ({m_count} Modelle, {qwen_lat} ms)"
-        else:
-            qwen_msg = f"HTTP {q_resp.status_code}"
-    except Exception:
-        pass
-    qwen_status = {
-        "id": "qwen",
-        "name": "Lokales Vision-LLM (Qwen2.5-VL)",
-        "role": "Lokale Vision-Language OCR via nyx.local:8088 (OpenAI-kompatibel)",
-        "status": "healthy" if qwen_ok else "standby",
-        "badge": "ONLINE" if qwen_ok else "STANDBY",
-        "endpoint": qwen_endpoint,
-        "latency_ms": qwen_lat,
-        "message": qwen_msg,
-        "cost_rate": "0,00 $ (Lokale GPU)",
-    }
-
-    # 8. Stalled Jobs Detection
+    # 7. Stalled Jobs Detection
     stalled_jobs = []
     if INPUT_DIR.is_dir():
         for d in sorted(INPUT_DIR.iterdir()):
@@ -714,7 +685,6 @@ def _probe_system_status() -> dict[str, Any]:
         "storage": storage_status,
         "tools": tools_status,
         "mistral": mistral_status,
-        "qwen": qwen_status,
         "stalled_jobs": stalled_jobs,
         "recent_jobs": recent_jobs,
         "featured_job": featured_job,

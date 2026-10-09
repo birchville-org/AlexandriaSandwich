@@ -36,12 +36,6 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
 │ Compute Node (Proxmox VM: alex.local)                       │
 │ • alexandria_worker  (ImageMagick, unpaper, Tesseract, OCR) │
 │ • alexandria_n8n     (Workflow orchestration & webhooks)    │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ Optional local vision inference
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│ GPU Node (Local VLM Server: nyx.local:8088)                 │
-│ • Qwen2.5-VL Vision-Language OCR (100% local, $0.00 cloud)  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -51,7 +45,6 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
 | :--- | :--- | :---: | :--- |
 | **`alex.local`** | `alexandria_worker`, `n8n` | **Yes (Required)** | Executes OCR pipeline & Cloud API calls (`MISTRAL_API_KEY` in `/opt/alexandria/.env`). |
 | **`synology.local`** | `alexandria_ui`, Traefik, Authelia | **Yes (Monitoring)** | Health checks against `api.mistral.ai` & displays cost metrics. |
-| **`nyx.local`** | `nyx.local:8088` (Qwen2.5-VL) | **No** | 100% offline local GPU inference without external dependencies. |
 
 ---
 
@@ -71,7 +64,7 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
    │            │
    │ (Yes)      │ (No)
    │            ▼
-   │      [4. AI Fallback] ──► Mistral OCR API (Cloud) or Qwen2.5-VL (Local VLM)
+   │      [4. AI Fallback] ──► Mistral Document AI (mistral-ocr-latest)
    │            │
    ▼            ▼
 [5. Multi-Artifact Generation]

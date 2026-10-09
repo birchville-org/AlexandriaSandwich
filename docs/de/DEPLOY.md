@@ -53,11 +53,4 @@ Templates & Frontend synchronisieren:
 bash scripts/deploy_ui_synology.sh
 ```
 
----
 
-## Lokale GPU-Node — nyx.local:8088
-
-- **Host:** `nyx.local` (Port 8088)
-- **Dienst:** OpenAI-kompatibler Server für `Qwen2.5-VL`
-- **API-Key:** **Nicht erforderlich** (100 % lokale Inferenz, 0,00 $ Fremdkosten)
-- **Healthcheck:** UI prüft automatisch `http://nyx.local:8088/v1/models` auf Verfügbarkeit.

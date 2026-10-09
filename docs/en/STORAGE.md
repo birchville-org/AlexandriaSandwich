@@ -6,7 +6,6 @@
 |------|------|------------------------|
 | Storage / Web Portal | `synology.local` (synology.local) | **Source of truth** for job data (`/volume1/docker/alexandria/data`), Traefik + Authelia Portal (`alexandria_ui`) |
 | Compute | `alex.local` (alex.local) | OCR worker (`alexandria_worker`), n8n; mounts NAS shares |
-| GPU Node | `nyx.local:8088` | Local VLM inference server for Qwen2.5-VL (ephemeral storage) |
 | Dev | Mac mini M2 / `hermes.local` | Code + local docker smoke tests |
 
 ## Canonical paths

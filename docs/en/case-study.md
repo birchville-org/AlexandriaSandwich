@@ -71,7 +71,7 @@ The objective is the production of a multi-tiered, archive-grade digital corpus:
 * **Total OCR Cost:** 478 pages x 0.004 USD = exactly **1.912 USD** for the entire volume.
 
 ### Step 2.1: Local VLM Alternative & Model Benchmark (Mistral OCR vs. Qwen2.5-VL)
-To evaluate an autonomous, offline-capable alternative for sensitive digitization workflows and air-gapped deployments alongside the Cloud API (`mistral-ocr-latest`), a local Vision-Language Model pipeline ([scripts/qwen_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/qwen_ocr.py), [scripts/benchmark_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/benchmark_ocr.py)) powered by **Qwen2.5-VL** (via MLX on Apple Silicon) was benchmarked:
+To evaluate an autonomous, offline-capable alternative for sensitive digitization workflows and air-gapped deployments alongside the Cloud API (`mistral-ocr-latest`), a local Vision-Language Model pipeline powered by **Qwen2.5-VL** (via MLX on Apple Silicon) was benchmarked:
 
 #### 1. Antiqua / Introductory Prose (Latin Typography, e.g. Page 5)
 On pure Latin typography and German philological explanations, the local model achieves near-complete concordance:
