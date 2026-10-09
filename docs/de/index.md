@@ -121,6 +121,7 @@ Scans (PNG / TIFF / JPEG)
 | [`assemble_sandwich.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/assemble_sandwich.py) | Python | Baut 1:1 Sandwich-PDFs mit unsichtbarer Textebene (Mode 3) aus bereinigten Seitenbildern. |
 | [`quality_check.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/quality_check.py) | Python | Führt Tesseract aus, analysiert Wort- und Seitenkonfidenzen und steuert das Quality Gate. |
 | [`preprocess.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/preprocess.sh) | Bash | Bereinigt Scans via ImageMagick und unpaper (Deskew, Randentfernung, Kontrast). |
+| [`inject_toc.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/inject_toc.py) | Python | Injiziert hierarchische Outlines (TOC), Metadaten und Seitennummerierungs-Labels in PDFs. |
 | [`hocr_correct.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/hocr_correct.py) | Python | Pre-Assembly: Ermöglicht hOCR-Textkorrekturen vor dem PDF-Bau. |
 | [`pdf_text_correct.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/pdf_text_correct.py) | Python | Post-Assembly: Low-Level-Stream-Editor für In-PDF-Textlayer-Korrekturen. |
 | [`sync_storage.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/sync_storage.sh) | Bash | Synchronisiert Eingabe- und Ausgabedaten optional mit zentralem NAS-/NFS-Storage. |

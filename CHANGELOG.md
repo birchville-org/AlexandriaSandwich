@@ -4,6 +4,11 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 
 ## [1.2.1] - 2026-10-09
 
+### Added
+- **Automatische TOC- & Metadaten-Injection in der Pipeline (`scripts/inject_toc.py`):**
+  - Integriert in `scripts/run_pipeline.sh`: Injiziert hierarchische Lesezeichen (Outlines), Dokument-Metadaten und Seitennummerierungs-Labels (r/D) in alle generierten PDFs (`.sandwich.pdf`, `.aligned.pdf`, `.digital.pdf`).
+  - Unterstützt manuelle `toc.json` (als Liste oder Dict) sowie automatischen Fallback auf Gliederungen und Metadaten aus `book.json`.
+
 ### Changed
 - **Terminologie-Refactoring (Sandwich & Aligned):**
   - Unspezifische Begriffe „Weg A / Weg B“ und „Path A / Path B“ durch präzise Fachbegriffe ersetzt:

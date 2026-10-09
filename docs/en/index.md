@@ -121,6 +121,7 @@ Raw Scans (PNG / TIFF / JPEG)
 | [`assemble_sandwich.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/assemble_sandwich.py) | Python | Assembles 1:1 Sandwich PDFs with invisible searchable text layer (PDF Mode 3). |
 | [`quality_check.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/quality_check.py) | Python | Executes Tesseract, evaluates per-word/per-page confidence, decides pass/fallback. |
 | [`preprocess.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/preprocess.sh) | Bash | Cleans raw scans using ImageMagick and unpaper (deskew, border cleaning, contrast). |
+| [`inject_toc.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/inject_toc.py) | Python | Injects hierarchical outlines (bookmarks), metadata, and page labels into PDFs. |
 | [`hocr_correct.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/hocr_correct.py) | Python | Pre-Assembly: Interactive/batch correction tool for hOCR word boundaries. |
 | [`pdf_text_correct.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/pdf_text_correct.py) | Python | Post-Assembly: Low-level stream replacement engine for in-PDF text layers. |
 | [`sync_storage.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/sync_storage.sh) | Bash | Storage synchronization utility for network shares (NFS/SMB). |

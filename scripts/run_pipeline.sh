@@ -293,6 +293,35 @@ else
   ALIGNED_PDF=""
 fi
 
+# Hierarchical Outline (TOC) & Metadata Injection into PDF artifacts
+INJECT_TOC="${SCRIPT_DIR}/inject_toc.py"
+TOC_FILE=""
+for cand in \
+  "${INPUT_DIR}/toc.json" \
+  "${INPUT_DIR}/${JOB_NAME}.toc.json" \
+  "$(dirname "$INPUT_DIR")/${JOB_NAME}.toc.json" \
+  "${QC_DIR}/toc.json" \
+  "${BOOK_DIR}/toc.json"; do
+  if [[ -f "$cand" ]]; then
+    TOC_FILE="$cand"
+    break
+  fi
+done
+
+if [[ -f "$INJECT_TOC" ]]; then
+  for pdf in "$PDF_OUT" "$ALIGNED_PDF" "$DIGITAL_PDF_OUT"; do
+    if [[ -n "$pdf" && -f "$pdf" ]]; then
+      log "inject toc / metadata into $pdf"
+      set +e
+      python3 "$INJECT_TOC" \
+        --input "$pdf" \
+        ${TOC_FILE:+--toc "$TOC_FILE"} \
+        --book-json "${BOOK_DIR}/book.json"
+      set -e
+    fi
+  done
+fi
+
 REPORT="$(JOB_NAME="$JOB_NAME" INPUT_DIR="$INPUT_DIR" PRE_DIR="$PRE_DIR" \
 THRESHOLD="$THRESHOLD" LANG_OCR="$LANG_OCR" PASS_N="$PASS_N" FAIL_N="$FAIL_N" \
 MISTRAL_N="$MISTRAL_N" TOTAL="${#PAGES[@]}" PAGES_JSONL="$PAGES_JSONL" \
