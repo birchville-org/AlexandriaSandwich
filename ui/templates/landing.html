@@ -307,8 +307,11 @@
   </p>
 
   <div class="hero-actions">
+    <a href="/toc" class="btn btn-primary" style="font-size:1.05rem; padding: 0.8rem 1.8rem; background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
+      <span>📑</span> PDF TOC Studio (Kostenfrei)
+    </a>
     <a href="/upload" class="btn btn-primary" style="font-size:1.05rem; padding: 0.8rem 1.8rem;">
-      <span>🚀</span> Zum Upload-Portal
+      <span>📤</span> Scan-Digitalisierung (OCR)
     </a>
     <a href="/dashboard" class="btn btn-secondary" style="font-size:1.05rem; padding: 0.8rem 1.6rem;">
       <span>📊</span> Job-Dashboard
@@ -328,12 +331,75 @@
       <div class="stat-desc">Devanagari & IAST</div>
     </div>
     <div class="stat-card">
-      <div class="stat-num">≥ 85%</div>
-      <div class="stat-desc">Automatisches AI-Gate</div>
+      <div class="stat-num">0,00 €</div>
+      <div class="stat-desc">TOC Studio Fremdkosten</div>
     </div>
     <div class="stat-card">
       <div class="stat-num">TEI-P5</div>
       <div class="stat-desc">XML & QA-Viewer</div>
+    </div>
+  </div>
+</section>
+
+<!-- Zwei getrennte Services auf alex.birchville.org -->
+<section class="services-dual-section" style="margin: 3.5rem 0 4.5rem;">
+  <div style="text-align: center; margin-bottom: 2.5rem;">
+    <span class="badge badge-gold" style="margin-bottom: 0.5rem;">Zwei spezialisierte Services</span>
+    <h2 style="font-size: 2.2rem; margin-top: 0.25rem;">Wählen Sie das passende Werkzeug</h2>
+    <p style="color: var(--text-muted); max-width: 640px; margin: 0.5rem auto 0;">
+      Für fertige PDFs ohne Fremdkosten oder für die anspruchsvolle KI-Digitalisierung historischer Buchscans.
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem;">
+    <!-- Service 1 Card -->
+    <div class="case-card" style="border: 1px solid rgba(217, 119, 6, 0.4); background: linear-gradient(180deg, rgba(217, 119, 6, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+          <span class="badge badge-gold">Service 1 &middot; Kostenfrei</span>
+          <span style="font-size: 0.8rem; color: #34d399; font-weight: 700; background: rgba(16, 185, 129, 0.15); padding: 0.2rem 0.5rem; border-radius: 4px;">⚡ 0,00 € Fremdkosten</span>
+        </div>
+        <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">📑 PDF TOC &amp; Outline Studio</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
+          Für beliebige PDFs (Bücher, Artikel, Dissertationen): Injizieren Sie hierarchische Lesezeichen, bibliographische Metadaten und römisch/arabische Paginierung.
+        </p>
+        <ul style="list-style: none; padding: 0; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem; color: var(--text-main);">
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>100% lokale CPU-Ausführung</strong> via PyMuPDF (kein Mistral/Cloud-Token)</li>
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>Hierarchische Lesezeichen</strong> (Teile, Kapitel, Abschnitte)</li>
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>Römische &amp; arabische Paginierung</strong> (i..xvi &amp; 1..N)</li>
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>Sofortiger Download</strong> im Millisekundenbereich</li>
+        </ul>
+      </div>
+      <div>
+        <a href="/toc" class="btn btn-primary" style="width: 100%; text-align: center; justify-content: center; font-size: 1rem; padding: 0.8rem; background: linear-gradient(135deg, #d97706 0%, #b45309 100%);">
+          <span>📑</span> Zum TOC Studio öffnen
+        </a>
+      </div>
+    </div>
+
+    <!-- Service 2 Card -->
+    <div class="case-card" style="border: 1px solid rgba(37, 99, 235, 0.4); background: linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+          <span class="badge badge-blue">Service 2 &middot; Vollständige Pipeline</span>
+          <span style="font-size: 0.8rem; color: #93c5fd; font-weight: 700; background: rgba(59, 130, 246, 0.15); padding: 0.2rem 0.5rem; border-radius: 4px;">🧠 Hybrid-OCR</span>
+        </div>
+        <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">📤 Scan-Digitalisierung</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
+          Für historische Buchscans &amp; Faksimiles: Vollständige OCR-Pipeline mit Sanskrit/IAST-Synchronisation, 1:1 Sandwich-PDF, TEI-P5 und Typst-Neusatz.
+        </p>
+        <ul style="list-style: none; padding: 0; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem; color: var(--text-main);">
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>1:1 Sandwich-PDF</strong> (Originalscan + kalibrierter OCR-Layer)</li>
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>KI-Synchronisation</strong> via Mistral VLM für Devanagari &amp; IAST</li>
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>Typst Vektorsatz</strong>, TEI-P5 Langzeitarchivierung &amp; EPUB 3</li>
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>Transparenter Kostenausweis</strong> (Mistral-Tarif 0,004 $ / Seite)</li>
+        </ul>
+      </div>
+      <div>
+        <a href="/upload" class="btn btn-primary" style="width: 100%; text-align: center; justify-content: center; font-size: 1rem; padding: 0.8rem;">
+          <span>📤</span> Zum Scan-Portal öffnen
+        </a>
+      </div>
     </div>
   </div>
 </section>

@@ -3,16 +3,24 @@
 from __future__ import annotations
 import asyncio
 import io
-import html, json, logging, os, platform, re, shutil, subprocess, time, zipfile
+import html, json, logging, os, platform, re, shutil, subprocess, time, uuid, zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 import httpx
 from fastapi import FastAPI, File, Form, UploadFile, Request
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+try:
+    import pymupdf as fitz
+except ImportError:
+    try:
+        import fitz
+    except ImportError:
+        fitz = None
 
 BASE_DIR = Path(__file__).resolve().parent
 _default_data = "/data" if Path("/data").exists() else str(BASE_DIR.parent / "data")
@@ -26,6 +34,8 @@ TEI_DIR = OUT_DIR / "tei"
 BOOKS_DIR = OUT_DIR / "books"
 RUNS_DIR = OUT_DIR / "runs"
 RUNS_DIR.mkdir(parents=True, exist_ok=True)
+TOC_STUDIO_DIR = PROC_DIR / "toc_studio"
+TOC_STUDIO_DIR.mkdir(parents=True, exist_ok=True)
 VALID_IMG_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".pnm", ".ppm"}
 
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "http://localhost:5678/webhook/alexandria/ocr")
@@ -1021,6 +1031,241 @@ def _extract_zip(zip_path: Path, target_dir: Path, dpi: int = 300) -> list[str]:
                 finally:
                     temp_pdf.unlink(missing_ok=True)
     return sorted(extracted)
+
+
+def parse_toc_content(raw: str) -> list[list[Any]]:
+    """Parse hierarchical TOC from JSON or indented/bulleted/dot-leader text."""
+    raw = (raw or "").strip()
+    if not raw:
+        return []
+
+    # 1. Try JSON with silent trailing-comma auto-repair
+    if raw.startswith("["):
+        try:
+            cleaned = re.sub(r",\s*([\]}])", r"\1", raw)
+            data = json.loads(cleaned)
+            valid = []
+            for item in data:
+                if isinstance(item, (list, tuple)) and len(item) >= 3:
+                    lvl = int(item[0])
+                    title = str(item[1]).strip()
+                    page = int(item[2])
+                    if title and page >= 1:
+                        valid.append([lvl, title, page])
+            if valid:
+                return valid
+        except Exception:
+            pass
+
+    # 2. Line-by-line smart parser (Plaintext, Tabs, Dot-leaders, Markdown #)
+    entries = []
+    lines = raw.splitlines()
+    for line in lines:
+        s = line.strip()
+        if not s:
+            continue
+        if s.startswith("//") or (s.startswith("#") and not re.search(r"\d+$", s)):
+            continue
+
+        # Format A: Markdown header style "# Title 1" or "## Title ... 15"
+        m_md = re.match(r"^(#+)\s*(.*?)[.\s\t]+(\d+)$", s)
+        if m_md:
+            lvl = len(m_md.group(1))
+            title = m_md.group(2).strip(". \t-")
+            page = int(m_md.group(3))
+            if title and page >= 1:
+                entries.append([lvl, title, page])
+            continue
+
+        # Determine level based on indentation (2 spaces or 1 tab = 1 level deeper)
+        leading_spaces = len(line) - len(line.lstrip(" "))
+        leading_tabs = len(line) - len(line.lstrip("\t"))
+        indent_lvl = 1 + max(leading_spaces // 2, leading_tabs)
+
+        # Format B: Numbered section prefix e.g. "1.2.3 Title 45" or "1. Einleitung 1"
+        m_num = re.match(r"^(\d+(?:\.\d+)*\.?)\s*(.*?)[.\s\t]+(\d+)$", s)
+        if m_num:
+            prefix_dots = m_num.group(1).rstrip(".").count(".")
+            lvl = max(indent_lvl, prefix_dots + 1)
+            title = f"{m_num.group(1)} {m_num.group(2)}".strip(". \t-")
+            page = int(m_num.group(3))
+            if title and page >= 1:
+                entries.append([lvl, title, page])
+            continue
+
+        # Format C: General "Title ... Page" or "Title [tab] Page"
+        m_gen = re.match(r"^(.*?)[.\s\t_-]+(\d+)$", s)
+        if m_gen:
+            title = m_gen.group(1).strip(". \t-")
+            page = int(m_gen.group(2))
+            if title and page >= 1:
+                entries.append([indent_lvl, title, page])
+            continue
+
+    return entries
+
+
+@app.get("/scan", response_class=HTMLResponse)
+async def scan_portal_redirect():
+    """Weiterleitung auf das Scan-Portal."""
+    return RedirectResponse(url="/upload", status_code=302)
+
+
+@app.get("/toc", response_class=HTMLResponse)
+async def toc_studio_page(request: Request):
+    """Dedizierte Subpage: PDF TOC & Outline Studio (100% lokal, 0 Fremdkosten)."""
+    return templates.TemplateResponse(request, "toc_studio.html", {})
+
+
+@app.post("/toc/inspect")
+async def toc_inspect_pdf(pdf_file: UploadFile = File(...)):
+    """Liest ein PDF und extrahiert Metadaten, Seitenzahl und vorhandene Lesezeichen."""
+    if not fitz:
+        return JSONResponse({"ok": False, "error": "PyMuPDF ist auf diesem Server nicht verfügbar."}, status_code=500)
+    try:
+        content = await pdf_file.read()
+        if not content:
+            return JSONResponse({"ok": False, "error": "Leere Datei empfangen."}, status_code=400)
+        doc = fitz.open(stream=content, filetype="pdf")
+        total_pages = len(doc)
+        meta = doc.metadata or {}
+        raw_toc = doc.get_toc() or []
+        doc.close()
+
+        formatted_lines = []
+        for item in raw_toc:
+            lvl, title, page = item[0], item[1], item[2]
+            indent = "  " * (lvl - 1)
+            formatted_lines.append(f"{indent}{title} ... {page}")
+        formatted_text = "\n".join(formatted_lines)
+
+        return JSONResponse({
+            "ok": True,
+            "filename": pdf_file.filename,
+            "size_bytes": len(content),
+            "size_mb": round(len(content) / (1024 * 1024), 2),
+            "total_pages": total_pages,
+            "title": meta.get("title") or "",
+            "author": meta.get("author") or "",
+            "subject": meta.get("subject") or "",
+            "keywords": meta.get("keywords") or "",
+            "existing_toc": raw_toc,
+            "formatted_text": formatted_text,
+            "toc_count": len(raw_toc)
+        })
+    except Exception as e:
+        logger.exception("Fehler beim Inspizieren des PDFs")
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@app.post("/toc/inject")
+async def toc_inject_pdf(
+    pdf_file: UploadFile = File(...),
+    toc_content: str = Form(""),
+    title: str = Form(""),
+    author: str = Form(""),
+    subject: str = Form(""),
+    keywords: str = Form(""),
+    roman_end: str = Form(""),
+    arabic_start: str = Form(""),
+):
+    """Injiziert hierarchische Lesezeichen, Metadaten und Paginierung in ein PDF (100% lokal, 0 Fremdkosten)."""
+    if not fitz:
+        return JSONResponse({"ok": False, "error": "PyMuPDF ist auf diesem Server nicht verfügbar."}, status_code=500)
+
+    t0 = time.time()
+    try:
+        content = await pdf_file.read()
+        if not content:
+            return JSONResponse({"ok": False, "error": "Leere PDF-Datei erhalten."}, status_code=400)
+
+        toc_entries = parse_toc_content(toc_content)
+
+        doc = fitz.open(stream=content, filetype="pdf")
+        total_pages = len(doc)
+
+        # 1. Metadaten aktualisieren
+        meta = doc.metadata or {}
+        if title.strip():
+            meta["title"] = title.strip()
+        if author.strip():
+            meta["author"] = author.strip()
+        if subject.strip():
+            meta["subject"] = subject.strip()
+        if keywords.strip():
+            meta["keywords"] = keywords.strip()
+        meta["producer"] = "AlexandriaSandwich TOC Studio (PyMuPDF - 100% local, zero cost)"
+        doc.set_metadata(meta)
+
+        # 2. Paginierung / Page Labels
+        r_end = int(roman_end) if roman_end.strip().isdigit() else None
+        a_start = int(arabic_start) if arabic_start.strip().isdigit() else None
+        if r_end is not None and a_start is not None:
+            labels = [
+                {"startpage": 0, "prefix": "", "style": "r", "firstpagenum": 1},
+                {"startpage": max(0, a_start - 1), "prefix": "", "style": "D", "firstpagenum": 1},
+            ]
+            doc.set_page_labels(labels)
+
+        # 3. Lesezeichen validieren & setzen
+        valid_toc = []
+        for entry in toc_entries:
+            lvl, name, page_num = entry[0], entry[1], entry[2]
+            if 1 <= page_num <= total_pages:
+                valid_toc.append([lvl, name, page_num])
+            else:
+                logger.warning(f"TOC Eintrag '{name}' p.{page_num} liegt außerhalb [1..{total_pages}]")
+
+        doc.set_toc(valid_toc)
+
+        # 4. Speichern in sicherem Session-Verzeichnis
+        token = uuid.uuid4().hex[:12]
+        session_dir = TOC_STUDIO_DIR / token
+        session_dir.mkdir(parents=True, exist_ok=True)
+
+        orig_stem = Path(pdf_file.filename or "document").stem
+        clean_stem = re.sub(r"[^a-zA-Z0-9_-]", "_", orig_stem).strip("_") or "document"
+        out_name = f"{clean_stem}_outline.pdf"
+        out_file = session_dir / out_name
+
+        doc.save(
+            str(out_file),
+            deflate=True,
+            garbage=3,
+            clean=True,
+        )
+        doc.close()
+
+        duration_ms = round((time.time() - t0) * 1000)
+        file_size_mb = round(out_file.stat().st_size / (1024 * 1024), 2)
+
+        return JSONResponse({
+            "ok": True,
+            "token": token,
+            "filename": out_name,
+            "download_url": f"/toc/download/{token}/{out_name}",
+            "total_pages": total_pages,
+            "toc_count": len(valid_toc),
+            "file_size_mb": file_size_mb,
+            "duration_ms": duration_ms
+        })
+    except Exception as e:
+        logger.exception("Fehler bei TOC-Injektion")
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/toc/download/{token}/{filename}")
+async def toc_download_file(token: str, filename: str):
+    """Liefert das injizierte PDF zum Download aus."""
+    target_dir = TOC_STUDIO_DIR / token
+    target_file = _safe_path(target_dir, filename)
+    if not target_file.is_file():
+        return HTMLResponse("<h1>Datei nicht gefunden oder abgelaufen.</h1>", status_code=404)
+    return FileResponse(
+        str(target_file),
+        media_type="application/pdf",
+        filename=filename
+    )
 
 
 @app.get("/upload", response_class=HTMLResponse)

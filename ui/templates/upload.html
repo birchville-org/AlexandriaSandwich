@@ -1,7 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Upload — AlexandriaSandwich{% endblock %}
+{% block title %}Scan-Digitalisierung &amp; Hybrid-OCR — AlexandriaSandwich{% endblock %}
 {% block content %}
-<h1>Buch oder Dokumente hochladen &amp; OCR starten</h1>
+<div style="margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <div style="margin-bottom: 0.35rem;">
+      <span class="badge badge-blue">✦ Service 2: Vollständige OCR- &amp; Konservierungs-Pipeline</span>
+    </div>
+    <h1 style="margin: 0; font-size: 2.2rem;">Scan-Digitalisierung &amp; Hybrid-OCR</h1>
+    <p style="margin-top: 0.4rem; color: var(--text-muted); font-size: 1rem; max-width: 780px;">
+      Verwandelt Rohscans historischer Bücher in 1:1 Sandwich-PDFs mit OCR-Textebene, KI-synchronisierte Faksimiles (Mistral VLM für Devanagari &amp; IAST), digitale Typst-Neusätze und TEI-P5 XML.
+    </p>
+  </div>
+  <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border-subtle); padding: 0.85rem 1.15rem; border-radius: var(--radius-md); font-size: 0.85rem; max-width: 330px;">
+    <strong>💡 Nur Lesezeichen / TOC einbetten?</strong><br>
+    Für fertige PDFs ohne OCR-Bedarf nutzen Sie unser kostenfreies <a href="/toc" style="color:var(--gold-light);font-weight:700;">PDF TOC &amp; Outline Studio ↗</a> (100% lokal, 0,00 € Fremdkosten).
+  </div>
+</div>
 
 {% if result %}
   {% if result.triggered and result.n8n_response and result.n8n_response.ok %}
