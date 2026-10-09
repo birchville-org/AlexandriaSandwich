@@ -1,0 +1,1271 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Automatisierte Buch-Digitalisierung mit Hybrid-OCR, TEI-P5, Sandwich-PDF & Typst Neusatz.">
+      
+      
+        <meta name="author" content="AlexandriaSandwich Team">
+      
+      
+        <link rel="canonical" href="https://birchville-org.github.io/AlexandriaSandwich/TARGET_FORMATS/">
+      
+      
+        <link rel="prev" href="../WIKI_VERFAHREN/">
+      
+      
+        <link rel="next" href="../CORRECTION_PATHS/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="de">
+        
+          <link rel="alternate" href="../en/TARGET_FORMATS/" hreflang="en">
+        
+      
+      
+      <link rel="icon" href="../assets/birchville_logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Zielformate & Dualität - AlexandriaSandwich</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/birchville.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#zielformat-architektur-duale-reproduktion" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href=".." title="AlexandriaSandwich" class="md-header__button md-logo" aria-label="AlexandriaSandwich" data-md-component="logo">
+      
+  <img src="../assets/birchville_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AlexandriaSandwich
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Zielformate & Dualität
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Sprache wechseln">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="de" class="md-select__link">
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../en/TARGET_FORMATS/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/birchville-org/AlexandriaSandwich" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    birchville-org/AlexandriaSandwich
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Startseite
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../INSTALLATION/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../WIKI_VERFAHREN/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Verfahren
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Zielformate & Dualität
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../CORRECTION_PATHS/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Korrekturpfade
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../DEPLOY/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Deployment
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../STORAGE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Speicherstruktur
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../N8N/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  n8n Integration
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../case-study/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Fallstudie (Böhtlingk 1887)
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../case-study-bau/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Fallstudie (Bṛhadāraṇyaka I.4)
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AlexandriaSandwich" class="md-nav__button md-logo" aria-label="AlexandriaSandwich" data-md-component="logo">
+      
+  <img src="../assets/birchville_logo.png" alt="logo">
+
+    </a>
+    AlexandriaSandwich
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/birchville-org/AlexandriaSandwich" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    birchville-org/AlexandriaSandwich
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startseite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALLATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../WIKI_VERFAHREN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verfahren
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zielformate & Dualität
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zielformate & Dualität
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-die-zielstruktur-die-4-ebenen-pyramide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Die Zielstruktur: Die 4-Ebenen-Pyramide
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-die-einzelnen-zielformate-im-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Die einzelnen Zielformate im Detail
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Die einzelnen Zielformate im Detail">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-faksimile-ebene-sandwich-pdf-sandwichpdf-alignedpdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Faksimile-Ebene: Sandwich-PDF (*.sandwich.pdf / *.aligned.pdf)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-maschinenlesbare-single-source-of-truth-bookjson-ast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Maschinenlesbare "Single Source of Truth": book.json (AST)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-philologischer-akademie-standard-teixml-tei-p5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Philologischer Akademie-Standard: tei.xml (TEI-P5)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-text-ki-ebene-bookmd-utf-8-markdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Text- &amp; KI-Ebene: book.md (UTF-8 Markdown)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-rezeptions-lese-ebene-epub-epub-3-digitalpdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Rezeptions- &amp; Lese-Ebene: *.epub (EPUB 3) &amp; *.digital.pdf
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-die-dualitat-original-reproduzieren-vs-neu-layouten" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Die Dualität: Original reproduzieren vs. Neu layouten
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Die Dualität: Original reproduzieren vs. Neu layouten">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strategie-1-reproduktion-des-originallayouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategie 1: Reproduktion des Originallayouts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strategie-2-volliges-neulayouten-des-inhalts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategie 2: Völliges Neulayouten des Inhalts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-standard-ordnerstruktur-pro-buch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Standard-Ordnerstruktur pro Buch
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CORRECTION_PATHS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Korrekturpfade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEPLOY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../STORAGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Speicherstruktur
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../N8N/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    n8n Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Böhtlingk 1887)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study-bau/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Bṛhadāraṇyaka I.4)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-die-zielstruktur-die-4-ebenen-pyramide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Die Zielstruktur: Die 4-Ebenen-Pyramide
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-die-einzelnen-zielformate-im-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Die einzelnen Zielformate im Detail
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Die einzelnen Zielformate im Detail">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-faksimile-ebene-sandwich-pdf-sandwichpdf-alignedpdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Faksimile-Ebene: Sandwich-PDF (*.sandwich.pdf / *.aligned.pdf)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-maschinenlesbare-single-source-of-truth-bookjson-ast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Maschinenlesbare "Single Source of Truth": book.json (AST)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-philologischer-akademie-standard-teixml-tei-p5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Philologischer Akademie-Standard: tei.xml (TEI-P5)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-text-ki-ebene-bookmd-utf-8-markdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Text- &amp; KI-Ebene: book.md (UTF-8 Markdown)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-rezeptions-lese-ebene-epub-epub-3-digitalpdf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Rezeptions- &amp; Lese-Ebene: *.epub (EPUB 3) &amp; *.digital.pdf
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-die-dualitat-original-reproduzieren-vs-neu-layouten" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Die Dualität: Original reproduzieren vs. Neu layouten
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Die Dualität: Original reproduzieren vs. Neu layouten">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strategie-1-reproduktion-des-originallayouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategie 1: Reproduktion des Originallayouts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strategie-2-volliges-neulayouten-des-inhalts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategie 2: Völliges Neulayouten des Inhalts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-standard-ordnerstruktur-pro-buch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Standard-Ordnerstruktur pro Buch
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/birchville-org/AlexandriaSandwich/edit/master/docs/de/TARGET_FORMATS.md" title="Seite editieren" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="zielformat-architektur-duale-reproduktion">Zielformat-Architektur &amp; Duale Reproduktion</h1>
+<h2 id="1-die-zielstruktur-die-4-ebenen-pyramide">1. Die Zielstruktur: Die 4-Ebenen-Pyramide</h2>
+<p>In der wissenschaftlichen Digitalisierung und Editionsphilologie kann kein einzelnes Dateiformat alle praktischen Anforderungen gleichzeitig erfüllen:
+- <strong>Faksimiles</strong> sind unverzichtbar für Zitate und Nachweise, aber unbrauchbar auf E-Readern (kein Textfluss).
+- <strong>Fließtext</strong> ist ideal für Mobilgeräte und KI, verliert aber das historische Satzbild.
+- <strong>XML</strong> garantiert 50+ Jahre Archivsicherheit, ist aber für Menschen schwer lesbar.</p>
+<p>AlexandriaSandwich löst dieses Problem durch eine <strong>4-Ebenen-Architektur</strong>, in der jedes Buch in einen festen Satz komplementärer Formate überführt wird:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>              ┌───────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>              │ 1. Rezeptionsschicht (Endnutzer)      │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>              │    • EPUB 3 (Reflowable E-Reader)     │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>              │    • Digital-PDF (Typst Vektor-Neusatz│
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>              └───────────────────▲───────────────────┘
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                                  │ Kompilierung
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>              ┌───────────────────┴───────────────────┐
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>              │ 2. Arbeits- &amp; KI-Ebene                │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>              │    • book.md (UTF-8 Plain Markdown)   │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>              └───────────────────▲───────────────────┘
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>                                  │ Konsolidierung
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>              ┌───────────────────┴───────────────────┐
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>              │ 3. Semantische &amp; Archiv-Ebene         │
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>              │    • book.json (Single Source of Truth│
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>              │    • tei.xml   (TEI-P5 Akademie-Norm) │
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>              └───────────────────▲───────────────────┘
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>                                  │ OCR &amp; Token-Alignment
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>              ┌───────────────────┴───────────────────┐
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>              │ 4. Faksimile- &amp; Beweisebene           │
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>              │    • &lt;id&gt;.sandwich.pdf (Scan + Layer) │
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>              │    • &lt;id&gt;.aligned.pdf  (KI-synchron)  │
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>              └───────────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="2-die-einzelnen-zielformate-im-detail">2. Die einzelnen Zielformate im Detail</h2>
+<h3 id="1-faksimile-ebene-sandwich-pdf-sandwichpdf-alignedpdf">1. Faksimile-Ebene: Sandwich-PDF (<code>*.sandwich.pdf</code> / <code>*.aligned.pdf</code>)</h3>
+<ul>
+<li><strong>Funktion:</strong> Originaltreues, zitierfähiges Dokumentenarchiv.</li>
+<li><strong>Aufbau:</strong> </li>
+<li>Oben: Unverändertes 300-DPI-Scanbild (Faksimile) mit historischem Bleisatzbild, Marginalien, Vergilbung und Original-Typographie.</li>
+<li>Unten: Unsichtbarer Vektor-Textlayer mit pixelgenauen Bounding-Box-Koordinaten für jedes Wort.</li>
+<li><strong>Post-Assembly Textlayer-Korrektur (KI-Synchronisation):</strong> Der unsichtbare Textlayer wird mit der semantischen Erkennung von Mistral OCR synchronisiert. Erkennungsfehler und Rausch-Halluzinationen (z. B. auf gepunkteten Leitlinien) werden bereinigt, während die exakten Pixel-Koordinaten des Originaldrucks erhalten bleiben (<code>*.aligned.pdf</code>).</li>
+</ul>
+<h3 id="2-maschinenlesbare-single-source-of-truth-bookjson-ast">2. Maschinenlesbare "Single Source of Truth": <code>book.json</code> (AST)</h3>
+<ul>
+<li><strong>Funktion:</strong> Zentrales, softwareunabhängiges Zwischenformat.</li>
+<li><strong>Aufbau:</strong> Hierarchischer Abstract Syntax Tree (AST), der Metadaten, Seiten, Absätze, Überschriften, Token-Listen, Konfidenzen und Bounding-Boxes (<code>[ymin, xmin, ymax, xmax]</code>) vereint.</li>
+<li><strong>Bedeutung:</strong> Aus dieser Datei kann jederzeit per Skript jedes neue Zielformat (HTML, EPUB, Typst, LaTeX, SQL-Datenbanken) ohne erneuten OCR-Lauf erzeugt werden.</li>
+</ul>
+<h3 id="3-philologischer-akademie-standard-teixml-tei-p5">3. Philologischer Akademie-Standard: <code>tei.xml</code> (TEI-P5)</h3>
+<ul>
+<li><strong>Funktion:</strong> Globale Langzeitarchivierung (50+ Jahre) und Schnittstelle zu Bibliotheken und Digital-Humanities-Repositorien (DTA, SARIT, Perseus).</li>
+<li><strong>Aufbau:</strong> Streng valides TEI-P5 XML mit <code>&lt;teiHeader&gt;</code>, Faksimile-Verknüpfung (<code>&lt;surface&gt;</code>, <code>&lt;zone&gt;</code>) und semantischem Textkörper (<code>&lt;body&gt;</code>, <code>&lt;div n="..." type="..."&gt;</code>, <code>&lt;p&gt;</code>, <code>&lt;table&gt;</code>).</li>
+</ul>
+<h3 id="4-text-ki-ebene-bookmd-utf-8-markdown">4. Text- &amp; KI-Ebene: <code>book.md</code> (UTF-8 Markdown)</h3>
+<ul>
+<li><strong>Funktion:</strong> Unmittelbare Bearbeitung, Versionskontrolle und Sprachmodell-Verarbeitung.</li>
+<li><strong>Aufbau:</strong> Reines UTF-8 Markdown ohne proprietären Ballast.</li>
+<li><strong>Einsatz:</strong> </li>
+<li>Direkte Versionierung in Git mit zeilenweisen Diffs (<code>git diff</code>).</li>
+<li>Optimale Eingabe für Retrieval-Augmented Generation (RAG), Vektor-Datenbanken und Volltext-Suchwerkzeuge (<code>grep</code>).</li>
+</ul>
+<h3 id="5-rezeptions-lese-ebene-epub-epub-3-digitalpdf">5. Rezeptions- &amp; Lese-Ebene: <code>*.epub</code> (EPUB 3) &amp; <code>*.digital.pdf</code></h3>
+<ul>
+<li><strong>Funktion:</strong> Optimale Rezeption durch den Menschen auf modernen Lesegeräten.</li>
+<li><strong>EPUB 3:</strong> Dynamischer Textfluss (Reflow) für E-Reader (Tolino, Kindle, Kobo, iPad) mit eingebetteten Unicode-Schriften für Devanagari (<em>Noto Serif Devanagari</em>) und IAST-Transliteration (<em>Linux Libertine</em> / <em>Charis SIL</em>).</li>
+<li><strong>Digital-PDF (Typst):</strong> Gestochen scharf gerenderter Vektor-Neusatz für hochwertigen Druck.</li>
+</ul>
+<hr />
+<h2 id="3-die-dualitat-original-reproduzieren-vs-neu-layouten">3. Die Dualität: Original reproduzieren vs. Neu layouten</h2>
+<p>Durch die strikte Trennung von Bilddaten, geometrischen Koordinaten und semantischem Text ermöglicht die Pipeline zwei gegensätzliche Publikationsstrategien:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>                        ┌──────────────────┐
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>                        │ Rohscan / Quelle │
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>                        └────────┬─────────┘
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>                                 │
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>                 ┌───────────────┴───────────────┐
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>                 ▼                               ▼
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>     [ STRATEGIE 1: REPRODUKTION ]    [ STRATEGIE 2: NEULAYOUT ]
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>     • Pixelgenaues Sandwich-PDF      • Reflowable EPUB 3
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>     • Vektor-Nachsatz via bbox       • Responsive HTML / Web
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>     • Erhalt historischer Typen      • Großformatiges Arbeitsbuch (Typst)
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>     • Zitate nach Original-Seiten    • Variable Schriftgrößen / Dark Mode
+</code></pre></div>
+<h3 id="strategie-1-reproduktion-des-originallayouts">Strategie 1: Reproduktion des Originallayouts</h3>
+<ol>
+<li><strong>Als KI-synchronisiertes Faksimile (<code>*.aligned.pdf</code>):</strong></li>
+<li>Das historische Druckbild bleibt 1:1 sichtbar. Zeilenumbrüche, Trennstriche, Schriftsetzerfehler, Ligaturen und Fußnotenpositionen bleiben identisch zum Originalexemplar der Bibliothek.</li>
+<li><strong>Als geometrischer Vektor-Nachsatz:</strong></li>
+<li>Da in <code>book.json</code> für jedes Wort und jede Zeile die geometrische Position (<code>bbox</code>), Zeilenabstände und Schriftgrößen hinterlegt sind, kann das Original-Layout mathematisch exakt mit modernen Vektorschriften neu gesetzt werden (identischer Satzspiegel, aber ohne Scan-Körnigkeit).</li>
+</ol>
+<h3 id="strategie-2-volliges-neulayouten-des-inhalts">Strategie 2: Völliges Neulayouten des Inhalts</h3>
+<ol>
+<li><strong>Fließendes E-Reader-Buch (EPUB 3):</strong></li>
+<li>Der semantische Text fließt frei. Auf kleinen Bildschirmen passt sich der Zeilenumbruch an; Schriftart, Kontrast und Zeilenhöhe werden vom Leser bestimmt.</li>
+<li><strong>Neues Print-Format (z. B. Studien-Arbeitsbuch via Typst):</strong></li>
+<li>Aus dem konsolidierten Text (<code>book.json</code> / <code>book.md</code>) wird auf Knopfdruck ein neues Werk generiert:<ul>
+<li>Formatwechsel (z. B. von historischem Klein-Oktav zu DIN A4).</li>
+<li>Großzügiger Korrekturrand für studentische Notizen.</li>
+<li>Moderne Typographie (z. B. <em>EB Garamond</em> + <em>Noto Serif Devanagari</em>).</li>
+<li>Parallele Synopsen (Originaltext links, deutsche Übersetzung rechts).</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h2 id="4-standard-ordnerstruktur-pro-buch">4. Standard-Ordnerstruktur pro Buch</h2>
+<p>Jedes von AlexandriaSandwich verarbeitete Werk erzeugt die folgende einheitliche Ordnerstruktur:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>output/books/&lt;buch_id&gt;/
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── &lt;buch_id&gt;.sandwich.pdf   # 1:1 Faksimile + Tesseract Textlayer
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├── &lt;buch_id&gt;.aligned.pdf    # Faksimile + Mistral-korrigierter Textlayer (0 Rauschen)
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>├── &lt;buch_id&gt;.digital.pdf    # Vektor-Neusatz via Typst
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>├── &lt;buch_id&gt;.epub           # Reflowable eBook mit eingebetteten Schriften
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>├── &lt;buch_id&gt;.tei.xml        # TEI-P5 Langzeitarchiv-XML
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>├── book.json                # Vollständiger semantischer Syntaxbaum (AST)
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>└── book.md                  # Konsolidierter UTF-8 Markdown-Volltext
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Zurück zum Seitenanfang
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
