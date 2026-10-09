@@ -15,7 +15,7 @@ tar -C "$ROOT" -cf - scripts/ | ssh "$REMOTE" "tar -C $APP -xf -"
 echo "3) Sync docker-compose.synology.yml to ($APP/docker-compose.yml)"
 cat "$ROOT/deploy/docker-compose.synology.yml" | ssh "$REMOTE" "cat > $APP/docker-compose.yml"
 
-echo "4) Restart alexandria_ui container on synology.local"
-ssh "$REMOTE" "/usr/local/bin/docker restart alexandria_ui"
+echo "4) Apply compose configuration & recreate container on synology.local"
+ssh "$REMOTE" "cd $APP && /usr/local/bin/docker compose up -d"
 
-echo "UI updated successfully on synology.local (bind-mount live update + container restart)."
+echo "UI updated successfully on synology.local (bind-mount live update + compose up)."
