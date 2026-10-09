@@ -101,8 +101,15 @@ if [[ ! -d "$JOB_INPUT" ]]; then
 fi
 
 if [[ "$SKIP_PREPROCESS" -eq 1 ]]; then
-  log "skip preprocess: copy $JOB_INPUT/*.png -> $PRE_DIR"
-  cp -a "$JOB_INPUT"/*.png "$PRE_DIR/"
+  shopt -s nullglob
+  existing_pre=( "$PRE_DIR"/*.png )
+  shopt -u nullglob
+  if [[ ${#existing_pre[@]} -gt 0 ]]; then
+    log "skip preprocess: using ${#existing_pre[@]} existing preprocessed pages in $PRE_DIR"
+  else
+    log "skip preprocess: copy $JOB_INPUT/*.png -> $PRE_DIR"
+    cp -a "$JOB_INPUT"/*.png "$PRE_DIR/"
+  fi
 else
   log "preprocess job=$JOB_NAME input=$JOB_INPUT -> $PRE_DIR"
   PRE_OPTS=()
@@ -126,11 +133,17 @@ MISTRAL_N=0
 for page in "${PAGES[@]}"; do
   base="$(basename "$page" .png)"
   qc_json="${QC_DIR}/${base}.quality.json"
-  log "quality_check $base"
-  set +e
-  python3 "$QUALITY" -i "$page" -l "$LANG_OCR" -t "$THRESHOLD" --json --keep-ocr "$QC_DIR" >"$qc_json"
-  qc_rc=$?
-  set -e
+
+  if [[ -s "$qc_json" ]]; then
+    passed="$(python3 -c 'import json,sys; print(1 if json.load(open(sys.argv[1])).get("passed",False) else 0)' "$qc_json" 2>/dev/null || echo 0)"
+    if [[ "$passed" -eq 1 ]]; then qc_rc=0; else qc_rc=1; fi
+  else
+    log "quality_check $base"
+    set +e
+    python3 "$QUALITY" -i "$page" -l "$LANG_OCR" -t "$THRESHOLD" --json --keep-ocr "$QC_DIR" >"$qc_json"
+    qc_rc=$?
+    set -e
+  fi
 
   mean="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("mean_confidence",0))' "$qc_json" 2>/dev/null || echo 0)"
   decision="pass"
@@ -187,16 +200,20 @@ PDF_OUT="${OUT_DIR}/pdf/${JOB_NAME}.sandwich.pdf"
 SIDECAR_OUT="${OUT_DIR}/pdf/${JOB_NAME}.sidecar.txt"
 mkdir -p "$(dirname "$PDF_OUT")"
 if [[ -f "$ASSEMBLE" ]]; then
-  log "assemble sandwich pdf -> $PDF_OUT"
-  set +e
-  python3 "$ASSEMBLE" -i "$PRE_DIR" -o "$PDF_OUT" -l "$LANG_OCR" --sidecar "$SIDECAR_OUT" --json >"${QC_DIR}/assemble.json"
-  assemble_rc=$?
-  set -e
-  if [[ "$assemble_rc" -ne 0 ]]; then
-    log "warn: sandwich assembly failed (rc=$assemble_rc)"
-    PDF_OUT=""
+  if [[ -s "$PDF_OUT" ]]; then
+    log "sandwich pdf cached: $PDF_OUT"
   else
-    log "sandwich ok: $PDF_OUT"
+    log "assemble sandwich pdf -> $PDF_OUT"
+    set +e
+    python3 "$ASSEMBLE" -i "$PRE_DIR" -o "$PDF_OUT" -l "$LANG_OCR" --sidecar "$SIDECAR_OUT" --json >"${QC_DIR}/assemble.json"
+    assemble_rc=$?
+    set -e
+    if [[ "$assemble_rc" -ne 0 ]]; then
+      log "warn: sandwich assembly failed (rc=$assemble_rc)"
+      PDF_OUT=""
+    else
+      log "sandwich ok: $PDF_OUT"
+    fi
   fi
 else
   log "warn: assemble_sandwich.py missing; skip PDF"
