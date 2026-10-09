@@ -13,7 +13,10 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import fitz  # PyMuPDF
+try:
+    import pymupdf
+except ImportError:
+    import fitz as pymupdf
 
 
 def escape_typst(text: str) -> str:
@@ -64,7 +67,7 @@ def build_full_digital_edition(
 ) -> Path:
     t0 = time.time()
     print(f"[build_digital] Opening: {input_pdf}")
-    doc = fitz.open(input_pdf)
+    doc = pymupdf.open(input_pdf)
     total_pages = len(doc)
     print(f"[build_digital] Total pages: {total_pages}")
 

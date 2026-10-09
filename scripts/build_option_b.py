@@ -17,9 +17,10 @@ import argparse
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple
-
-import fitz  # PyMuPDF
+try:
+    import pymupdf
+except ImportError:
+    import fitz as pymupdf
 
 
 DEFAULT_FONT = "/Library/Fonts/Arial Unicode.ttf"
@@ -44,13 +45,13 @@ def build_option_b(
     if not input_pdf.is_file():
         raise FileNotFoundError(f"Input PDF not found: {input_pdf}")
 
-    src_doc = fitz.open(input_pdf)
+    src_doc = pymupdf.open(input_pdf)
     total_src = len(src_doc)
     if end_page is None or end_page > total_src:
         end_page = total_src
 
     print(f"[option_b] Processing pages {start_page} to {end_page} from {input_pdf}")
-    out_doc = fitz.open()
+    out_doc = pymupdf.open()
 
     page_offset = start_page - 1
 
@@ -69,9 +70,9 @@ def build_option_b(
                     if not txt:
                         continue
 
-                    rect = fitz.Rect(line["bbox"])
+                    rect = pymupdf.Rect(line["bbox"])
                     max_fs = spans[0]["size"]
-                    expanded_rect = fitz.Rect(
+                    expanded_rect = pymupdf.Rect(
                         rect.x0 - 1.0,
                         rect.y0 - 2.0,
                         rect.x1 + 8.0,

@@ -22,9 +22,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
-    import pymupdf as fitz
+    import pymupdf
 except ImportError:
-    import fitz  # PyMuPDF fallback
+    import fitz as pymupdf
 
 
 def inject_toc(
@@ -42,7 +42,7 @@ def inject_toc(
         raise FileNotFoundError(f"Input PDF not found: {input_pdf}")
 
     print(f"[inject_toc] Opening: {input_pdf}")
-    doc = fitz.open(input_pdf)
+    doc = pymupdf.open(input_pdf)
     total_pages = len(doc)
     print(f"[inject_toc] Total pages: {total_pages}")
 
