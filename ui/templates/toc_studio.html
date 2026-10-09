@@ -1,0 +1,879 @@
+{% extends "base.html" %}
+{% block title %}PDF TOC &amp; Outline Studio — AlexandriaSandwich{% endblock %}
+
+{% block content %}
+<style>
+  .toc-studio-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+  .toc-studio-title-area h1 {
+    font-size: 2.3rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(180deg, #ffffff 30%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .toc-studio-title-area h1 span {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .toc-studio-desc {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 780px;
+    line-height: 1.5;
+  }
+
+  .service-meta-badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6rem;
+  }
+  .badge-cost-free {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .badge-engine {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Split-Pane QA Viewer Architecture */
+  .toc-split-layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 1.75rem;
+    align-items: stretch;
+    margin-bottom: 3rem;
+  }
+
+  /* Left Pane */
+  .pane-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    box-shadow: var(--shadow-md);
+  }
+  .pane-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 0.75rem;
+  }
+  .pane-card-title span.step-indicator {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    background: rgba(217, 119, 6, 0.2);
+    color: var(--gold-light);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  /* Dropzone */
+  .pdf-dropzone {
+    border: 2px dashed rgba(217, 119, 6, 0.4);
+    background: rgba(11, 15, 23, 0.6);
+    border-radius: var(--radius-md);
+    padding: 1.75rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+  }
+  .pdf-dropzone:hover, .pdf-dropzone.drag-over {
+    border-color: var(--gold-light);
+    background: rgba(217, 119, 6, 0.08);
+    transform: translateY(-1px);
+  }
+  .dropzone-icon {
+    font-size: 2.4rem;
+    margin-bottom: 0.6rem;
+    display: block;
+  }
+  .dropzone-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    margin-bottom: 0.25rem;
+  }
+  .dropzone-sub {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  .file-loaded-info {
+    display: none;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    margin-top: 0.75rem;
+  }
+  .file-loaded-name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #e2e8f0;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .file-loaded-stats {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin-top: 0.25rem;
+    display: flex;
+    gap: 1rem;
+  }
+
+  /* Form Elements */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .form-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .form-input {
+    background: rgba(11, 15, 23, 0.8);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.8rem;
+    color: #f8fafc;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    transition: var(--transition);
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--gold-light);
+    box-shadow: 0 0 0 2px var(--gold-glow);
+  }
+
+  .pagination-box {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .pagination-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .pagination-note {
+    font-size: 0.76rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* Right Pane (TOC Editor) */
+  .editor-pane-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Snippet Toolbar */
+  .snippet-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(11, 15, 23, 0.8);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.75rem;
+  }
+  .snippet-btn {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-sans);
+  }
+  .snippet-btn:hover {
+    background: var(--gold);
+    color: #fff;
+    border-color: var(--gold-light);
+  }
+  .snippet-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0 0.25rem;
+  }
+
+  /* Monospace Editor */
+  .editor-wrap {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 380px;
+    position: relative;
+  }
+  .toc-editor-textarea {
+    width: 100%;
+    flex: 1;
+    min-height: 400px;
+    background: #070a10;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #f1f5f9;
+    resize: vertical;
+    tab-size: 2;
+    transition: var(--transition);
+  }
+  .toc-editor-textarea:focus {
+    outline: none;
+    border-color: var(--gold-light);
+    box-shadow: 0 0 0 2px var(--gold-glow);
+  }
+
+  .editor-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border-subtle);
+    border-top: none;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    padding: 0.4rem 0.75rem;
+    font-size: 0.76rem;
+    color: var(--text-dim);
+  }
+  .editor-status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  /* Actions & Pulse */
+  .action-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 0.5rem;
+  }
+  .inject-btn {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.85rem 1.8rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
+  }
+  .inject-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(217, 119, 6, 0.5);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  }
+  .inject-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+  }
+
+  /* Silent Auto-Repair subtle visual feedback */
+  @keyframes repairPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+    50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+  }
+  .repair-pulsing {
+    animation: repairPulse 0.45s ease-out;
+  }
+
+  /* Result Badge / Download Box */
+  .result-banner {
+    display: none;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .result-banner.show {
+    display: flex;
+  }
+  .result-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .result-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #34d399;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .result-details {
+    font-size: 0.85rem;
+    color: #94a3b8;
+  }
+  .btn-download-pdf {
+    background: #059669;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0.65rem 1.4rem;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: var(--transition);
+  }
+  .btn-download-pdf:hover {
+    background: #10b981;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  /* Alternative Service Callout */
+  .switch-service-box {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .switch-service-box a {
+    color: var(--gold-light);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  @media (max-width: 960px) {
+    .toc-split-layout {
+      grid-template-columns: 1fr;
+    }
+    .service-meta-badges {
+      align-items: flex-start;
+    }
+  }
+</style>
+
+<div class="toc-studio-header">
+  <div class="toc-studio-title-area">
+    <div style="margin-bottom:0.4rem;">
+      <span class="badge badge-gold">✦ Service 1: Kostenfrei &amp; 100% Lokal</span>
+    </div>
+    <h1>PDF TOC &amp; <span>Outline Studio</span></h1>
+    <p class="toc-studio-desc">
+      Injizieren Sie hierarchische Lesezeichen (Gliederungsstruktur), bibliographische Metadaten und römisch/arabische Paginierung in beliebige PDFs. Blitzschnell im Millisekundenbereich – ohne Layoutveränderung und vollkommen ohne Fremdkosten.
+    </p>
+  </div>
+
+  <div class="service-meta-badges">
+    <div class="badge-cost-free">
+      <span>⚡ 0,00 € Fremdkosten</span>
+      <small style="font-weight: normal; color: #a7f3d0;">(100% lokale CPU)</small>
+    </div>
+    <div class="badge-engine">
+      Engine: PyMuPDF 1.28 &middot; Zero Cloud Calls
+    </div>
+  </div>
+</div>
+
+<form id="tocInjectForm" onsubmit="event.preventDefault(); submitTocInjection();">
+  <div class="toc-split-layout">
+    
+    <!-- LEFT PANE: PDF Source & Document Metadata -->
+    <div class="pane-card source-pane">
+      <div class="pane-card-title">
+        <span>1. PDF-Quelle &amp; Metadaten</span>
+        <span class="step-indicator">Schritt 1</span>
+      </div>
+
+      <!-- Dropzone -->
+      <div class="pdf-dropzone" id="pdfDropzone" onclick="document.getElementById('pdfFileInput').click();">
+        <input type="file" id="pdfFileInput" name="pdf_file" accept=".pdf" style="display:none;" onchange="handleFileSelect(this.files[0])">
+        <span class="dropzone-icon">📄</span>
+        <div class="dropzone-label">PDF hier ablegen oder durchsuchen</div>
+        <div class="dropzone-sub">Beliebiges PDF (Bücher, Editionen, Aufsätze)</div>
+
+        <div class="file-loaded-info" id="fileLoadedInfo">
+          <div class="file-loaded-name" id="fileLoadedName">datei.pdf</div>
+          <div class="file-loaded-stats">
+            <span id="fileLoadedPages">Seiten: --</span>
+            <span id="fileLoadedSize">Größe: --</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metadata Fields -->
+      <div class="form-group">
+        <label for="metaTitle">Dokumenttitel (Metadata)</label>
+        <input type="text" id="metaTitle" name="title" class="form-input" placeholder="z.B. Pāṇini: A Survey of Research">
+      </div>
+
+      <div class="form-group">
+        <label for="metaAuthor">Autor / Urheber</label>
+        <input type="text" id="metaAuthor" name="author" class="form-input" placeholder="z.B. George Cardona">
+      </div>
+
+      <div class="form-group">
+        <label for="metaSubject">Thema / Fachgebiet</label>
+        <input type="text" id="metaSubject" name="subject" class="form-input" placeholder="z.B. Indologie &amp; Linguistik">
+      </div>
+
+      <div class="form-group">
+        <label for="metaKeywords">Schlagwörter</label>
+        <input type="text" id="metaKeywords" name="keywords" class="form-input" placeholder="z.B. Sanskrit, Grammatik, Panini">
+      </div>
+
+      <!-- Pagination / Page Labels -->
+      <div class="pagination-box">
+        <div style="font-size:0.82rem; font-weight:700; color:var(--text-main); text-transform:uppercase; letter-spacing:0.04em;">
+          📑 Römische &amp; Arabische Paginierung
+        </div>
+        <div class="pagination-grid">
+          <div class="form-group">
+            <label for="romanEnd">Römisch (i..xvi) bis Seite</label>
+            <input type="number" id="romanEnd" name="roman_end" class="form-input" placeholder="z.B. 16" min="1">
+          </div>
+          <div class="form-group">
+            <label for="arabicStart">Arabisch (1..N) ab Seite</label>
+            <input type="number" id="arabicStart" name="arabic_start" class="form-input" placeholder="z.B. 17" min="1">
+          </div>
+        </div>
+        <div class="pagination-note">
+          Setzt native PDF-Seitenlabels, sodass Viewer im Vorwort römische Ziffern und im Text arabische Ziffern anzeigen.
+        </div>
+      </div>
+
+      <!-- Switch to Scan Service -->
+      <div class="switch-service-box">
+        🔍 <strong>Haben Sie unverarbeitete Scans?</strong><br>
+        Falls Sie eine vollständige OCR mit Sanskrit-Devanagari-Korrektur und Neusatz benötigen, nutzen Sie unser <a href="/upload">Scan-Digitalisierungsportal</a>.
+      </div>
+    </div>
+
+    <!-- RIGHT PANE: TOC Editor with Snippet Toolbar -->
+    <div class="editor-pane-card">
+      <div class="pane-card-title">
+        <span>2. Hierarchische Gliederung (TOC)</span>
+        <span class="step-indicator">Schritt 2</span>
+      </div>
+
+      <!-- Snippet Toolbar -->
+      <div class="snippet-toolbar">
+        <button type="button" class="snippet-btn" onclick="insertSnippet('teil')">+ Teil (L1)</button>
+        <button type="button" class="snippet-btn" onclick="insertSnippet('kapitel')">+ Kapitel (L1)</button>
+        <button type="button" class="snippet-btn" onclick="insertSnippet('abschnitt')">+ Abschnitt (L2)</button>
+        <button type="button" class="snippet-btn" onclick="insertSnippet('unterabschnitt')">+ Unterabschnitt (L3)</button>
+        <span class="snippet-divider"></span>
+        <button type="button" class="snippet-btn" onclick="runAutoRepair(true)">🧹 Auto-Repair</button>
+        <button type="button" class="snippet-btn" onclick="loadSampleTOC()">📋 Beispiel</button>
+        <button type="button" class="snippet-btn" onclick="clearEditor()">🗑️ Leeren</button>
+      </div>
+
+      <!-- Editor Area -->
+      <div class="editor-wrap">
+        <textarea id="tocTextarea" name="toc_content" class="toc-editor-textarea" spellcheck="false" placeholder="Fügen Sie hier Ihr Inhaltsverzeichnis ein. Unterstützte Formate:
+
+1. Text mit Punkten oder Tabs:
+Vorwort ................. 1
+Einleitung .............. 9
+  1. Grundlagen ......... 15
+  2. Forschungslage ..... 24
+    2.1 Quellenlage ..... 28
+Hauptteil ............... 40
+
+2. Markdown-Syntax:
+# Vorwort 1
+# Einleitung 9
+## 1. Grundlagen 15
+
+3. JSON-Array:
+[[1, &quot;Vorwort&quot;, 1], [1, &quot;Einleitung&quot;, 9], [2, &quot;Grundlagen&quot;, 15]]"></textarea>
+
+        <div class="editor-status-bar">
+          <div class="editor-status-item">
+            <span>🔖 Erkannte Lesezeichen:</span>
+            <strong id="liveBookmarkCount" style="color:var(--gold-light);">0</strong>
+          </div>
+          <div class="editor-status-item">
+            <span>📐 Max. Tiefe:</span>
+            <strong id="liveMaxDepth" style="color:#e2e8f0;">0</strong>
+          </div>
+          <div class="editor-status-item">
+            <span id="storageStatus" style="color:var(--text-dim);">Entwurf lokal gesichert</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Row -->
+      <div class="action-row">
+        <button type="button" id="injectBtn" class="inject-btn" onclick="submitTocInjection()">
+          <span>🚀</span> Lesezeichen einbetten &amp; herunterladen
+        </button>
+        <div style="font-size:0.82rem; color:var(--text-dim);">
+          Verarbeitung erfolgt lokal in ca. 100–300 Millisekunden.
+        </div>
+      </div>
+
+      <!-- Result Banner -->
+      <div id="resultBanner" class="result-banner">
+        <div class="result-info">
+          <div class="result-title">
+            <span>✅</span> Lesezeichen erfolgreich eingebettet!
+          </div>
+          <div class="result-details" id="resultDetails">
+            --
+          </div>
+        </div>
+        <a id="downloadLinkBtn" href="#" class="btn-download-pdf">
+          <span>💾</span> Neues PDF herunterladen
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+</form>
+
+<script>
+  let selectedPdfFile = null;
+  const STORAGE_KEY = "alexandria_toc_studio_draft";
+
+  // Drag & Drop
+  const dropzone = document.getElementById("pdfDropzone");
+  ['dragenter', 'dragover'].forEach(name => {
+    dropzone.addEventListener(name, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('drag-over');
+    });
+  });
+  ['dragleave', 'drop'].forEach(name => {
+    dropzone.addEventListener(name, (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+    });
+  });
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileSelect(e.dataTransfer.files[0]);
+    }
+  });
+
+  // Handle selected PDF
+  async function handleFileSelect(file) {
+    if (!file || !file.name.toLowerCase().endsWith(".pdf")) {
+      alert("Bitte wählen Sie eine gültige PDF-Datei aus.");
+      return;
+    }
+    selectedPdfFile = file;
+
+    const infoBox = document.getElementById("fileLoadedInfo");
+    const nameEl = document.getElementById("fileLoadedName");
+    const pagesEl = document.getElementById("fileLoadedPages");
+    const sizeEl = document.getElementById("fileLoadedSize");
+
+    infoBox.style.display = "block";
+    nameEl.textContent = "📄 " + file.name;
+    pagesEl.textContent = "Analysiere PDF...";
+    sizeEl.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+
+    // Asynchronous inspection
+    const formData = new FormData();
+    formData.append("pdf_file", file);
+
+    try {
+      const resp = await fetch("/toc/inspect", {
+        method: "POST",
+        body: formData
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        pagesEl.textContent = `${data.total_pages} Seiten`;
+        
+        // Pre-fill metadata if empty
+        const titleInput = document.getElementById("metaTitle");
+        const authorInput = document.getElementById("metaAuthor");
+        const subjInput = document.getElementById("metaSubject");
+        const kwInput = document.getElementById("metaKeywords");
+
+        if (!titleInput.value && data.title) titleInput.value = data.title;
+        if (!authorInput.value && data.author) authorInput.value = data.author;
+        if (!subjInput.value && data.subject) subjInput.value = data.subject;
+        if (!kwInput.value && data.keywords) kwInput.value = data.keywords;
+
+        // If PDF already has TOC and editor is empty, populate it
+        const textarea = document.getElementById("tocTextarea");
+        if (data.formatted_text && (!textarea.value.trim() || textarea.value.trim().length < 10)) {
+          textarea.value = data.formatted_text;
+          updateLiveStats();
+          saveDraft();
+        }
+      } else {
+        pagesEl.textContent = "Prüfung fehlgeschlagen";
+      }
+    } catch (err) {
+      console.warn("Inspect failed:", err);
+      pagesEl.textContent = "Bereit zum Einbetten";
+    }
+  }
+
+  // Snippets
+  function insertSnippet(type) {
+    const textarea = document.getElementById("tocTextarea");
+    let snippet = "";
+    if (type === "teil") snippet = "Erster Teil: Titel ................. 1\n";
+    if (type === "kapitel") snippet = "1. Kapitel: Titel .................. 10\n";
+    if (type === "abschnitt") snippet = "  1.1 Abschnitt .................... 15\n";
+    if (type === "unterabschnitt") snippet = "    1.1.1 Unterabschnitt ........... 18\n";
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+
+    textarea.value = text.substring(0, start) + snippet + text.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + snippet.length;
+    textarea.focus();
+    updateLiveStats();
+    saveDraft();
+  }
+
+  function clearEditor() {
+    if (confirm("Möchten Sie das Inhaltsverzeichnis wirklich leeren?")) {
+      document.getElementById("tocTextarea").value = "";
+      updateLiveStats();
+      saveDraft();
+    }
+  }
+
+  function loadSampleTOC() {
+    const sample = `Frontispiz & Vorwort ................. 1
+Einleitung ........................... 5
+Erstes Buch: Allgemeine Grundlagen ... 9
+  1. Kapitel: Begriffsbestimmungen ... 15
+  2. Kapitel: Methodik ............... 22
+    2.1 Quellenanalyse ............... 25
+    2.2 Textkritische Kriterien ...... 30
+Zweites Buch: Hauptteil .............. 45
+  3. Kapitel: Synthese ............... 50
+Anhang & Bibliographie ............... 80`;
+
+    document.getElementById("tocTextarea").value = sample;
+    updateLiveStats();
+    saveDraft();
+  }
+
+  // Silent Auto-Repair on Save / Action
+  function runAutoRepair(manualTrigger = false) {
+    const textarea = document.getElementById("tocTextarea");
+    let text = textarea.value;
+    if (!text.trim()) return;
+
+    // Silent repair of common formatting flaws
+    const lines = text.split("\n");
+    const repaired = lines.map(line => {
+      let l = line;
+      // Replace multiple consecutive tabs with single tab or dots
+      l = l.replace(/\t+/g, " ... ");
+      // Fix trailing dots before page number: e.g. "Title . . . . 12" -> "Title ... 12"
+      l = l.replace(/\s*(\.\s*){2,}\s*(\d+)$/, " ... $2");
+      return l;
+    });
+
+    textarea.value = repaired.join("\n");
+    updateLiveStats();
+    saveDraft();
+
+    // Subtle visual feedback: inject button pulse
+    const btn = document.getElementById("injectBtn");
+    btn.classList.remove("repair-pulsing");
+    void btn.offsetWidth; // trigger reflow
+    btn.classList.add("repair-pulsing");
+  }
+
+  // Live validator & stats
+  function updateLiveStats() {
+    const text = document.getElementById("tocTextarea").value;
+    const lines = text.split("\n");
+    let validCount = 0;
+    let maxDepth = 0;
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith("//")) continue;
+
+      // Check number match
+      const m = line.match(/(\d+)$/);
+      if (m) {
+        validCount++;
+        const leadingSpaces = rawLine.length - rawLine.trimStart().length;
+        const depth = 1 + Math.floor(leadingSpaces / 2);
+        if (depth > maxDepth) maxDepth = depth;
+      }
+    }
+
+    document.getElementById("liveBookmarkCount").textContent = validCount;
+    document.getElementById("liveMaxDepth").textContent = maxDepth;
+  }
+
+  function saveDraft() {
+    try {
+      localStorage.setItem(STORAGE_KEY, document.getElementById("tocTextarea").value);
+    } catch (e) {}
+  }
+
+  // Submit Injection
+  async function submitTocInjection() {
+    if (!selectedPdfFile) {
+      alert("Bitte wählen Sie zuerst eine PDF-Datei im linken Bereich aus.");
+      document.getElementById("pdfFileInput").click();
+      return;
+    }
+
+    const tocContent = document.getElementById("tocTextarea").value.trim();
+    if (!tocContent) {
+      alert("Bitte tragen Sie mindestens ein Lesezeichen in das Textfeld ein.");
+      document.getElementById("tocTextarea").focus();
+      return;
+    }
+
+    // Silent Auto-Repair before execution
+    runAutoRepair(false);
+
+    const btn = document.getElementById("injectBtn");
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> Lesezeichen werden eingebettet...`;
+
+    const formData = new FormData();
+    formData.append("pdf_file", selectedPdfFile);
+    formData.append("toc_content", document.getElementById("tocTextarea").value);
+    formData.append("title", document.getElementById("metaTitle").value);
+    formData.append("author", document.getElementById("metaAuthor").value);
+    formData.append("subject", document.getElementById("metaSubject").value);
+    formData.append("keywords", document.getElementById("metaKeywords").value);
+    formData.append("roman_end", document.getElementById("romanEnd").value);
+    formData.append("arabic_start", document.getElementById("arabicStart").value);
+
+    try {
+      const resp = await fetch("/toc/inject", {
+        method: "POST",
+        body: formData
+      });
+      const data = await resp.json();
+
+      if (data.ok) {
+        const banner = document.getElementById("resultBanner");
+        const details = document.getElementById("resultDetails");
+        const dlBtn = document.getElementById("downloadLinkBtn");
+
+        details.textContent = `${data.toc_count} Lesezeichen eingebettet &middot; ${data.total_pages} Seiten &middot; ${data.file_size_mb} MB &middot; In ${data.duration_ms} ms &middot; 0,00 € Fremdkosten`;
+        dlBtn.href = data.download_url;
+        dlBtn.setAttribute("download", data.filename);
+        banner.classList.add("show");
+
+        // Scroll smoothly to download button
+        banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Trigger direct download
+        dlBtn.click();
+      } else {
+        alert("Fehler bei der Lesezeichen-Injektion: " + (data.error || "Unbekannter Fehler"));
+      }
+    } catch (err) {
+      alert("Netzwerkfehler bei der Übertragung: " + err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+
+  // Init
+  document.addEventListener("DOMContentLoaded", () => {
+    const textarea = document.getElementById("tocTextarea");
+    textarea.addEventListener("input", () => {
+      updateLiveStats();
+      saveDraft();
+    });
+
+    // Restore draft if present
+    const savedDraft = localStorage.getItem(STORAGE_KEY);
+    if (savedDraft && !textarea.value.trim()) {
+      textarea.value = savedDraft;
+      updateLiveStats();
+    }
+  });
+</script>
+{% endblock %}
