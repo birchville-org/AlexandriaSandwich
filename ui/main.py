@@ -3,13 +3,13 @@
 from __future__ import annotations
 import asyncio
 import io
-import html, json, logging, os, platform, re, shutil, subprocess, time, uuid, zipfile
+import html, json, logging, os, platform, re, shutil, subprocess, sys, tempfile, time, uuid, zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 import httpx
-from fastapi import FastAPI, File, Form, UploadFile, Request
+from fastapi import FastAPI, File, Form, UploadFile, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -39,7 +39,7 @@ TOC_STUDIO_DIR.mkdir(parents=True, exist_ok=True)
 VALID_IMG_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".pnm", ".ppm"}
 
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "http://localhost:5678/webhook/alexandria/ocr")
-FALLBACK_N8N_URL = os.getenv("FALLBACK_N8N_URL", "http://192.168.1.250:5678/webhook/alexandria/ocr")
+FALLBACK_N8N_URL = os.getenv("FALLBACK_N8N_URL", "")
 N8N_WEBHOOK_TIMEOUT = float(os.getenv("N8N_WEBHOOK_TIMEOUT", "180"))
 PUBLIC_URL = os.getenv("PUBLIC_URL", "http://localhost:8080").rstrip("/")
 AUTH_LOGIN_URL = os.getenv("AUTH_LOGIN_URL", "").strip()
@@ -63,9 +63,80 @@ templates.env.globals.update({
 })
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+# ── Security & Validation Utilities ───────────────────────────────────────────
+MAX_FILE_SIZE = 500 * 1024 * 1024  # 500 MB per file
+MAX_ZIP_ENTRIES = 2000
+MAX_ZIP_UNCOMPRESSED = 1024 * 1024 * 1024  # 1 GB
+CHUNK_SIZE = 1024 * 1024  # 1 MB
+
+
+def _validate_job(job: str) -> str:
+    """Validiert den Job-Namen gegen Path-Traversal und illegale Zeichen."""
+    if not job or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", job):
+        raise HTTPException(
+            status_code=400,
+            detail="Ungültiger Job-Name (erlaubt: A-Z, a-z, 0-9, _, -; 1-64 Zeichen)",
+        )
+    return job
+
+
+def _validate_run_id(run_id: str) -> str:
+    """Validiert eine Run-ID gegen Path-Traversal."""
+    if not run_id or not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", run_id):
+        raise HTTPException(status_code=400, detail="Ungültige Run-ID")
+    return run_id
+
+
+def _validate_lang(lang: str) -> str:
+    """Validiert den Tesseract/OCR-Sprachcode."""
+    cleaned = (lang or "deu+eng").strip()
+    if not re.fullmatch(r"[A-Za-z0-9+_-]{2,32}", cleaned):
+        return "deu+eng"
+    return cleaned
+
+
+def _check_csrf_origin(request: Request) -> None:
+    """Prüft den Origin-Header bei zustandsändernden POST-Requests."""
+    origin = request.headers.get("origin")
+    if origin:
+        host = request.headers.get("host", "").split(":")[0]
+        parsed_origin = urlparse(origin)
+        origin_host = parsed_origin.hostname or ""
+        pub_host = urlparse(PUBLIC_URL).hostname or ""
+        allowed = {host, pub_host, "localhost", "127.0.0.1", "synology.local", "alex.local", "alex.birchville.org"}
+        if origin_host and origin_host not in allowed:
+            raise HTTPException(status_code=403, detail="Cross-Origin Request Blocked")
+
+
+def _content_disposition(disposition: str, filename: str) -> str:
+    """Generiert einen RFC-5987 / RFC-6266 konformen Content-Disposition Header."""
+    clean_name = Path(filename).name
+    ascii_name = re.sub(r'[^\x20-\x7E]', '_', clean_name).replace('"', '\\"')
+    encoded_name = quote(clean_name, encoding="utf-8")
+    return f'{disposition}; filename="{ascii_name}"; filename*=UTF-8\'\'{encoded_name}'
+
+
+async def _save_upload_file(upload_file: UploadFile, dest_path: Path, max_size: int = MAX_FILE_SIZE) -> int:
+    """Speichert eine hochgeladene Datei gestreamt in Chunks und erzwingt ein Größenlimit."""
+    total = 0
+    with open(dest_path, "wb") as out:
+        while chunk := await upload_file.read(CHUNK_SIZE):
+            total += len(chunk)
+            if total > max_size:
+                dest_path.unlink(missing_ok=True)
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"Datei '{upload_file.filename}' überschreitet das Limit von {max_size // (1024*1024)} MB",
+                )
+            out.write(chunk)
+    return total
+
 
 def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
     """Sammelt alle erzeugten Artefakte eines Jobs (oder eines archivierten Vorlaufs)."""
+    job = _validate_job(job)
+    if run_id:
+        run_id = _validate_run_id(run_id)
     items = []
     if run_id:
         target_dir = RUNS_DIR / job / run_id
@@ -171,6 +242,7 @@ def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
 
 def _archive_current_run(job: str, note: str = "") -> str | None:
     """Archiviert die aktuellen Ziel-Artefakte und den Report eines Jobs als separaten Vorlauf."""
+    job = _validate_job(job)
     current_art = _get_job_artifacts(job)
     if not current_art["has_any"]:
         return None
@@ -230,6 +302,7 @@ def _archive_current_run(job: str, note: str = "") -> str | None:
 
 def _list_job_runs(job: str) -> list[dict[str, Any]]:
     """Listet alle archivierten Vorläufe eines Jobs chronologisch sortiert auf (neueste zuerst)."""
+    job = _validate_job(job)
     runs = []
     job_runs_dir = RUNS_DIR / job
     if not job_runs_dir.is_dir():
@@ -272,11 +345,13 @@ def _list_job_runs(job: str) -> list[dict[str, Any]]:
 
 def _delete_job_run(job: str, run_id: str) -> bool:
     """Löscht einen spezifischen Vorlauf sicher."""
+    job = _validate_job(job)
+    run_id = _validate_run_id(run_id)
     job_runs_dir = RUNS_DIR / job
     run_dir = job_runs_dir / run_id
     try:
         resolved = run_dir.resolve()
-        if not str(resolved).startswith(str(job_runs_dir.resolve())):
+        if not resolved.is_relative_to(job_runs_dir.resolve()):
             raise ValueError("Path traversal blocked")
         if run_dir.is_dir():
             shutil.rmtree(run_dir)
@@ -288,6 +363,7 @@ def _delete_job_run(job: str, run_id: str) -> bool:
 
 def _clear_all_runs(job: str) -> int:
     """Löscht alle archivierten Vorläufe eines Jobs."""
+    job = _validate_job(job)
     job_runs_dir = RUNS_DIR / job
     count = 0
     if job_runs_dir.is_dir():
@@ -303,20 +379,21 @@ def _clear_all_runs(job: str) -> int:
 
 def _delete_entire_job(job: str) -> bool:
     """Löscht alle Daten eines Jobs (Input, Preprocessing, Quality, Markdown, Books, PDFs, TEI, Reports, Runs)."""
+    job = _validate_job(job)
     in_dir = INPUT_DIR / job
-    if in_dir.is_dir():
+    if in_dir.is_dir() and in_dir.resolve().is_relative_to(INPUT_DIR.resolve()):
         shutil.rmtree(in_dir, ignore_errors=True)
     pre_dir = PROC_DIR / "preprocessed" / job
-    if pre_dir.is_dir():
+    if pre_dir.is_dir() and pre_dir.resolve().is_relative_to(PROC_DIR.resolve()):
         shutil.rmtree(pre_dir, ignore_errors=True)
     qc_dir = PROC_DIR / "quality" / job
-    if qc_dir.is_dir():
+    if qc_dir.is_dir() and qc_dir.resolve().is_relative_to(PROC_DIR.resolve()):
         shutil.rmtree(qc_dir, ignore_errors=True)
     md_dir = OUT_DIR / "markdown" / job
-    if md_dir.is_dir():
+    if md_dir.is_dir() and md_dir.resolve().is_relative_to(OUT_DIR.resolve()):
         shutil.rmtree(md_dir, ignore_errors=True)
     bk_dir = BOOKS_DIR / job
-    if bk_dir.is_dir():
+    if bk_dir.is_dir() and bk_dir.resolve().is_relative_to(BOOKS_DIR.resolve()):
         shutil.rmtree(bk_dir, ignore_errors=True)
     for p in PDF_DIR.glob(f"{job}.*"):
         p.unlink(missing_ok=True)
@@ -325,12 +402,15 @@ def _delete_entire_job(job: str) -> bool:
     for p in REPORTS_DIR.glob(f"{job}.*"):
         p.unlink(missing_ok=True)
     runs_dir = RUNS_DIR / job
-    if runs_dir.is_dir():
+    if runs_dir.is_dir() and runs_dir.resolve().is_relative_to(RUNS_DIR.resolve()):
         shutil.rmtree(runs_dir, ignore_errors=True)
     return True
 
 
 def _build_zip_response(job: str, run_id: str | None = None) -> StreamingResponse | JSONResponse:
+    job = _validate_job(job)
+    if run_id:
+        run_id = _validate_run_id(run_id)
     art = _get_job_artifacts(job, run_id=run_id)
     if not art["items"]:
         return JSONResponse({"error": "Keine Artefakte zum Download vorhanden"}, status_code=404)
@@ -357,7 +437,7 @@ def _build_zip_response(job: str, run_id: str | None = None) -> StreamingRespons
     return StreamingResponse(
         buf,
         media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        headers={"Content-Disposition": _content_disposition("attachment", filename)}
     )
 
 
@@ -696,6 +776,7 @@ def _probe_system_status() -> dict[str, Any]:
 
 
 def _get_job_progress(job: str) -> dict[str, Any]:
+    job = _validate_job(job)
     in_dir = INPUT_DIR / job
     pre_dir = PROC_DIR / "preprocessed" / job
     qc_dir = PROC_DIR / "quality" / job
@@ -901,9 +982,12 @@ def _get_job_progress(job: str) -> dict[str, Any]:
     }
 
 
-def _safe_path(base, user_path):
-    resolved = (base / user_path).resolve()
-    if not str(resolved).startswith(str(base.resolve())): raise ValueError("path traversal blocked")
+def _safe_path(base: Path, user_path: Path | str) -> Path:
+    """Verifiziert, dass der aufgelöste Pfad innerhalb der angegebenen Basis liegt."""
+    base_res = base.resolve()
+    resolved = (base_res / user_path).resolve()
+    if not resolved.is_relative_to(base_res):
+        raise ValueError("path traversal blocked")
     return resolved
 
 
@@ -946,6 +1030,7 @@ async def api_system_status():
 
 @app.api_route("/api/jobs/{job}/progress", methods=["GET", "HEAD"])
 async def api_job_progress(job: str):
+    job = _validate_job(job)
     prog = await asyncio.to_thread(_get_job_progress, job)
     return JSONResponse(prog)
 
@@ -971,21 +1056,25 @@ async def health():
         "timestamp": data["timestamp_utc"],
         "n8n": data["n8n"]["badge"],
         "storage_free_gb": data["storage"]["free_gb"],
-        "stalled_jobs": len(data["stalled_jobs"])
+        "stalled_jobs": len(data["stalled_jobs"]),
+        "data_dir": str(DATA_DIR),
+        "n8n_url": N8N_WEBHOOK_URL,
     }
 
 
 logger = logging.getLogger("alexandria_ui")
-VALID_IMG_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".pnm", ".ppm"}
 
 
 def _extract_pdf(pdf_path: Path, target_dir: Path, stem: str, dpi: int = 300) -> list[str]:
-    """Extrahiert Seiten eines Multi-Page PDFs als PNG via pdftoppm."""
+    """Extrahiert Seiten eines Multi-Page PDFs als PNG via pdftoppm mit Timeout."""
     target_dir.mkdir(parents=True, exist_ok=True)
     clean_stem = re.sub(r"[^a-zA-Z0-9_-]", "_", stem).strip("_") or "page"
     prefix = target_dir / clean_stem
     cmd = ["pdftoppm", "-png", "-r", str(dpi), str(pdf_path), str(prefix)]
-    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("pdftoppm Zeitüberschreitung (120 s)")
     if res.returncode != 0:
         err = res.stderr.strip() or res.stdout.strip()
         logger.error(f"pdftoppm fehlgeschlagen: {err}")
@@ -995,11 +1084,18 @@ def _extract_pdf(pdf_path: Path, target_dir: Path, stem: str, dpi: int = 300) ->
 
 
 def _extract_zip(zip_path: Path, target_dir: Path, dpi: int = 300) -> list[str]:
-    """Entpackt Bilddateien und PDFs aus einem ZIP-Archiv."""
+    """Entpackt Bilddateien und PDFs aus einem ZIP-Archiv mit Schutz gegen ZIP-Bomben."""
     target_dir.mkdir(parents=True, exist_ok=True)
     extracted = []
     with zipfile.ZipFile(zip_path, "r") as zf:
-        for member in zf.infolist():
+        infolist = zf.infolist()
+        if len(infolist) > MAX_ZIP_ENTRIES:
+            raise ValueError(f"ZIP-Archiv enthält zu viele Einträge ({len(infolist)} > {MAX_ZIP_ENTRIES})")
+        total_uncompressed = sum(m.file_size for m in infolist)
+        if total_uncompressed > MAX_ZIP_UNCOMPRESSED:
+            raise ValueError(f"ZIP-Archiv entpackt überschreitet Limit ({total_uncompressed // (1024*1024)} MB > 1024 MB)")
+
+        for member in infolist:
             if member.is_dir():
                 continue
             fname = Path(member.filename).name
@@ -1247,14 +1343,22 @@ async def toc_inject_pdf(
 @app.get("/toc/download/{token}/{filename}")
 async def toc_download_file(token: str, filename: str):
     """Liefert das injizierte PDF zum Download aus."""
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", token):
+        raise HTTPException(status_code=400, detail="Ungültiger Token")
+    clean_filename = Path(filename).name
+    if not clean_filename or clean_filename != filename:
+        raise HTTPException(status_code=400, detail="Ungültiger Dateiname")
     target_dir = TOC_STUDIO_DIR / token
-    target_file = _safe_path(target_dir, filename)
+    try:
+        target_file = _safe_path(target_dir, clean_filename)
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Path traversal blocked")
     if not target_file.is_file():
         return HTMLResponse("<h1>Datei nicht gefunden oder abgelaufen.</h1>", status_code=404)
     return FileResponse(
         str(target_file),
         media_type="application/pdf",
-        filename=filename
+        headers={"Content-Disposition": _content_disposition("attachment", clean_filename)}
     )
 
 
@@ -1281,6 +1385,9 @@ async def upload_submit(
     trigger: bool = Form(False),
     files: list[UploadFile] = File(...),
 ):
+    _check_csrf_origin(request)
+    job = _validate_job(job)
+    lang = _validate_lang(lang)
     job_dir = INPUT_DIR / job
     job_dir.mkdir(parents=True, exist_ok=True)
     saved = []
@@ -1289,37 +1396,35 @@ async def upload_submit(
     for f in files:
         if not f.filename:
             continue
-        ext = Path(f.filename).suffix.lower()
+        clean_name = Path(f.filename).name
+        ext = Path(clean_name).suffix.lower()
         if ext == ".pdf":
             # Originales PDF als Quelle sichern
-            pdf_path = job_dir / f"source_{Path(f.filename).name}"
-            with open(pdf_path, "wb") as out:
-                out.write(await f.read())
+            pdf_path = job_dir / f"source_{clean_name}"
+            await _save_upload_file(f, pdf_path)
             try:
-                pages = await asyncio.to_thread(_extract_pdf, pdf_path, job_dir, Path(f.filename).stem, dpi)
+                pages = await asyncio.to_thread(_extract_pdf, pdf_path, job_dir, Path(clean_name).stem, dpi)
                 saved.extend(pages)
-                notes.append(f"PDF '{f.filename}' zerlegt in {len(pages)} Einzelseite(n) ({dpi} DPI)")
+                notes.append(f"PDF '{clean_name}' zerlegt in {len(pages)} Einzelseite(n) ({dpi} DPI)")
             except Exception as e:
-                notes.append(f"Fehler bei PDF-Extraktion von '{f.filename}': {e}")
+                notes.append(f"Fehler bei PDF-Extraktion von '{clean_name}': {e}")
         elif ext == ".zip":
-            zip_path = job_dir / f"_temp_{Path(f.filename).name}"
-            with open(zip_path, "wb") as out:
-                out.write(await f.read())
+            zip_path = job_dir / f"_temp_{uuid.uuid4().hex[:8]}_{clean_name}"
+            await _save_upload_file(f, zip_path)
             try:
                 items = await asyncio.to_thread(_extract_zip, zip_path, job_dir, dpi)
                 saved.extend(items)
-                notes.append(f"ZIP-Archiv '{f.filename}' entpackt: {len(items)} Seite(n) bereitgestellt")
+                notes.append(f"ZIP-Archiv '{clean_name}' entpackt: {len(items)} Seite(n) bereitgestellt")
             except Exception as e:
-                notes.append(f"Fehler bei ZIP-Entpacken von '{f.filename}': {e}")
+                notes.append(f"Fehler bei ZIP-Entpacken von '{clean_name}': {e}")
             finally:
                 zip_path.unlink(missing_ok=True)
         elif ext in VALID_IMG_EXTS:
-            dest = job_dir / Path(f.filename).name
-            with open(dest, "wb") as out:
-                out.write(await f.read())
+            dest = job_dir / clean_name
+            await _save_upload_file(f, dest)
             saved.append(dest.name)
         else:
-            notes.append(f"Format nicht unterstützt und übersprungen: '{f.filename}'")
+            notes.append(f"Format nicht unterstützt und übersprungen: '{clean_name}'")
 
     result = {
         "saved": saved,
@@ -1366,6 +1471,7 @@ async def upload_submit(
 
 @app.get("/api/jobs/{job}/status")
 async def job_status_api(job: str):
+    job = _validate_job(job)
     report_path = REPORTS_DIR / f"{job}.pipeline.json"
     in_dir = INPUT_DIR / job
     input_pages = len([p for p in in_dir.iterdir() if p.suffix.lower() in VALID_IMG_EXTS]) if in_dir.is_dir() else 0
@@ -1408,18 +1514,27 @@ async def job_status_api(job: str):
 
 @app.post("/jobs/{job}/trigger")
 async def trigger_job(request: Request, job: str):
+    _check_csrf_origin(request)
+    job = _validate_job(job)
     lang = "deu+eng"
     threshold = 100
     limit = 0
     no_mistral = False
-
     skip_preprocess = False
 
     # 1. Query Params
     qp = request.query_params
     if "lang" in qp: lang = qp["lang"]
-    if "threshold" in qp: threshold = int(qp["threshold"])
-    if "limit" in qp: limit = int(qp["limit"])
+    if "threshold" in qp:
+        try:
+            threshold = int(qp["threshold"])
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Threshold muss eine Ganzzahl sein")
+    if "limit" in qp:
+        try:
+            limit = int(qp["limit"])
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Limit muss eine Ganzzahl sein")
     if "no_mistral" in qp: no_mistral = qp["no_mistral"].lower() in ("1", "true", "yes", "on")
     if "skip_preprocess" in qp: skip_preprocess = qp["skip_preprocess"].lower() in ("1", "true", "yes", "on")
 
@@ -1428,23 +1543,37 @@ async def trigger_job(request: Request, job: str):
     if "application/json" in ct:
         try:
             body = await request.json()
-            lang = body.get("lang", lang)
-            threshold = int(body.get("threshold", threshold))
-            limit = int(body.get("limit", limit))
+            if "lang" in body: lang = str(body["lang"])
+            if "threshold" in body:
+                try: threshold = int(body["threshold"])
+                except ValueError: raise HTTPException(status_code=422, detail="Threshold muss eine Ganzzahl sein")
+            if "limit" in body:
+                try: limit = int(body["limit"])
+                except ValueError: raise HTTPException(status_code=422, detail="Limit muss eine Ganzzahl sein")
             no_mistral = bool(body.get("no_mistral", no_mistral))
             skip_preprocess = bool(body.get("skip_preprocess", skip_preprocess))
+        except HTTPException:
+            raise
         except Exception:
             pass
     elif "application/x-www-form-urlencoded" in ct or "multipart/form-data" in ct:
         try:
             form = await request.form()
             if "lang" in form: lang = str(form["lang"])
-            if "threshold" in form: threshold = int(form["threshold"])
-            if "limit" in form: limit = int(form["limit"])
+            if "threshold" in form:
+                try: threshold = int(form["threshold"])
+                except ValueError: raise HTTPException(status_code=422, detail="Threshold muss eine Ganzzahl sein")
+            if "limit" in form:
+                try: limit = int(form["limit"])
+                except ValueError: raise HTTPException(status_code=422, detail="Limit muss eine Ganzzahl sein")
             if "no_mistral" in form: no_mistral = str(form["no_mistral"]).lower() in ("1", "true", "yes", "on")
             if "skip_preprocess" in form: skip_preprocess = str(form["skip_preprocess"]).lower() in ("1", "true", "yes", "on")
+        except HTTPException:
+            raise
         except Exception:
             pass
+
+    lang = _validate_lang(lang)
 
     # 3. Vor Re-Run: bisherigen Lauf automatisch archivieren, falls Artefakte vorhanden sind
     current_art = _get_job_artifacts(job)
@@ -1466,11 +1595,18 @@ async def trigger_job(request: Request, job: str):
     )
 
     redirect_target = request.query_params.get("redirect", "")
+    if redirect_target and (not redirect_target.startswith("/") or redirect_target.startswith("//")):
+        redirect_target = ""
+
     if not redirect_target:
         ref = request.headers.get("referer", "")
-        if "/status" in ref:
-            redirect_target = f"/status?job={job}"
-        else:
+        if ref:
+            parsed_ref = urlparse(ref)
+            if "/status" in parsed_ref.path:
+                redirect_target = f"/status?job={job}"
+            elif f"/jobs/{job}" in parsed_ref.path:
+                redirect_target = f"/jobs/{job}"
+        if not redirect_target:
             redirect_target = f"/jobs/{job}"
 
     accept = request.headers.get("accept", "")
@@ -1481,6 +1617,7 @@ async def trigger_job(request: Request, job: str):
 
 @app.get("/jobs/{job}", response_class=HTMLResponse)
 async def job_detail(job: str, request: Request):
+    job = _validate_job(job)
     info = {"name": job}
     report_path = REPORTS_DIR / f"{job}.pipeline.json"
     info["report"] = json.loads(report_path.read_text()) if report_path.exists() else None
@@ -1535,35 +1672,52 @@ async def job_detail(job: str, request: Request):
 @app.get("/jobs/{job}/download-zip")
 @app.get("/download/zip/{job}")
 async def job_download_zip(job: str):
+    job = _validate_job(job)
     return _build_zip_response(job)
 
 
 @app.get("/jobs/{job}/runs/{run_id}/download-zip")
 async def run_download_zip(job: str, run_id: str):
+    job = _validate_job(job)
+    run_id = _validate_run_id(run_id)
     return _build_zip_response(job, run_id=run_id)
 
 
 @app.get("/jobs/{job}/runs/{run_id}/download/{filename}")
 async def run_download_file(job: str, run_id: str, filename: str):
+    job = _validate_job(job)
+    run_id = _validate_run_id(run_id)
+    clean_filename = Path(filename).name
+    if not clean_filename or clean_filename != filename:
+        raise HTTPException(status_code=400, detail="Ungültiger Dateiname")
     try:
         run_dir = _safe_path(RUNS_DIR / job, run_id)
-        path = _safe_path(run_dir, filename)
+        path = _safe_path(run_dir, clean_filename)
     except ValueError:
-        return JSONResponse({"error": "path traversal blocked"}, status_code=403)
-    if not path.exists():
-        return JSONResponse({"error": "not found"}, status_code=404)
-    return StreamingResponse(open(path, "rb"), media_type="application/octet-stream", headers={"Content-Disposition": f'attachment; filename="{path.name}"'})
+        raise HTTPException(status_code=403, detail="Path traversal blocked")
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Datei nicht gefunden")
+    return StreamingResponse(
+        open(path, "rb"),
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": _content_disposition("attachment", path.name)},
+    )
 
 
 @app.get("/jobs/{job}/runs/{run_id}/browse/{filename}")
 async def run_browse_file(job: str, run_id: str, filename: str):
+    job = _validate_job(job)
+    run_id = _validate_run_id(run_id)
+    clean_filename = Path(filename).name
+    if not clean_filename or clean_filename != filename:
+        raise HTTPException(status_code=400, detail="Ungültiger Dateiname")
     try:
         run_dir = _safe_path(RUNS_DIR / job, run_id)
-        path = _safe_path(run_dir, filename)
+        path = _safe_path(run_dir, clean_filename)
     except ValueError:
-        return JSONResponse({"error": "path traversal blocked"}, status_code=403)
-    if not path.exists():
-        return JSONResponse({"error": "not found"}, status_code=404)
+        raise HTTPException(status_code=403, detail="Path traversal blocked")
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Datei nicht gefunden")
 
     ext = path.suffix.lower()
     if ext in {".png", ".jpg", ".jpeg"}:
@@ -1576,14 +1730,24 @@ async def run_browse_file(job: str, run_id: str, filename: str):
     elif ext in {".txt", ".md", ".hocr", ".tsv", ".typ"}:
         return HTMLResponse(f"<pre style='white-space:pre-wrap;word-break:break-all;'>{html.escape(path.read_text(errors='replace'))}</pre>")
     elif ext == ".pdf":
-        return StreamingResponse(open(path, "rb"), media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="{path.name}"'})
+        return StreamingResponse(
+            open(path, "rb"),
+            media_type="application/pdf",
+            headers={"Content-Disposition": _content_disposition("inline", path.name)},
+        )
     elif ext == ".epub":
-        return StreamingResponse(open(path, "rb"), media_type="application/epub+zip", headers={"Content-Disposition": f'attachment; filename="{path.name}"'})
-    return JSONResponse({"error": "unsupported"}, status_code=400)
+        return StreamingResponse(
+            open(path, "rb"),
+            media_type="application/epub+zip",
+            headers={"Content-Disposition": _content_disposition("attachment", path.name)},
+        )
+    raise HTTPException(status_code=400, detail="Dateiformat wird nicht unterstützt")
 
 
 @app.post("/jobs/{job}/runs/archive")
 async def run_archive_current(job: str, request: Request):
+    _check_csrf_origin(request)
+    job = _validate_job(job)
     note = "Manuell archivierter Vorlauf"
     ct = request.headers.get("content-type", "")
     if "application/x-www-form-urlencoded" in ct or "multipart/form-data" in ct:
@@ -1602,35 +1766,57 @@ async def run_archive_current(job: str, request: Request):
             pass
 
     run_id = _archive_current_run(job, note=note)
-    ref = request.headers.get("referer", f"/jobs/{job}")
+    ref = request.headers.get("referer", "")
+    redirect_target = f"/jobs/{job}"
+    if ref:
+        parsed_ref = urlparse(ref)
+        if parsed_ref.path.startswith(f"/jobs/{job}"):
+            redirect_target = parsed_ref.path
     accept = request.headers.get("accept", "")
-    if "text/html" in accept or ref:
-        return RedirectResponse(url=ref, status_code=303)
+    if "text/html" in accept or redirect_target:
+        return RedirectResponse(url=redirect_target, status_code=303)
     return JSONResponse({"ok": bool(run_id), "run_id": run_id})
 
 
 @app.post("/jobs/{job}/runs/{run_id}/delete")
 async def run_delete_single(job: str, run_id: str, request: Request):
+    _check_csrf_origin(request)
+    job = _validate_job(job)
+    run_id = _validate_run_id(run_id)
     ok = _delete_job_run(job, run_id)
-    ref = request.headers.get("referer", f"/jobs/{job}")
+    ref = request.headers.get("referer", "")
+    redirect_target = f"/jobs/{job}"
+    if ref:
+        parsed_ref = urlparse(ref)
+        if parsed_ref.path.startswith(f"/jobs/{job}"):
+            redirect_target = parsed_ref.path
     accept = request.headers.get("accept", "")
-    if "text/html" in accept or ref:
-        return RedirectResponse(url=ref, status_code=303)
+    if "text/html" in accept or redirect_target:
+        return RedirectResponse(url=redirect_target, status_code=303)
     return JSONResponse({"ok": ok, "job": job, "run_id": run_id})
 
 
 @app.post("/jobs/{job}/runs/clear")
 async def run_clear_all(job: str, request: Request):
+    _check_csrf_origin(request)
+    job = _validate_job(job)
     deleted_count = _clear_all_runs(job)
-    ref = request.headers.get("referer", f"/jobs/{job}")
+    ref = request.headers.get("referer", "")
+    redirect_target = f"/jobs/{job}"
+    if ref:
+        parsed_ref = urlparse(ref)
+        if parsed_ref.path.startswith(f"/jobs/{job}"):
+            redirect_target = parsed_ref.path
     accept = request.headers.get("accept", "")
-    if "text/html" in accept or ref:
-        return RedirectResponse(url=ref, status_code=303)
+    if "text/html" in accept or redirect_target:
+        return RedirectResponse(url=redirect_target, status_code=303)
     return JSONResponse({"ok": True, "job": job, "deleted_runs": deleted_count})
 
 
 @app.post("/jobs/{job}/delete")
 async def job_delete_entire(job: str, request: Request):
+    _check_csrf_origin(request)
+    job = _validate_job(job)
     ok = _delete_entire_job(job)
     accept = request.headers.get("accept", "")
     if "text/html" in accept or request.headers.get("referer"):
@@ -1640,83 +1826,103 @@ async def job_delete_entire(job: str, request: Request):
 
 @app.get("/api/jobs/{job}/artifacts")
 async def api_job_artifacts(job: str):
+    job = _validate_job(job)
     return JSONResponse(_get_job_artifacts(job))
 
 
 @app.get("/api/jobs/{job}/runs")
 async def api_job_runs(job: str):
+    job = _validate_job(job)
     return JSONResponse(_list_job_runs(job))
 
 
 @app.get("/browse/{kind}/{job}/{filename}")
 async def browse_file(kind: str, job: str, filename: str):
+    job = _validate_job(job)
+    clean_filename = Path(filename).name
+    if not clean_filename or clean_filename != filename:
+        raise HTTPException(status_code=400, detail="Ungültiger Dateiname")
     base_map = {
         "input": INPUT_DIR, "preprocessed": PROC_DIR / "preprocessed",
         "quality": PROC_DIR / "quality", "markdown": OUT_DIR / "markdown",
         "pdf": PDF_DIR, "reports": REPORTS_DIR, "tei": TEI_DIR, "books": BOOKS_DIR, "epub": BOOKS_DIR
     }
     base = base_map.get(kind)
-    if base is None: return JSONResponse({"error": "invalid kind"}, status_code=400)
+    if base is None:
+        raise HTTPException(status_code=400, detail="Ungültige Kategorie")
     try:
-        if (base / filename).exists():
-            path = _safe_path(base, filename)
-        elif (base / job / filename).exists():
-            path = _safe_path(base / job, filename)
+        if (base / clean_filename).is_file():
+            path = _safe_path(base, clean_filename)
+        elif (base / job / clean_filename).is_file():
+            path = _safe_path(base / job, clean_filename)
         else:
-            path = _safe_path(base, filename)
-    except ValueError: return JSONResponse({"error": "path traversal blocked"}, status_code=403)
-    if not path.exists(): return JSONResponse({"error": "not found"}, status_code=404)
-    if path.suffix.lower() in {".png", ".jpg", ".jpeg"}:
-        media_type = "image/png" if path.suffix == ".png" else "image/jpeg"
+            path = _safe_path(base, clean_filename)
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Path traversal blocked")
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Datei nicht gefunden")
+
+    ext = path.suffix.lower()
+    if ext in {".png", ".jpg", ".jpeg"}:
+        media_type = "image/png" if ext == ".png" else "image/jpeg"
         return StreamingResponse(open(path, "rb"), media_type=media_type)
-    elif path.suffix == ".json": return JSONResponse(json.loads(path.read_text()))
-    elif path.suffix in {".xml", ".tei.xml"}:
+    elif ext == ".json":
+        return JSONResponse(json.loads(path.read_text()))
+    elif ext in {".xml", ".tei.xml"}:
         return HTMLResponse(f"<pre style='white-space:pre-wrap;word-break:break-all;'>{html.escape(path.read_text(errors='replace'))}</pre>")
-    elif path.suffix in {".txt", ".md", ".hocr", ".tsv", ".typ"}:
+    elif ext in {".txt", ".md", ".hocr", ".tsv", ".typ"}:
         return HTMLResponse(f"<pre style='white-space:pre-wrap;word-break:break-all;'>{html.escape(path.read_text(errors='replace'))}</pre>")
-    elif path.suffix == ".pdf": return StreamingResponse(open(path, "rb"), media_type="application/pdf", headers={"Content-Disposition": f"inline; filename={path.name}"})
-    elif path.suffix == ".epub": return StreamingResponse(open(path, "rb"), media_type="application/epub+zip", headers={"Content-Disposition": f"attachment; filename={path.name}"})
-    return JSONResponse({"error": "unsupported"}, status_code=400)
+    elif ext == ".pdf":
+        return StreamingResponse(
+            open(path, "rb"),
+            media_type="application/pdf",
+            headers={"Content-Disposition": _content_disposition("inline", path.name)},
+        )
+    elif ext == ".epub":
+        return StreamingResponse(
+            open(path, "rb"),
+            media_type="application/epub+zip",
+            headers={"Content-Disposition": _content_disposition("attachment", path.name)},
+        )
+    raise HTTPException(status_code=400, detail="Dateiformat wird nicht unterstützt")
 
 
 @app.get("/download/{kind}/{job}/{filename}")
 async def download_file(kind: str, job: str, filename: str):
+    job = _validate_job(job)
+    clean_filename = Path(filename).name
+    if not clean_filename or clean_filename != filename:
+        raise HTTPException(status_code=400, detail="Ungültiger Dateiname")
     base_map = {
         "pdf": PDF_DIR, "reports": REPORTS_DIR, "markdown": OUT_DIR / "markdown",
         "preprocessed": PROC_DIR / "preprocessed", "quality": PROC_DIR / "quality",
         "input": INPUT_DIR, "tei": TEI_DIR, "books": BOOKS_DIR
     }
     base = base_map.get(kind)
-    if base is None: return JSONResponse({"error": "invalid kind"}, status_code=400)
+    if base is None:
+        raise HTTPException(status_code=400, detail="Ungültige Kategorie")
     try:
-        if (base / filename).exists():
-            path = _safe_path(base, filename)
-        elif (base / job / filename).exists():
-            path = _safe_path(base / job, filename)
+        if (base / clean_filename).is_file():
+            path = _safe_path(base, clean_filename)
+        elif (base / job / clean_filename).is_file():
+            path = _safe_path(base / job, clean_filename)
         else:
-            path = _safe_path(base, filename)
-    except ValueError: return JSONResponse({"error": "path traversal blocked"}, status_code=403)
-    if not path.exists(): return JSONResponse({"error": "not found"}, status_code=404)
-    return StreamingResponse(open(path, "rb"), media_type="application/octet-stream", headers={"Content-Disposition": f"attachment; filename={path.name}"})
-
-
-@app.get("/health")
-async def health(): return {"status": "ok", "data_dir": str(DATA_DIR), "n8n_url": N8N_WEBHOOK_URL}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+            path = _safe_path(base, clean_filename)
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Path traversal blocked")
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Datei nicht gefunden")
+    return StreamingResponse(
+        open(path, "rb"),
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": _content_disposition("attachment", path.name)},
+    )
 
 
 # ── PDF Textlayer-Editor: text extraction, preview, correction ────────────────
-import subprocess
-import sys as _sys
-import tempfile
-
-# Add scripts/ to path so we can import pdf_text_correct directly
-_scripts_dir = BASE_DIR / "scripts"
-if str(_scripts_dir) not in _sys.path:
-    _sys.path.insert(0, str(_scripts_dir))
+for _sdir in [BASE_DIR / "scripts", BASE_DIR.parent / "scripts"]:
+    if _sdir.is_dir() and str(_sdir) not in sys.path:
+        sys.path.insert(0, str(_sdir))
 
 try:
     from pdf_text_correct import replace_in_pdf as _replace_in_pdf, pdftotext as _pdftotext
@@ -1727,12 +1933,22 @@ except Exception as _e:
 
 
 def _get_sandwich_pdf(job: str) -> Path | None:
-    pdf = PDF_DIR / f"{job}.sandwich.pdf"
-    return pdf if pdf.exists() else None
+    job = _validate_job(job)
+    for name in [
+        f"{job}.perfect_sandwich.pdf",
+        f"{job}.sandwich.pdf",
+        f"{job}.aligned.pdf",
+        f"{job}.pathb.pdf",
+    ]:
+        p = PDF_DIR / name
+        if p.is_file():
+            return p
+    return None
 
 
 @app.get("/jobs/{job}/edit", response_class=HTMLResponse)
 async def job_edit(job: str, request: Request):
+    job = _validate_job(job)
     pdf = _get_sandwich_pdf(job)
     if pdf is None:
         return templates.TemplateResponse(request, "editor.html", {
@@ -1770,43 +1986,58 @@ async def job_edit(job: str, request: Request):
     })
 
 
+def _render_page_png(pdf_path: Path, page: int, dpi: int = 150) -> bytes:
+    """Rendert eine einzelne PDF-Seite determiniert via pdftoppm -singlefile."""
+    with tempfile.TemporaryDirectory() as td:
+        out_stem = Path(td) / "page"
+        cmd = [
+            "pdftoppm",
+            "-png",
+            "-r", str(dpi),
+            "-f", str(page),
+            "-singlefile",
+            str(pdf_path),
+            str(out_stem),
+        ]
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+        if proc.returncode != 0:
+            err = proc.stderr.decode("utf-8", errors="replace")[:200]
+            raise RuntimeError(f"pdftoppm fehlgeschlagen (code {proc.returncode}): {err}")
+        out_png = Path(td) / "page.png"
+        if not out_png.is_file():
+            raise FileNotFoundError("pdftoppm erzeugte keine Bilddatei")
+        return out_png.read_bytes()
+
+
 @app.get("/jobs/{job}/preview/{page}")
 async def job_preview_page(job: str, page: int):
+    job = _validate_job(job)
+    if page < 1:
+        raise HTTPException(status_code=400, detail="Ungültige Seitennummer")
     pdf = _get_sandwich_pdf(job)
     if pdf is None:
-        return JSONResponse({"error": "no sandwich PDF"}, status_code=404)
+        raise HTTPException(status_code=404, detail="Kein Sandwich-PDF gefunden")
     try:
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-            tmp_path = tmp.name
-        proc = subprocess.run(
-            ["pdftoppm", "-png", "-f", str(page), "-l", str(page), "-r", "150", str(pdf), tmp_path],
-            capture_output=True, timeout=30,
-        )
-        if proc.returncode != 0:
-            return JSONResponse({"error": f"pdftoppm failed: {proc.stderr.decode()[:200]}"}, status_code=500)
-        # pdftoppm appends -N to filename
-        result_path = Path(tmp_path + f"-{page}.png") if page < 10 else Path(tmp_path.replace(".png", f"-{page}.png"))
-        if not result_path.exists():
-            # try alternate naming
-            candidates = list(Path(tmp_path).parent.glob(Path(tmp_path).stem + "-*.png"))
-            if candidates:
-                result_path = candidates[0]
-            else:
-                return JSONResponse({"error": "pdftoppm produced no output"}, status_code=500)
-        img_bytes = result_path.read_bytes()
-        result_path.unlink(missing_ok=True)
-        Path(tmp_path).unlink(missing_ok=True)
+        img_bytes = await asyncio.to_thread(_render_page_png, pdf, page, 150)
         return StreamingResponse(
-            iter([img_bytes]),
+            io.BytesIO(img_bytes),
             media_type="image/png",
-            headers={"Cache-Control": "public, max-age=300"},
+            headers={
+                "Cache-Control": "public, max-age=300",
+                "Content-Disposition": _content_disposition("inline", f"{job}_p{page}.png"),
+            },
         )
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Seite konnte nicht gerendert werden")
     except Exception as e:
+        logger.exception(f"Vorschau-Fehler für {job} p.{page}")
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @app.post("/jobs/{job}/correct")
-async def job_correct(job: str, body: dict = None):
+async def job_correct(request: Request, job: str, body: dict = None):
+    _check_csrf_origin(request)
+    job = _validate_job(job)
     pdf = _get_sandwich_pdf(job)
     if pdf is None:
         return JSONResponse({"ok": False, "error": "no sandwich PDF"}, status_code=404)
@@ -1858,3 +2089,8 @@ async def job_correct(job: str, body: dict = None):
         "output": str(out_pdf),
         "text_after": text_after[:2000],
     })
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)

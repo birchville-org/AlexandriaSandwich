@@ -5,18 +5,25 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 ## [1.2.1] - 2026-10-09
 
 ### Added
-- **Automatische TOC- & Metadaten-Injection in der Pipeline (`scripts/inject_toc.py`):**
-  - Integriert in `scripts/run_pipeline.sh`: Injiziert hierarchische Lesezeichen (Outlines), Dokument-Metadaten und Seitennummerierungs-Labels (r/D) in alle generierten PDFs (`.sandwich.pdf`, `.aligned.pdf`, `.digital.pdf`).
-  - Unterstützt manuelle `toc.json` (als Liste oder Dict) sowie automatischen Fallback auf Gliederungen und Metadaten aus `book.json`.
+- **Zweigleisige Rekonstruktions-Pipeline (`scripts/run_pipeline.sh`):**
+  - **Pfad A (Perfect Sandwich):** `scripts/build_perfect_sandwich.py` trennt Text- und Bildblöcke automatisch, binarisiert den Hintergrund auf 98 % Weißgrad (Beseitigung von Scan-Schatten und Daumenabdrücken) und bettet eine unsichtbare, koordinatengenaue Vektor-Textebene ein.
+  - **Pfad B (Semantic Typeset Edition):** `scripts/build_typeset_edition.py` erzeugt einen freilaufenden, zweispaltigen Typst-Neusatz (Boethlingk-Architektur) mit zentriertem vertikalem Mittelstrich (`grid.vline`), dynamischer Kolumnentrennung und automatischer Devanāgarī-Font-Kaskade.
+- **Automatische TOC- & Metadaten-Injection (`scripts/inject_toc.py`):**
+  - Injiziert hierarchische Lesezeichen (Outlines), Dokument-Metadaten und Seitennummerierungs-Labels (r/D) in alle generierten PDFs (`.sandwich.pdf`, `.aligned.pdf`, `.digital.pdf`, `.perfect_sandwich.pdf`, `.typeset_edition.pdf`).
+  - Unterstützt manuelle `toc.json` sowie automatischen Fallback auf Gliederungen und Metadaten aus `book.json`.
 
-### Changed
-- **Terminologie-Refactoring (Sandwich & Aligned):**
-  - Unspezifische Begriffe „Weg A / Weg B“ und „Path A / Path B“ durch präzise Fachbegriffe ersetzt:
-    - Standard-Faksimile: `<job>.sandwich.pdf`
-    - KI-synchronisiertes Faksimile: `<job>.aligned.pdf`
-    - Vor-Montage-Ebene: „Pre-Assembly hOCR-Korrektur“ (`scripts/hocr_correct.py`)
-    - Nach-Montage-Ebene: „Post-Assembly Textlayer-Korrektur“ (`scripts/pdf_text_correct.py`, `scripts/align_mistral_pdf.py`)
-  - Volle Abwärtskompatibilität: Pipeline-Reports und UI erkennen weiterhin bestehende `.pathb.pdf`-Artefakte nahtlos.
+### Security & Hardening
+- **Web UI & API Sicherheitsarchitektur (`ui/main.py`):**
+  - **Path-Traversal-Schutz:** Strikte Validierung von `job` (`_validate_job`) und `run_id` (`_validate_run_id`) über alle Routen; Absicherung aller Dateizugriffe und Löschoperationen mit `Path.is_relative_to()`.
+  - **Upload-Schutz:** Streaming-Upload in 1-MB-Chunks (`_save_upload_file`) mit 500 MB Größenlimit, CSRF-Origin-Prüfung (`_check_csrf_origin`) und Schutz vor ZIP-Bomben (`MAX_ZIP_ENTRIES`, `MAX_ZIP_UNCOMPRESSED`).
+  - **Open-Redirect-Prävention:** Weiterleitungsziele auf relative Pfade innerhalb derselben Domain beschränkt.
+  - **Header-Encoding:** RFC-5987 / RFC-6266 konforme `Content-Disposition`-Header für Downloads.
+
+### Fixed & Changed
+- **Seitenvorschau-Fix (`ui/main.py`):** `job_preview_page` auf `pdftoppm -singlefile` im Thread-Pool (`asyncio.to_thread`) umgestellt; eliminiert pdftoppm-Dateinamensfallen und blockiert den Event-Loop nicht mehr.
+- **Pipeline-Guards:** Caching-Guards für Vorverarbeitung und Qualitätsprüfungen in `scripts/run_pipeline.sh` ergänzt.
+- **Terminologie-Refactoring:** Unspezifische Bezeichnungen durch präzise Fachbegriffe ersetzt (`sandwich`, `aligned`, `pre-assembly`, `post-assembly`).
+
 
 ## [1.2.0] - 2026-09-28
 

@@ -3,7 +3,7 @@
 > **Automatisierte Buch-Digitalisierung mit Hybrid-OCR (Tesseract + Mistral AI), GSD-Pipeline & Perfect Sandwich-PDF Output.**
 
 ![Build Status](https://img.shields.io/badge/docker-multi--arch-blue)
-![Release](https://img.shields.io/badge/release-v1.2.0-blue)
+![Release](https://img.shields.io/badge/release-v1.2.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Python](https://img.shields.io/badge/python-3.12-yellow)
 
