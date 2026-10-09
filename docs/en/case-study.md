@@ -68,7 +68,36 @@ The objective is the production of a multi-tiered, archive-grade digital corpus:
 * **Output Artifacts:**
   * `.mistral.md`: Semantically structured Markdown with heading hierarchies and running text.
   * `.mistral.json`: Detailed response containing page dimensions, text blocks, and bounding-box coordinates for Sandwich PDF layering.
-* **Total OCR Cost:** 478 pages x $0.004 = exactly **$1.912** for the entire volume.
+* **Total OCR Cost:** 478 pages x 0.004 USD = exactly **1.912 USD** for the entire volume.
+
+### Step 2.1: Local VLM Alternative & Model Benchmark (Mistral OCR vs. Qwen2.5-VL)
+To evaluate an autonomous, offline-capable alternative for sensitive digitization workflows and air-gapped deployments alongside the Cloud API (`mistral-ocr-latest`), a local Vision-Language Model pipeline ([scripts/qwen_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/qwen_ocr.py), [scripts/benchmark_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/benchmark_ocr.py)) powered by **Qwen2.5-VL** (via MLX on Apple Silicon) was benchmarked:
+
+#### 1. Antiqua / Introductory Prose (Latin Typography, e.g. Page 5)
+On pure Latin typography and German philological explanations, the local model achieves near-complete concordance:
+
+| Metric | Mistral Document AI (Cloud) | Qwen2.5-VL (Local, BF16 / 8-bit) | Difference / Evaluation |
+| :--- | :--- | :--- | :--- |
+| **Similarity** | Reference | **99.96 %** | Virtually identical text extraction |
+| **Character Count** | 2,437 chars | 2,435 chars | -2 chars |
+| **Word Count** | 338 words | 337 words | -1 word |
+| **Processing Time** | approx. 1.8 s | approx. 161 s | Cloud approx. 90x faster |
+| **API Costs** | 0.004 USD / page | **0.00 USD (Local)** | 100% free & offline |
+
+#### 2. Polyglossic Setting / Historical Devanāgarī (e.g. Page 108)
+On complex 19th-century Devanāgarī lead type featuring ligatures, Virāmas, and mixed commentary, specialization becomes pronounced:
+
+| Metric | Mistral Document AI (Cloud) | Qwen2.5-VL BF16 (Local) | Qwen2.5-VL 8-bit (Local) |
+| :--- | :--- | :--- | :--- |
+| **Similarity** | Reference | **66.59 %** | **65.32 %** |
+| **Devanāgarī Characters** | 1,304 chars | 1,212 chars (-92) | 1,210 chars (-94) |
+| **Total Characters** | 1,825 chars | 1,782 chars (-43) | 1,779 chars (-46) |
+| **Processing Time / Page** | approx. 1.8 s | 293.7 s (~4.9 min) | **196.5 s (~3.3 min, +33% speedup)** |
+| **API Costs** | 0.004 USD / page | **0.00 USD** | **0.00 USD** |
+
+#### Conclusion & Architectural Decision:
+- **Mistral OCR:** Gold standard for historical Indic scripts and bulk processing (highest ligature accuracy, minimal latency).
+- **Qwen2.5-VL 8-bit (Local):** Robust, privacy-preserving alternative for modern and European typography (99.96% accuracy). 8-bit quantization reduces inference latency by 33% with negligible character loss (-0.2%).
 
 ### Step 3: Canonical Alignment & Heuristics (`scripts/align_mistral_sutras.py`)
 * **Fuzzy Canonical Matching:** When OCR misreads a Sūtra counter (e.g. reading Devanagari digit ८ as ६: `६५` instead of `८५`), a `SequenceMatcher` algorithm compares normalized Sanskrit text with expected Sūtras in `data/sutras.json`. At similarity >= 0.45, the counter is automatically adjusted.

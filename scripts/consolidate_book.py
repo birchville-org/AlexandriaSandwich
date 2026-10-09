@@ -137,15 +137,29 @@ def parse_markdown_page(md_path: Path) -> Dict[str, Any]:
 
 def clean_page_artifacts(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Remove repetitive running headers, footers and standalone page numbers
-    from page boundaries.
+    Remove repetitive running headers, footers, standalone page numbers,
+    and prompt evaluation hallucinations from page boundaries.
     """
     for page in pages:
         cleaned_blocks = []
         num_blocks = len(page["blocks"])
+        seen_texts: Dict[str, int] = {}
+        
         for idx, block in enumerate(page["blocks"]):
             text = block["text"].strip()
+            if not text:
+                continue
+
+            # Filter model hallucination loops on blank/noisy pages
+            t_lower = text.lower()
+            if "ground truth image displays" in t_lower or "underscore & line rules" in t_lower:
+                continue
             
+            # Filter repetition loops (identical block repeated > 3 times on one page)
+            seen_texts[text] = seen_texts.get(text, 0) + 1
+            if seen_texts[text] > 3:
+                continue
+
             # Check if block is a standalone page number (e.g., "12", "- 12 -", "[12]")
             is_standalone_page_no = bool(re.match(r'^[-–—\[\(]?\s*\d{1,4}\s*[-–—\]\)]?$', text))
             

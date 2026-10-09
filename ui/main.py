@@ -2,6 +2,7 @@
 """AlexandriaSandwich Web UI (FastAPI)"""
 from __future__ import annotations
 import asyncio
+import io
 import html, json, logging, os, platform, re, shutil, subprocess, time, zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +24,10 @@ REPORTS_DIR = OUT_DIR / "reports"
 PDF_DIR = OUT_DIR / "pdf"
 TEI_DIR = OUT_DIR / "tei"
 BOOKS_DIR = OUT_DIR / "books"
+RUNS_DIR = OUT_DIR / "runs"
+RUNS_DIR.mkdir(parents=True, exist_ok=True)
+VALID_IMG_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".pnm", ".ppm"}
+
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "http://localhost:5678/webhook/alexandria/ocr")
 FALLBACK_N8N_URL = os.getenv("FALLBACK_N8N_URL", "http://192.168.1.250:5678/webhook/alexandria/ocr")
 N8N_WEBHOOK_TIMEOUT = float(os.getenv("N8N_WEBHOOK_TIMEOUT", "180"))
@@ -34,18 +39,329 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
+def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
+    """Sammelt alle erzeugten Artefakte eines Jobs (oder eines archivierten Vorlaufs)."""
+    items = []
+    if run_id:
+        target_dir = RUNS_DIR / job / run_id
+        if target_dir.is_dir():
+            for p in sorted(target_dir.iterdir()):
+                if p.is_file() and p.name != "meta.json":
+                    size_kb = round(p.stat().st_size / 1024, 1)
+                    ext = p.suffix.lower()
+                    kind = "pdf" if ext == ".pdf" else ("tei" if ".tei" in p.name else ("books" if ext in {".epub", ".json", ".md"} else "reports"))
+                    title = p.name
+                    desc = "Archiviertes Artefakt"
+                    if "sandwich" in p.name:
+                        title = "1:1 Sandwich-PDF"
+                        desc = "Originalscan + native OCR-Textebene"
+                    elif "pathb" in p.name:
+                        title = "KI-synchronisiertes Sandwich-PDF"
+                        desc = "Mistral-bereinigter Textlayer (Path B)"
+                    elif "digital" in p.name:
+                        title = "Digitales Neusatz-PDF"
+                        desc = "Typst wissenschaftlicher Buchsatz"
+                    elif p.name.endswith(".epub"):
+                        title = "Reflowable EPUB 3 E-Book"
+                        desc = "E-Reader & Mobilgeräte"
+                    elif "tei" in p.name:
+                        title = "Generisches TEI-P5 XML"
+                        desc = "Langzeitarchivierungs-Standard"
+                    elif p.name == "book.json":
+                        title = "Buch-AST (JSON)"
+                        desc = "Strukturierte Objektrepräsentation"
+                    elif p.name == "book.md":
+                        title = "Konsolidiertes Markdown"
+                        desc = "Bereinigter Fließtext"
+                    elif "sidecar" in p.name:
+                        title = "OCR-Textstrom (Sidecar)"
+                        desc = "Unformatierter Text"
+                    elif "pipeline.json" in p.name:
+                        title = "Pipeline-Auditbericht"
+                        desc = "Qualitätsmetriken & Kostenaufstellung"
+
+                    items.append({
+                        "name": p.name,
+                        "title": title,
+                        "desc": desc,
+                        "path": str(p),
+                        "size_kb": size_kb,
+                        "size_mb": round(size_kb / 1024, 2),
+                        "ext": ext,
+                        "kind": kind,
+                        "download_url": f"/jobs/{job}/runs/{run_id}/download/{p.name}",
+                        "browse_url": f"/jobs/{job}/runs/{run_id}/browse/{p.name}",
+                    })
+    else:
+        # Aktueller Lauf
+        candidates = [
+            (PDF_DIR / f"{job}.sandwich.pdf", "pdf", "1:1 Sandwich-PDF", "Originalscan + native OCR-Textebene"),
+            (PDF_DIR / f"{job}.pathb.pdf", "pdf", "KI-synchronisiertes Sandwich-PDF", "Mistral-abgeglichene Textebene (Path B)"),
+            (PDF_DIR / f"{job}.digital.pdf", "pdf", "Digitales Neusatz-PDF", "Moderner Typst Vektorsatz"),
+            (TEI_DIR / f"{job}.tei.xml", "tei", "Generisches TEI-P5 XML", "Bibliotheksstandard zur Langzeitarchivierung"),
+            (BOOKS_DIR / job / f"{job}.epub", "books", "Reflowable EPUB 3 E-Book", "Mobilgeräte & E-Reader mit eingebetteten Schriften"),
+            (BOOKS_DIR / job / "book.json", "books", "Hierarchischer AST (book.json)", "Single Source of Truth mit Bounding Boxes"),
+            (BOOKS_DIR / job / "book.md", "books", "Konsolidiertes Markdown (book.md)", "Bereinigter UTF-8 Fließtext"),
+            (PDF_DIR / f"{job}.sidecar.txt", "pdf", "OCR-Textstrom (Sidecar)", "Unformatierter Volltext"),
+            (REPORTS_DIR / f"{job}.pipeline.json", "reports", "Pipeline-Auditbericht", "Qualitätsmetriken & Kostenaufstellung"),
+        ]
+        # Fallback EPUB Check
+        if not (BOOKS_DIR / job / f"{job}.epub").exists() and (OUT_DIR / "books" / f"{job}.epub").exists():
+            candidates[4] = (OUT_DIR / "books" / f"{job}.epub", "books", "Reflowable EPUB 3 E-Book", "Mobilgeräte & E-Reader mit eingebetteten Schriften")
+
+        for path, kind, title, desc in candidates:
+            if path.exists() and path.stat().st_size > 0:
+                size_kb = round(path.stat().st_size / 1024, 1)
+                items.append({
+                    "name": path.name,
+                    "title": title,
+                    "desc": desc,
+                    "path": str(path),
+                    "size_kb": size_kb,
+                    "size_mb": round(size_kb / 1024, 2),
+                    "ext": path.suffix.lower(),
+                    "kind": kind,
+                    "download_url": f"/download/{kind}/{job}/{path.name}",
+                    "browse_url": f"/browse/{kind}/{job}/{path.name}",
+                })
+
+    total_kb = sum(it["size_kb"] for it in items)
+    total_mb = round(total_kb / 1024, 2)
+    zip_url = f"/jobs/{job}/runs/{run_id}/download-zip" if run_id else f"/jobs/{job}/download-zip"
+
+    return {
+        "job": job,
+        "run_id": run_id,
+        "files": items,
+        "items": items,
+        "count": len(items),
+        "has_any": len(items) > 0,
+        "total_size_kb": round(total_kb, 1),
+        "total_size_mb": total_mb,
+        "zip_download_url": zip_url,
+    }
+
+
+def _archive_current_run(job: str, note: str = "") -> str | None:
+    """Archiviert die aktuellen Ziel-Artefakte und den Report eines Jobs als separaten Vorlauf."""
+    current_art = _get_job_artifacts(job)
+    if not current_art["has_any"]:
+        return None
+
+    now = datetime.now()
+    run_id = f"run_{now.strftime('%Y%m%d_%H%M%S')}"
+    run_dir = RUNS_DIR / job / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    copied = []
+    for item in current_art["items"]:
+        src = Path(item["path"])
+        dst = run_dir / src.name
+        try:
+            shutil.copy2(src, dst)
+            copied.append({
+                "name": src.name,
+                "title": item["title"],
+                "kind": item["kind"],
+                "size_kb": round(dst.stat().st_size / 1024, 1),
+                "ext": item["ext"],
+            })
+        except Exception as e:
+            logging.warning(f"Could not copy {src} to {dst}: {e}")
+
+    rep_file = REPORTS_DIR / f"{job}.pipeline.json"
+    rep_data = {}
+    if rep_file.exists():
+        try:
+            rep_data = json.loads(rep_file.read_text())
+        except Exception:
+            pass
+
+    meta = {
+        "run_id": run_id,
+        "job": job,
+        "archived_at": now.isoformat(),
+        "archived_str": now.strftime("%d.%m.%Y, %H:%M:%S"),
+        "note": note or "Vorangegangener Lauf",
+        "status": "PASS" if rep_data.get("fail", 1) == 0 or rep_data.get("pass", 0) > 0 else (rep_data.get("status") or "COMPLETED"),
+        "threshold": rep_data.get("threshold", 100),
+        "lang": rep_data.get("lang", "deu+eng"),
+        "pages_total": rep_data.get("pages_total", len(copied)),
+        "pass": rep_data.get("pass", 0),
+        "fail": rep_data.get("fail", 0),
+        "mistral_ok": rep_data.get("mistral_ok", 0),
+        "mistral_cost_usd": round(rep_data.get("mistral_ok", 0) * 0.004, 4),
+        "artifacts_count": len(copied),
+        "total_size_kb": round(sum(c["size_kb"] for c in copied), 1),
+        "artifacts": copied
+    }
+
+    meta_file = run_dir / "meta.json"
+    meta_file.write_text(json.dumps(meta, indent=2, ensure_ascii=False))
+    return run_id
+
+
+def _list_job_runs(job: str) -> list[dict[str, Any]]:
+    """Listet alle archivierten Vorläufe eines Jobs chronologisch sortiert auf (neueste zuerst)."""
+    runs = []
+    job_runs_dir = RUNS_DIR / job
+    if not job_runs_dir.is_dir():
+        return []
+
+    for d in sorted(job_runs_dir.iterdir(), reverse=True):
+        if d.is_dir() and d.name.startswith("run_"):
+            meta_file = d / "meta.json"
+            meta = {}
+            if meta_file.exists():
+                try:
+                    meta = json.loads(meta_file.read_text())
+                except Exception:
+                    pass
+
+            artifacts_info = _get_job_artifacts(job, run_id=d.name)
+            run_entry = {
+                "run_id": d.name,
+                "job": job,
+                "archived_at": meta.get("archived_at", datetime.fromtimestamp(d.stat().st_mtime).isoformat()),
+                "archived_str": meta.get("archived_str", datetime.fromtimestamp(d.stat().st_mtime).strftime("%d.%m.%Y, %H:%M:%S")),
+                "note": meta.get("note", "Archivierter Vorlauf"),
+                "status": meta.get("status", "PASS"),
+                "threshold": meta.get("threshold", 100),
+                "lang": meta.get("lang", "deu+eng"),
+                "pages_total": meta.get("pages_total", artifacts_info["count"]),
+                "pass": meta.get("pass", 0),
+                "fail": meta.get("fail", 0),
+                "mistral_ok": meta.get("mistral_ok", 0),
+                "mistral_cost_usd": meta.get("mistral_cost_usd", 0.0),
+                "artifacts": artifacts_info["items"],
+                "artifacts_count": artifacts_info["count"],
+                "total_size_mb": artifacts_info["total_size_mb"],
+                "zip_download_url": artifacts_info["zip_download_url"],
+            }
+            runs.append(run_entry)
+
+    return runs
+
+
+def _delete_job_run(job: str, run_id: str) -> bool:
+    """Löscht einen spezifischen Vorlauf sicher."""
+    job_runs_dir = RUNS_DIR / job
+    run_dir = job_runs_dir / run_id
+    try:
+        resolved = run_dir.resolve()
+        if not str(resolved).startswith(str(job_runs_dir.resolve())):
+            raise ValueError("Path traversal blocked")
+        if run_dir.is_dir():
+            shutil.rmtree(run_dir)
+            return True
+    except Exception as e:
+        logging.error(f"Error deleting run {run_id} for job {job}: {e}")
+    return False
+
+
+def _clear_all_runs(job: str) -> int:
+    """Löscht alle archivierten Vorläufe eines Jobs."""
+    job_runs_dir = RUNS_DIR / job
+    count = 0
+    if job_runs_dir.is_dir():
+        for d in list(job_runs_dir.iterdir()):
+            if d.is_dir() and d.name.startswith("run_"):
+                try:
+                    shutil.rmtree(d)
+                    count += 1
+                except Exception as e:
+                    logging.error(f"Error removing {d}: {e}")
+    return count
+
+
+def _delete_entire_job(job: str) -> bool:
+    """Löscht alle Daten eines Jobs (Input, Preprocessing, Quality, Markdown, Books, PDFs, TEI, Reports, Runs)."""
+    in_dir = INPUT_DIR / job
+    if in_dir.is_dir():
+        shutil.rmtree(in_dir, ignore_errors=True)
+    pre_dir = PROC_DIR / "preprocessed" / job
+    if pre_dir.is_dir():
+        shutil.rmtree(pre_dir, ignore_errors=True)
+    qc_dir = PROC_DIR / "quality" / job
+    if qc_dir.is_dir():
+        shutil.rmtree(qc_dir, ignore_errors=True)
+    md_dir = OUT_DIR / "markdown" / job
+    if md_dir.is_dir():
+        shutil.rmtree(md_dir, ignore_errors=True)
+    bk_dir = BOOKS_DIR / job
+    if bk_dir.is_dir():
+        shutil.rmtree(bk_dir, ignore_errors=True)
+    for p in PDF_DIR.glob(f"{job}.*"):
+        p.unlink(missing_ok=True)
+    for p in TEI_DIR.glob(f"{job}.*"):
+        p.unlink(missing_ok=True)
+    for p in REPORTS_DIR.glob(f"{job}.*"):
+        p.unlink(missing_ok=True)
+    runs_dir = RUNS_DIR / job
+    if runs_dir.is_dir():
+        shutil.rmtree(runs_dir, ignore_errors=True)
+    return True
+
+
+def _build_zip_response(job: str, run_id: str | None = None) -> StreamingResponse | JSONResponse:
+    art = _get_job_artifacts(job, run_id=run_id)
+    if not art["items"]:
+        return JSONResponse({"error": "Keine Artefakte zum Download vorhanden"}, status_code=404)
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        summary = {
+            "job": job,
+            "run_id": run_id or "aktuell",
+            "exported_at": datetime.now().isoformat(),
+            "artifacts_count": len(art["items"]),
+            "artifacts": [{"name": it["name"], "title": it["title"], "size_kb": it["size_kb"]} for it in art["items"]],
+        }
+        zf.writestr("MANIFEST.json", json.dumps(summary, indent=2, ensure_ascii=False))
+
+        for item in art["items"]:
+            file_path = Path(item["path"])
+            if file_path.exists() and file_path.is_file():
+                zf.write(file_path, arcname=file_path.name)
+
+    buf.seek(0)
+    suffix = f"_{run_id}" if run_id else ""
+    filename = f"{job}{suffix}_artefakte.zip"
+    return StreamingResponse(
+        buf,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
 def _list_jobs():
     jobs = {}
     if INPUT_DIR.is_dir():
         for d in sorted(INPUT_DIR.iterdir()):
             if d.is_dir():
-                jobs.setdefault(d.name, {"name": d.name, "input_pages": len(list(d.glob("*.png"))) + len(list(d.glob("*.jpg"))) + len(list(d.glob("*.tif"))), "status": "-", "has_report": False, "has_pdf": False})
+                jobs.setdefault(d.name, {
+                    "name": d.name,
+                    "input_pages": len([p for p in d.iterdir() if p.suffix.lower() in VALID_IMG_EXTS]),
+                    "status": "-",
+                    "has_report": False,
+                    "has_pdf": False,
+                    "runs_count": 0,
+                    "has_artifacts": False
+                })
     if REPORTS_DIR.is_dir():
         for f in sorted(REPORTS_DIR.glob("*.pipeline.json"), key=lambda p: p.stat().st_mtime, reverse=True):
             name = f.stem.replace(".pipeline", "")
             try: report = json.loads(f.read_text())
             except: report = {}
-            entry = jobs.get(name, {"name": name, "input_pages": 0, "status": "-", "has_report": False, "has_pdf": False})
+            entry = jobs.get(name, {
+                "name": name,
+                "input_pages": 0,
+                "status": "-",
+                "has_report": False,
+                "has_pdf": False,
+                "runs_count": 0,
+                "has_artifacts": False
+            })
             entry["status"] = "PASS" if report.get("fail", 1) == 0 or report.get("pass", 0) > 0 else "FAIL"
             entry["has_report"] = True
             entry["pass"] = report.get("pass", 0)
@@ -66,6 +382,12 @@ def _list_jobs():
         for f in TEI_DIR.glob("*.tei.xml"):
             name = f.name.replace(".tei.xml", "")
             if name in jobs: jobs[name]["has_tei"] = True
+
+    # Ergänze Vorläufe und Artefakt-Status für jeden Job
+    for name, entry in jobs.items():
+        entry["runs_count"] = len(_list_job_runs(name))
+        entry["has_artifacts"] = _get_job_artifacts(name)["has_any"]
+
     return sorted(jobs.values(), key=lambda j: j.get("modified", ""), reverse=True)
 
 
@@ -196,6 +518,7 @@ def _probe_system_status() -> dict[str, Any]:
     out_pdf_count = len(list(PDF_DIR.glob("*.pdf"))) if PDF_DIR.is_dir() else 0
     out_tei_count = len(list(TEI_DIR.glob("*.tei.xml"))) if TEI_DIR.is_dir() else 0
     out_epub_count = len(list(BOOKS_DIR.glob("**/*.epub"))) if BOOKS_DIR.is_dir() else 0
+    out_runs_count = sum(len([p for p in d.iterdir() if p.is_dir() and p.name.startswith("run_")]) for d in RUNS_DIR.iterdir() if d.is_dir()) if RUNS_DIR.is_dir() else 0
 
     storage_status = {
         "id": "storage",
@@ -216,7 +539,8 @@ def _probe_system_status() -> dict[str, Any]:
             "reports": out_rep_count,
             "pdfs": out_pdf_count,
             "tei_xmls": out_tei_count,
-            "epubs": out_epub_count
+            "epubs": out_epub_count,
+            "archived_runs": out_runs_count
         }
     }
 
@@ -550,6 +874,9 @@ def _get_job_progress(job: str) -> dict[str, Any]:
                     current_stage = f"Stufe {s['id']}: {s['name']}"
                     break
 
+    art = _get_job_artifacts(job)
+    runs = _list_job_runs(job)
+
     return {
         "job": job,
         "status_type": status_type,
@@ -566,7 +893,11 @@ def _get_job_progress(job: str) -> dict[str, Any]:
         "current_mistral_ok": mistral_ok,
         "estimated_total_seconds": total_sec,
         "estimated_total_str": f"{int(total_sec // 60)} Min. {int(total_sec % 60)} s" if total_sec >= 60 else f"{round(total_sec, 1)} s",
-        "stages": stages
+        "stages": stages,
+        "artifacts": art,
+        "runs": runs,
+        "runs_count": len(runs),
+        "zip_download_url": f"/jobs/{job}/download-zip"
     }
 
 
@@ -878,6 +1209,15 @@ async def trigger_job(request: Request, job: str):
         except Exception:
             pass
 
+    # 3. Vor Re-Run: bisherigen Lauf automatisch archivieren, falls Artefakte vorhanden sind
+    current_art = _get_job_artifacts(job)
+    if current_art.get("has_any"):
+        archived_id = _archive_current_run(
+            job,
+            note=f"Snapshot vor Re-Run (Threshold {threshold}%, {lang})"
+        )
+        logging.info(f"Job '{job}': Aktueller Stand archiviert als '{archived_id}'")
+
     resp = await asyncio.to_thread(
         _trigger_n8n,
         job,
@@ -944,7 +1284,128 @@ async def job_detail(job: str, request: Request):
     info["sidecar"] = sidecar.name if sidecar.exists() else None
     e2e_path = REPORTS_DIR / f"{job}.e2e.json"
     info["e2e_report"] = json.loads(e2e_path.read_text()) if e2e_path.exists() else None
+
+    # Artefakte und vorangegangene Läufe
+    info["artifacts"] = _get_job_artifacts(job)
+    info["runs"] = _list_job_runs(job)
+
     return templates.TemplateResponse(request, "job_detail.html", {"job": job, "info": info})
+
+
+@app.get("/jobs/{job}/download-zip")
+@app.get("/download/zip/{job}")
+async def job_download_zip(job: str):
+    return _build_zip_response(job)
+
+
+@app.get("/jobs/{job}/runs/{run_id}/download-zip")
+async def run_download_zip(job: str, run_id: str):
+    return _build_zip_response(job, run_id=run_id)
+
+
+@app.get("/jobs/{job}/runs/{run_id}/download/{filename}")
+async def run_download_file(job: str, run_id: str, filename: str):
+    try:
+        run_dir = _safe_path(RUNS_DIR / job, run_id)
+        path = _safe_path(run_dir, filename)
+    except ValueError:
+        return JSONResponse({"error": "path traversal blocked"}, status_code=403)
+    if not path.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return StreamingResponse(open(path, "rb"), media_type="application/octet-stream", headers={"Content-Disposition": f'attachment; filename="{path.name}"'})
+
+
+@app.get("/jobs/{job}/runs/{run_id}/browse/{filename}")
+async def run_browse_file(job: str, run_id: str, filename: str):
+    try:
+        run_dir = _safe_path(RUNS_DIR / job, run_id)
+        path = _safe_path(run_dir, filename)
+    except ValueError:
+        return JSONResponse({"error": "path traversal blocked"}, status_code=403)
+    if not path.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+
+    ext = path.suffix.lower()
+    if ext in {".png", ".jpg", ".jpeg"}:
+        media_type = "image/png" if ext == ".png" else "image/jpeg"
+        return StreamingResponse(open(path, "rb"), media_type=media_type)
+    elif ext == ".json":
+        return JSONResponse(json.loads(path.read_text()))
+    elif ext in {".xml", ".tei.xml"}:
+        return HTMLResponse(f"<pre style='white-space:pre-wrap;word-break:break-all;'>{html.escape(path.read_text(errors='replace'))}</pre>")
+    elif ext in {".txt", ".md", ".hocr", ".tsv", ".typ"}:
+        return HTMLResponse(f"<pre style='white-space:pre-wrap;word-break:break-all;'>{html.escape(path.read_text(errors='replace'))}</pre>")
+    elif ext == ".pdf":
+        return StreamingResponse(open(path, "rb"), media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="{path.name}"'})
+    elif ext == ".epub":
+        return StreamingResponse(open(path, "rb"), media_type="application/epub+zip", headers={"Content-Disposition": f'attachment; filename="{path.name}"'})
+    return JSONResponse({"error": "unsupported"}, status_code=400)
+
+
+@app.post("/jobs/{job}/runs/archive")
+async def run_archive_current(job: str, request: Request):
+    note = "Manuell archivierter Vorlauf"
+    ct = request.headers.get("content-type", "")
+    if "application/x-www-form-urlencoded" in ct or "multipart/form-data" in ct:
+        try:
+            form = await request.form()
+            if "note" in form and str(form["note"]).strip():
+                note = str(form["note"]).strip()
+        except Exception:
+            pass
+    elif "application/json" in ct:
+        try:
+            body = await request.json()
+            if "note" in body and str(body["note"]).strip():
+                note = str(body["note"]).strip()
+        except Exception:
+            pass
+
+    run_id = _archive_current_run(job, note=note)
+    ref = request.headers.get("referer", f"/jobs/{job}")
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept or ref:
+        return RedirectResponse(url=ref, status_code=303)
+    return JSONResponse({"ok": bool(run_id), "run_id": run_id})
+
+
+@app.post("/jobs/{job}/runs/{run_id}/delete")
+async def run_delete_single(job: str, run_id: str, request: Request):
+    ok = _delete_job_run(job, run_id)
+    ref = request.headers.get("referer", f"/jobs/{job}")
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept or ref:
+        return RedirectResponse(url=ref, status_code=303)
+    return JSONResponse({"ok": ok, "job": job, "run_id": run_id})
+
+
+@app.post("/jobs/{job}/runs/clear")
+async def run_clear_all(job: str, request: Request):
+    deleted_count = _clear_all_runs(job)
+    ref = request.headers.get("referer", f"/jobs/{job}")
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept or ref:
+        return RedirectResponse(url=ref, status_code=303)
+    return JSONResponse({"ok": True, "job": job, "deleted_runs": deleted_count})
+
+
+@app.post("/jobs/{job}/delete")
+async def job_delete_entire(job: str, request: Request):
+    ok = _delete_entire_job(job)
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept or request.headers.get("referer"):
+        return RedirectResponse(url="/dashboard", status_code=303)
+    return JSONResponse({"ok": ok, "job": job})
+
+
+@app.get("/api/jobs/{job}/artifacts")
+async def api_job_artifacts(job: str):
+    return JSONResponse(_get_job_artifacts(job))
+
+
+@app.get("/api/jobs/{job}/runs")
+async def api_job_runs(job: str):
+    return JSONResponse(_list_job_runs(job))
 
 
 @app.get("/browse/{kind}/{job}/{filename}")

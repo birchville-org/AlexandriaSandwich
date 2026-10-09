@@ -16,6 +16,18 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Fallback: MISTRAL_API_KEY aus .env laden falls im Container-Aufruf nicht übergeben
+if [[ -z "${MISTRAL_API_KEY:-}" ]]; then
+  for env_file in "/opt/alexandria/.env" "${SCRIPT_DIR}/../.env" "/data/.env"; do
+    if [[ -f "$env_file" ]]; then
+      set +u
+      eval "$(grep -E '^(export )?MISTRAL_API_KEY=' "$env_file" | sed 's/^export //; s/^/export /')" 2>/dev/null || true
+      set -u
+      [[ -n "${MISTRAL_API_KEY:-}" ]] && break
+    fi
+  done
+fi
+
 JOB_NAME="${AS_JOB_NAME:-manual}"
 DO_PULL=0
 DO_PUSH=0

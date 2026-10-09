@@ -174,13 +174,18 @@
         <label for="lang">OCR-Sprache</label>
         <select id="lang" name="lang">
           <option value="deu+eng" selected>Deutsch + Englisch (deu+eng)</option>
-          <option value="deu+san">Deutsch + Sanskrit (deu+san)</option>
+          <option value="eng+san">Englisch + Sanskrit Devanagari (eng+san)</option>
+          <option value="deu+san">Deutsch + Sanskrit Devanagari (deu+san)</option>
+          <option value="deu+eng+san">Deutsch + Englisch + Sanskrit (deu+eng+san)</option>
           <option value="san">Sanskrit Devanagari (san)</option>
-          <option value="deu">Deutsch (deu)</option>
           <option value="eng">Englisch (eng)</option>
+          <option value="deu">Deutsch (deu)</option>
           <option value="fra">Französisch (fra)</option>
           <option value="lat">Latein (lat)</option>
         </select>
+        <div style="font-size:0.76rem; color:#94a3b8; margin-top:0.35rem; line-height:1.35;">
+          Steuert Tesseract-Wortgrenzen &amp; Bounding Boxes im <strong>Sandwich-PDF</strong>. Für gemischte Werke immer <code>eng+san</code> bzw. <code>deu+san</code> wählen.
+        </div>
       </div>
       <div class="form-group">
         <label for="dpi">PDF-Auflösung (falls PDF hochgeladen)</label>
@@ -193,6 +198,31 @@
       <div class="form-group">
         <label for="limit">Seiten-Limit (0 = alle Seiten)</label>
         <input type="number" id="limit" name="limit" value="0" min="0">
+      </div>
+    </div>
+
+    <!-- Sprachauswahl-Leitfaden & Verhältnis zu Mistral AI -->
+    <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.8rem 1rem; margin-top:1rem; font-size:0.82rem; color:#94a3b8; line-height:1.45;">
+      <div style="display:flex; align-items:center; gap:6px; font-weight:600; color:#e2e8f0; margin-bottom:0.35rem;">
+        <span>ℹ️ Leitfaden zur Sprachwahl (Warum auch bei 100% Qualität relevant?):</span>
+      </div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:0.75rem; margin-top:0.4rem;">
+        <div>
+          <strong style="color:#fbbf24;">Welche Option wählen?</strong>
+          <ul style="margin:0.25rem 0 0 1.2rem; padding:0;">
+            <li><strong>Englisch mit Sanskrit/Devanagari:</strong> <code>eng+san</code> (z.B. Cardona 1976, Indologie)</li>
+            <li><strong>Deutsch mit Sanskrit/Devanagari:</strong> <code>deu+san</code> (z.B. Böhtlingk 1887)</li>
+            <li><strong>Trilinguale Editionen:</strong> <code>deu+eng+san</code></li>
+            <li><strong>Reine westliche Monographien:</strong> <code>deu+eng</code>, <code>eng</code> oder <code>deu</code></li>
+          </ul>
+        </div>
+        <div>
+          <strong style="color:#60a5fa;">Rolle bei 100 % Konfidenz (Mistral AI):</strong>
+          <p style="margin:0.25rem 0 0 0;">
+            Mistral AI ist für den Volltext (Typst-PDF, EPUB 3, TEI XML) <strong>sprachagnostisch</strong> und erkennt Englisch und Devanagari nativ.
+            Die Tesseract-Sprachwahl ist dennoch essenziell: Sie generiert die <strong>pixelgenauen Wort-Bounding-Boxes</strong> für das <strong>1:1 Sandwich-PDF (Weg A &amp; B)</strong>. Ohne <code>san</code> fehlen die Koordinaten für Devanagari im PDF.
+          </p>
+        </div>
       </div>
     </div>
 

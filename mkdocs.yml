@@ -8,19 +8,12 @@ repo_name: birchville-org/AlexandriaSandwich
 theme:
   name: material
   language: de
+  logo: assets/birchville_logo.png
+  favicon: assets/birchville_logo.png
   palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-7
-        name: Wechsel zu dunklem Modus
-    - scheme: slate
-      primary: indigo
-      accent: indigo
-      toggle:
-        icon: material/brightness-4
-        name: Wechsel zu hellem Modus
+    scheme: default
+    primary: custom
+    accent: custom
   features:
     - navigation.tabs
     - navigation.sections
@@ -30,6 +23,9 @@ theme:
     - search.highlight
     - content.code.copy
     - content.action.edit
+
+extra_css:
+  - stylesheets/birchville.css
 
 plugins:
   - search

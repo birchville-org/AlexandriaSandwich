@@ -3,6 +3,7 @@
 AlexandriaSandwich — scripts/render_digital_pdf.py
 Renders consolidated book structure (book.json / book.md) into a clean,
 publication-grade digital vector-text PDF using Typst (Artifact 3).
+Preserves original page breaks and output distribution (1:1 page concordance).
 """
 from __future__ import annotations
 
@@ -10,12 +11,13 @@ import argparse
 import datetime
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 
 def log(msg: str):
@@ -25,24 +27,58 @@ def log(msg: str):
 
 def escape_typst(text: str) -> str:
     """Escape special Typst syntax characters in plain text."""
-    # Special characters in Typst markup: [ ] $ # _ * ` \ < > @
-    # For body text, escaping backslash, brackets and hashes is primary.
+    # Escape backslash first
     text = text.replace("\\", "\\\\")
     text = text.replace("[", "\\[").replace("]", "\\]")
     text = text.replace("<", "\\<").replace(">", "\\>")
     text = text.replace("$", "\\$")
     text = text.replace("#", "\\#")
     text = text.replace("@", "\\@")
+    text = text.replace("`", "\\`")
     text = text.replace("*", "\\*")
     text = text.replace("_", "\\_")
-    text = text.replace("`", "\\`")
     return text
+
+
+def format_markdown_table(table_rows: List[str]) -> str:
+    """Convert contiguous markdown table rows into native Typst #table."""
+    data = []
+    for r in table_rows:
+        cells = [c.strip() for c in r.strip().strip("|").split("|")]
+        # Skip markdown separator row |---|---|
+        if all(set(c).issubset({"-", ":", " "}) for c in cells if c):
+            continue
+        data.append(cells)
+    if not data:
+        return ""
+    num_cols = max(len(r) for r in data)
+    if num_cols == 0:
+        return ""
+    
+    col_spec = ", ".join(["1fr"] * (num_cols - 1) + ["auto"]) if num_cols > 1 else "1fr"
+    typ_cells = []
+    for row in data:
+        while len(row) < num_cols:
+            row.append("")
+        for c in row:
+            tc = escape_typst(c)
+            typ_cells.append(f"[{tc}]")
+    cells_str = ", \n    ".join(typ_cells)
+    align_fn = f"(col, row) => if col == {num_cols - 1} {{ right }} else {{ left }}" if num_cols > 1 else "left"
+    return f"""#table(
+  columns: ({col_spec}),
+  stroke: none,
+  fill: (x, y) => if y == 0 {{ luma(245) }} else {{ none }},
+  align: {align_fn},
+  {cells_str}
+)"""
 
 
 def build_typst_document(
     book_data: Dict[str, Any],
     template_path: str = "/templates/book.typ",
-    paper: str = "a5"
+    paper: Optional[str] = None,
+    preserve_pages: bool = True,
 ) -> str:
     """Generate complete Typst source code from book dictionary."""
     meta = book_data.get("metadata", {})
@@ -51,7 +87,7 @@ def build_typst_document(
     date_val = meta.get("generated_at", "")[:10]
     raw_lang = meta.get("language", "deu+eng")
     
-    # Map OCR lang code to Typst language code (e.g. deu -> de, eng -> en, san -> sa)
+    # Map OCR lang code to Typst language code
     lang_map = {
         "deu": "de", "ger": "de", "eng": "en", "fra": "fr", "fre": "fr",
         "ita": "it", "spa": "es", "lat": "la", "san": "sa"
@@ -59,42 +95,108 @@ def build_typst_document(
     first_lang = raw_lang.split("+")[0].strip().lower()
     typst_lang = lang_map.get(first_lang, "de")
 
+    # Determine page dimensions
+    pages = book_data.get("pages", [])
+    dim_args: List[str] = []
+    
+    if paper:
+        dim_args.append(f'  paper: "{paper}",')
+    elif preserve_pages and pages:
+        # Check if first page has geometry bbox [ymin, xmin, ymax, xmax] or [x0, y0, x1, y1]
+        bbox = pages[0].get("bbox", [])
+        if len(bbox) == 4 and bbox[2] > 0 and bbox[3] > 0:
+            # bbox in pixels at 300 DPI -> convert to points (72 pt / inch)
+            w_px = bbox[2] - bbox[0] if bbox[2] > bbox[0] else bbox[2]
+            h_px = bbox[3] - bbox[1] if bbox[3] > bbox[1] else bbox[3]
+            w_pt = round(w_px / 300.0 * 72.0, 1)
+            h_pt = round(h_px / 300.0 * 72.0, 1)
+            if w_pt > 150 and h_pt > 150:
+                dim_args.append(f'  width: {w_pt}pt,')
+                dim_args.append(f'  height: {h_pt}pt,')
+    
+    if not dim_args:
+        # Default scholarly format
+        dim_args.append('  paper: "b5",')
+
     lines = [
         f'#import "{template_path}": book',
         f'#show: book.with(',
         f'  title: "{escape_typst(title)}",',
         f'  author: "{escape_typst(author)}",',
         f'  date: "{date_val}",',
-        f'  paper: "{paper}",',
+        *dim_args,
+        f'  preserve_pages: {"true" if preserve_pages else "false"},',
         f'  lang: "{typst_lang}"',
         f')',
+        '',
+        '// Auto-scale layout macro ensuring each original page stays strictly within 1 page',
+        '#let page_content(body) = layout(size => context {',
+        '  let m = measure(body)',
+        '  if m.height > size.height {',
+        '    let scale_factor = (size.height / m.height) * 0.96',
+        '    place(top + left)[',
+        '      #scale(x: scale_factor * 100%, y: scale_factor * 100%, origin: top + left)[',
+        '        #block(width: size.width / scale_factor)[#body]',
+        '      ]',
+        '    ]',
+        '  } else {',
+        '    place(top + left)[',
+        '      #block(width: size.width)[#body]',
+        '    ]',
+        '  }',
+        '})',
         ''
     ]
 
-    pages = book_data.get("pages", [])
-    for page in pages:
-        p_num = page.get("page_num", 1)
+    for idx, page in enumerate(pages):
+        p_num = page.get("page_num", idx + 1)
         blocks = page.get("blocks", [])
         
+        page_elements: List[str] = []
+        table_acc: List[str] = []
+
+        def flush_table():
+            if table_acc:
+                tbl_typ = format_markdown_table(table_acc)
+                if tbl_typ:
+                    page_elements.append(tbl_typ)
+                table_acc.clear()
+
         for block in blocks:
             b_type = block.get("type", "p")
             text = block.get("text", "").strip()
             if not text:
                 continue
 
+            # Filter hallucinated prompts on blank pages
+            t_lower = text.lower()
+            if "ground truth image displays" in t_lower or "underscore & line rules" in t_lower:
+                continue
+
+            if b_type == "table_row":
+                table_acc.append(text)
+                continue
+            
+            flush_table()
+
             if b_type.startswith("h") and len(b_type) == 2 and b_type[1].isdigit():
                 level = int(b_type[1])
-                # Typst headings: = Title, == Subtitle, etc.
                 eqs = "=" * level
-                lines.append(f"{eqs} {escape_typst(text)}")
-                lines.append("")
-            elif b_type == "table_row":
-                # Render table row as monospace or raw
-                lines.append(f"`{text}`")
-                lines.append("")
+                page_elements.append(f"{eqs} {escape_typst(text)}")
             else:
-                lines.append(escape_typst(text))
-                lines.append("")
+                page_elements.append(escape_typst(text))
+
+        flush_table()
+
+        content_body = "\n\n".join(page_elements)
+        lines.append(f"// --- Original Page {p_num} ---")
+        if preserve_pages:
+            lines.append(f"#page_content[\n{content_body}\n]")
+            if idx < len(pages) - 1:
+                lines.append("#pagebreak()")
+        else:
+            lines.append(content_body)
+        lines.append("")
 
     return "\n".join(lines)
 
@@ -104,7 +206,8 @@ def render_pdf(
     input_file: Path,
     output_file: Path,
     project_root: Path,
-    paper: str = "a5"
+    paper: Optional[str] = None,
+    preserve_pages: bool = True,
 ) -> Dict[str, Any]:
     """Compile Typst document into high-quality digital PDF."""
     start_time = time.time()
@@ -114,13 +217,11 @@ def render_pdf(
         with open(input_file, "r", encoding="utf-8") as f:
             book_data = json.load(f)
     elif input_file.suffix == ".md":
-        # Check if sibling book.json exists
         sibling_json = input_file.parent / "book.json"
         if sibling_json.exists():
             with open(sibling_json, "r", encoding="utf-8") as f:
                 book_data = json.load(f)
         else:
-            # Fallback simple book structure
             book_data = {
                 "metadata": {"job": job_name, "title": job_name},
                 "pages": [{"page_num": 1, "blocks": [{"type": "p", "text": input_file.read_text(encoding="utf-8")}]}]
@@ -132,7 +233,13 @@ def render_pdf(
     template_file = (project_root / "templates" / "book.typ").resolve()
     if not template_file.exists():
         template_file = (Path(__file__).resolve().parent.parent / "templates" / "book.typ").resolve()
-    typst_code = build_typst_document(book_data, template_path=str(template_file), paper=paper)
+    
+    typst_code = build_typst_document(
+        book_data,
+        template_path=str(template_file),
+        paper=paper,
+        preserve_pages=preserve_pages,
+    )
 
     # 3. Write temp .typ file in job directory
     output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -143,7 +250,6 @@ def render_pdf(
     # 4. Check for typst binary
     typst_cmd = shutil.which("typst")
     if not typst_cmd:
-        # Check standard docker / linux install path
         if Path("/usr/local/bin/typst").exists():
             typst_cmd = "/usr/local/bin/typst"
         else:
@@ -178,7 +284,8 @@ def main():
     parser.add_argument("--job", "-j", required=True, help="Job name (e.g. e2e_m1)")
     parser.add_argument("--input", "-i", help="Path to book.json or book.md (default: /data/output/books/<job>/book.json)")
     parser.add_argument("--output", "-o", help="Path to output PDF (default: /data/output/pdf/<job>.digital.pdf)")
-    parser.add_argument("--paper", default="a5", help="Paper size (a5, a4, b5, etc.)")
+    parser.add_argument("--paper", default=None, help="Paper size (b5, a4, a5, etc., default: matches source scan geometry)")
+    parser.add_argument("--no-preserve-pages", action="store_true", help="Disable 1:1 page break preservation")
     parser.add_argument("--root", help="Project root for Typst imports (default: repo root)")
 
     args = parser.parse_args()
@@ -198,7 +305,8 @@ def main():
         input_file=input_file,
         output_file=output_file,
         project_root=project_root,
-        paper=args.paper
+        paper=args.paper,
+        preserve_pages=not args.no_preserve_pages,
     )
 
 

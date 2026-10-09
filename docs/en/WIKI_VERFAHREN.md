@@ -16,15 +16,16 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│ Dev Node (Mac mini M2)                                      │
+│ Dev Node (Mac mini M2: hermes.local)                        │
 │ • Pipeline development & multi-arch container builds        │
 └──────────────────────────────┬──────────────────────────────┘
-                               │ Git / Docker Registry
+                               │ Git / Rsync
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Control Node (NAS)                                          │
-│ • n8n workflow orchestrator                                 │
-│ • Central storage:                                          │
+│ Storage & Web Portal (Synology NAS: synology.local)          │
+│ • alexandria_ui      (FastAPI Dashboard, Path B Editor)     │
+│ • Traefik Reverse-Proxy + Authelia 2FA SSO (alex.birchville)│
+│ • Central NFS storage:                                       │
 │   ├── /data/input       (Incoming raw scans)                │
 │   ├── /data/processing  (Intermediate artifacts)            │
 │   └── /data/output      (Final PDFs, XML, Markdown)         │
@@ -34,9 +35,23 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
 ┌─────────────────────────────────────────────────────────────┐
 │ Compute Node (Proxmox VM: alex.local)                       │
 │ • alexandria_worker  (ImageMagick, unpaper, Tesseract, OCR) │
-│ • alexandria_ui      (FastAPI Dashboard & Path B Editor)    │
+│ • alexandria_n8n     (Workflow orchestration & webhooks)    │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Optional local vision inference
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ GPU Node (Local VLM Server: nyx.local:8088)                 │
+│ • Qwen2.5-VL Vision-Language OCR (100% local, $0.00 cloud)  │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Roles & API Key Distribution
+
+| Host | Services | Mistral API Key? | Role & Rationale |
+| :--- | :--- | :---: | :--- |
+| **`alex.local`** | `alexandria_worker`, `n8n` | **Yes (Required)** | Executes OCR pipeline & Cloud API calls (`MISTRAL_API_KEY` in `/opt/alexandria/.env`). |
+| **`synology.local`** | `alexandria_ui`, Traefik, Authelia | **Yes (Monitoring)** | Health checks against `api.mistral.ai` & displays cost metrics. |
+| **`nyx.local`** | `nyx.local:8088` (Qwen2.5-VL) | **No** | 100% offline local GPU inference without external dependencies. |
 
 ---
 
@@ -56,7 +71,7 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
    │            │
    │ (Yes)      │ (No)
    │            ▼
-   │      [4. AI Fallback] ──► Mistral OCR API (mistral-ocr-latest)
+   │      [4. AI Fallback] ──► Mistral OCR API (Cloud) or Qwen2.5-VL (Local VLM)
    │            │
    ▼            ▼
 [5. Multi-Artifact Generation]
@@ -89,5 +104,5 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
 ## Reference Projects & Case Studies
 
 * **[Pāṇini's Grammar (Otto von Böhtlingk, 1887)](case-study.md):**
-  Complete scholarly digitization, multi-script OCR, canonical alignment, and TEI-P5 modeling of 3,997 Sūtras on 478 book pages.
+  Complete scholarly digitization, multi-script OCR, canonical alignment, TEI-P5 modeling, and [OCR engine benchmark (Mistral vs. local Qwen2.5-VL)](case-study.md#step-21-local-vlm-alternative-model-benchmark-mistral-ocr-vs-qwen25-vl) across 3,997 Sūtras on 478 book pages.
 

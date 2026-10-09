@@ -200,6 +200,8 @@
           <input type="text" class="param-input" id="statusLangInput" name="lang" value="{{ status_data.featured_progress.current_lang|default('deu+eng') }}" required>
           <div class="quick-pills">
             <button type="button" class="quick-pill" onclick="setStatusLang('deu+eng')">deu+eng (Deutsch/Englisch)</button>
+            <button type="button" class="quick-pill" onclick="setStatusLang('eng+san')">eng+san (Englisch + Sanskrit)</button>
+            <button type="button" class="quick-pill" onclick="setStatusLang('deu+san')">deu+san (Deutsch + Sanskrit)</button>
             <button type="button" class="quick-pill" onclick="setStatusLang('deu+eng+san')">deu+eng+san (+Sanskrit)</button>
             <button type="button" class="quick-pill" onclick="setStatusLang('san')">san (Reines Sanskrit)</button>
           </div>
@@ -258,6 +260,128 @@
       </div>
     </div>
     {% endfor %}
+  </div>
+
+  <!-- 1.1 Artefakte nach Abschluss zum Download anbieten -->
+  <div class="artifacts-completion-card" id="artifactsCompletionCard" style="display: {% if status_data.featured_progress.artifacts.has_any %}block{% else %}none{% endif %};">
+    <div class="artifacts-card-header">
+      <div>
+        <h3 class="artifacts-card-title">
+          <span>🎉</span> Job-Abschluss: Generierte Zielformate &amp; Artefakte
+        </h3>
+        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+          Alle finalen Publikationsformate für '<strong id="artifactsJobName" style="color: #fff;">{{ status_data.featured_job }}</strong>' stehen zum Download und zur Ansicht bereit.
+        </p>
+      </div>
+      <div>
+        <a id="btnZipDownloadTop" href="/jobs/{{ status_data.featured_job }}/download-zip" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; box-shadow: 0 4px 14px rgba(217,119,6,0.35);">
+          <span>📦</span> <span id="btnZipDownloadText">Alle Artefakte als ZIP herunterladen ({{ status_data.featured_progress.artifacts.total_size_mb }} MB)</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Quick Grid der Artefakte -->
+    <div class="artifacts-quick-grid" id="artifactsQuickGrid">
+      {% for art in status_data.featured_progress.artifacts.files %}
+      <div class="artifact-card-item">
+        <div class="artifact-item-header">
+          <div>
+            <div class="artifact-item-title">{{ art.title }}</div>
+            <div class="artifact-item-desc">{{ art.desc }}</div>
+          </div>
+          <span class="badge" style="font-size: 0.72rem; text-transform: uppercase;">{{ art.ext|replace('.', '') }}</span>
+        </div>
+        <div class="artifact-item-footer">
+          <div class="artifact-size-badge">{{ art.size_kb }} KB</div>
+          <div class="artifact-item-actions">
+            {% if art.kind in ['pdf', 'tei', 'reports'] or art.ext in ['.json', '.md', '.txt'] %}
+            <a href="{{ art.browse_url }}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" title="Vorschau im Browser">
+              👁 Vorschau
+            </a>
+            {% endif %}
+            <a href="{{ art.download_url }}" class="btn btn-sm" style="background: var(--gold); color: #fff; padding: 0.2rem 0.55rem; font-size: 0.75rem;" title="Datei herunterladen">
+              ⬇ Download
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 1.2 Vorgängige Läufe desselben Jobs separat mit Löschmöglichkeit -->
+  <div class="runs-section" id="runsSection">
+    <div class="runs-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <h3 style="margin: 0; font-size: 1.15rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <span>🕒</span> Vorgängige Läufe dieses Jobs
+        </h3>
+        <span id="runsCountBadge" class="badge badge-gold">{{ status_data.featured_progress.runs|length }} Vorläufe</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <form id="statusArchiveForm" action="/jobs/{{ status_data.featured_job }}/runs/archive" method="post" style="display: inline-block;">
+          <input type="hidden" name="note" value="Manueller Snapshot aus Status-Ansicht">
+          <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">
+            <span>💾</span> Stand als Vorlauf archivieren
+          </button>
+        </form>
+        {% if status_data.featured_progress.runs %}
+        <form id="statusClearRunsForm" action="/jobs/{{ status_data.featured_job }}/runs/clear" method="post" style="display: inline-block;" onsubmit="return confirm('Wirklich ALLE {{ status_data.featured_progress.runs|length }} archivierten Vorläufe dieses Jobs unwiderruflich löschen?');">
+          <button type="submit" class="btn-danger btn-danger-sm" title="Alle Vorläufe löschen">
+            <span>🗑️</span> Alle Vorläufe bereinigen
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="runs-list" id="runsList">
+      {% if status_data.featured_progress.runs %}
+        {% for run in status_data.featured_progress.runs %}
+        <div class="run-card" id="runCard_{{ run.run_id }}">
+          <div class="run-card-top">
+            <div class="run-title-group">
+              <span class="run-id-code">{{ run.run_id }}</span>
+              <span class="badge {% if run.status == 'PASS' %}badge-pass{% else %}badge-gold{% endif %}">{{ run.status }}</span>
+              <span class="run-time-str">Archiviert am {{ run.archived_str }}</span>
+            </div>
+            <div class="run-actions-group">
+              <a href="{{ run.zip_download_url }}" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" title="Alle Artefakte dieses Laufs herunterladen">
+                <span>📦</span> ZIP ({{ run.total_size_mb }} MB)
+              </a>
+              <form action="/jobs/{{ status_data.featured_job }}/runs/{{ run.run_id }}/delete" method="post" style="display: inline;" onsubmit="return confirm('Vorlauf {{ run.run_id }} unwiderruflich löschen?');">
+                <button type="submit" class="btn-danger btn-danger-sm" title="Diesen Vorlauf löschen">
+                  <span>🗑️</span> Löschen
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div class="run-meta-row">
+            <div class="run-meta-item">Notiz: <strong>{{ run.note }}</strong></div>
+            <div class="run-meta-item">Schwellenwert: <strong>{{ run.threshold }} %</strong></div>
+            <div class="run-meta-item">Sprache: <strong>{{ run.lang }}</strong></div>
+            <div class="run-meta-item">Seiten: <strong>{{ run.pages_total }}</strong></div>
+            <div class="run-meta-item">Mistral AI: <strong>{{ run.mistral_ok }} S. (${{ "%.4f"|format(run.mistral_cost_usd) }})</strong></div>
+            <div class="run-meta-item">Artefakte: <strong>{{ run.artifacts_count }} Dateien</strong></div>
+          </div>
+
+          <div class="run-artifacts-wrap">
+            <span style="font-size: 0.75rem; color: var(--text-dim); margin-right: 4px;">Enthaltene Dateien:</span>
+            {% for item in run.artifacts %}
+            <a href="{{ item.download_url }}" class="run-artifact-pill" title="{{ item.title }} herunterladen ({{ item.size_kb }} KB)">
+              <span>⬇</span> {{ item.name }} <small style="opacity: 0.7;">({{ item.size_kb }} KB)</small>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="background: rgba(11, 15, 23, 0.4); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+          Noch keine früheren Vorläufe für diesen Job archiviert. Bei einem erneuten Start mit modifizierten Parametern wird der bisherige Stand hier automatisch abgelegt.
+        </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 {% endif %}
@@ -754,6 +878,114 @@ function renderJobProgress(prog) {
         </div>
       </div>
     `).join('');
+  }
+
+  // ── Artefakte nach Abschluss dynamisch aktualisieren ──
+  const artCard = document.getElementById("artifactsCompletionCard");
+  const artGrid = document.getElementById("artifactsQuickGrid");
+  const artJobName = document.getElementById("artifactsJobName");
+  const btnZip = document.getElementById("btnZipDownloadTop");
+  const btnZipText = document.getElementById("btnZipDownloadText");
+
+  if (artCard && prog.artifacts) {
+    if (prog.artifacts.has_any) {
+      artCard.style.display = "block";
+      if (artJobName) artJobName.textContent = prog.job;
+      if (btnZip) btnZip.href = `/jobs/${encodeURIComponent(prog.job)}/download-zip`;
+      if (btnZipText) btnZipText.textContent = `Alle Artefakte als ZIP herunterladen (${prog.artifacts.total_size_mb} MB)`;
+
+      const artList = prog.artifacts.files || prog.artifacts.items || [];
+      if (artGrid && artList.length > 0) {
+        artGrid.innerHTML = artList.map(item => `
+          <div class="artifact-card-item">
+            <div class="artifact-item-header">
+              <div>
+                <div class="artifact-item-title">${item.title}</div>
+                <div class="artifact-item-desc">${item.desc}</div>
+              </div>
+              <span class="badge" style="font-size: 0.72rem; text-transform: uppercase;">${(item.ext || '').replace('.', '')}</span>
+            </div>
+            <div class="artifact-item-footer">
+              <div class="artifact-size-badge">${item.size_kb} KB</div>
+              <div class="artifact-item-actions">
+                ${['pdf', 'tei', 'reports'].includes(item.kind) || ['.json', '.md', '.txt'].includes(item.ext) ? `
+                  <a href="${item.browse_url}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" title="Vorschau im Browser">
+                    👁 Vorschau
+                  </a>
+                ` : ''}
+                <a href="${item.download_url}" class="btn btn-sm" style="background: var(--gold); color: #fff; padding: 0.2rem 0.55rem; font-size: 0.75rem;" title="Datei herunterladen">
+                  ⬇ Download
+                </a>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    } else {
+      artCard.style.display = "none";
+    }
+  }
+
+  // ── Vorgängige Läufe dynamisch aktualisieren ──
+  const runsCountBadge = document.getElementById("runsCountBadge");
+  const runsList = document.getElementById("runsList");
+  const statusArchiveForm = document.getElementById("statusArchiveForm");
+  const statusClearRunsForm = document.getElementById("statusClearRunsForm");
+
+  if (statusArchiveForm) statusArchiveForm.action = `/jobs/${encodeURIComponent(prog.job)}/runs/archive`;
+  if (statusClearRunsForm) statusClearRunsForm.action = `/jobs/${encodeURIComponent(prog.job)}/runs/clear`;
+
+  if (prog.runs) {
+    if (runsCountBadge) runsCountBadge.textContent = `${prog.runs.length} Vorläufe`;
+    if (runsList) {
+      if (prog.runs.length > 0) {
+        runsList.innerHTML = prog.runs.map(run => `
+          <div class="run-card" id="runCard_${run.run_id}">
+            <div class="run-card-top">
+              <div class="run-title-group">
+                <span class="run-id-code">${run.run_id}</span>
+                <span class="badge ${run.status === 'PASS' ? 'badge-pass' : 'badge-gold'}">${run.status}</span>
+                <span class="run-time-str">Archiviert am ${run.archived_str}</span>
+              </div>
+              <div class="run-actions-group">
+                <a href="${run.zip_download_url}" class="btn btn-sm btn-secondary" style="font-size: 0.75rem;" title="Alle Artefakte dieses Laufs herunterladen">
+                  <span>📦</span> ZIP (${run.total_size_mb} MB)
+                </a>
+                <form action="/jobs/${encodeURIComponent(prog.job)}/runs/${encodeURIComponent(run.run_id)}/delete" method="post" style="display: inline;" onsubmit="return confirm('Vorlauf ${run.run_id} unwiderruflich löschen?');">
+                  <button type="submit" class="btn-danger btn-danger-sm" title="Diesen Vorlauf löschen">
+                    <span>🗑️</span> Löschen
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div class="run-meta-row">
+              <div class="run-meta-item">Notiz: <strong>${run.note || '—'}</strong></div>
+              <div class="run-meta-item">Schwellenwert: <strong>${run.threshold} %</strong></div>
+              <div class="run-meta-item">Sprache: <strong>${run.lang}</strong></div>
+              <div class="run-meta-item">Seiten: <strong>${run.pages_total}</strong></div>
+              <div class="run-meta-item">Mistral AI: <strong>${run.mistral_ok} S. ($${(run.mistral_cost_usd || 0).toFixed(4)})</strong></div>
+              <div class="run-meta-item">Artefakte: <strong>${run.artifacts_count} Dateien</strong></div>
+            </div>
+
+            <div class="run-artifacts-wrap">
+              <span style="font-size: 0.75rem; color: var(--text-dim); margin-right: 4px;">Enthaltene Dateien:</span>
+              ${(run.artifacts || []).map(item => `
+                <a href="${item.download_url}" class="run-artifact-pill" title="${item.title} herunterladen (${item.size_kb} KB)">
+                  <span>⬇</span> ${item.name} <small style="opacity: 0.7;">(${item.size_kb} KB)</small>
+                </a>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        runsList.innerHTML = `
+          <div style="background: rgba(11, 15, 23, 0.4); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+            Noch keine früheren Vorläufe für diesen Job archiviert. Bei einem erneuten Start mit modifizierten Parametern wird der bisherige Stand hier automatisch abgelegt.
+          </div>
+        `;
+      }
+    }
   }
 }
 

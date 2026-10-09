@@ -36,3 +36,28 @@ pdftotext -layout /data/output/pdf/smoke.sandwich.pdf -
 - After first `usermod -aG docker`, new login/`sg docker` may be required.
 - NFS to NAS is optional (`alexandria_nfs_mount` in ansible group_vars).
 - Rebuild image on hermes/dev after Dockerfile changes, then re-run deploy.
+
+---
+
+## Web-Portal Deploy — synology.local
+
+- **Host:** `synology.local` (192.168.1.8)
+- **SSH user:** `marco`
+- **App dir:** `/volume1/docker/alexandria`
+- **Compose:** `deploy/docker-compose.synology.yml`
+- **Anbindung:** Traefik Reverse-Proxy + Authelia 2FA SSO (`alex.birchville.cc`)
+- **Volumes:** Live-Bind-Mount (`./ui:/app`, `./scripts:/app/scripts`)
+
+Templates & Frontend synchronisieren:
+```bash
+bash scripts/deploy_ui_synology.sh
+```
+
+---
+
+## Lokale GPU-Node — nyx.local:8088
+
+- **Host:** `nyx.local` (Port 8088)
+- **Dienst:** OpenAI-kompatibler Server für `Qwen2.5-VL`
+- **API-Key:** **Nicht erforderlich** (100 % lokale Inferenz, 0,00 $ Fremdkosten)
+- **Healthcheck:** UI prüft automatisch `http://nyx.local:8088/v1/models` auf Verfügbarkeit.

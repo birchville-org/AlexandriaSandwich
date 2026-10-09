@@ -32,7 +32,11 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT_UI:-8080}:8080"
+    env_file:
+      - path: .env
+        required: false
     environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
       - DATA_DIR=/data
       - N8N_WEBHOOK_URL=http://alexandria_n8n:5678/webhook/alexandria/ocr
     volumes:
