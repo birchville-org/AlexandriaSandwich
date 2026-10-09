@@ -80,14 +80,16 @@ def inject_toc(
 
     # 4. Save 1:1 preserving existing images and fonts
     output_pdf.parent.mkdir(parents=True, exist_ok=True)
+    temp_out = output_pdf.parent / f".tmp_{output_pdf.name}"
     print(f"[inject_toc] Saving to: {output_pdf} (deflate=True, garbage=3)...")
     doc.save(
-        str(output_pdf),
+        str(temp_out),
         deflate=True,
         garbage=3,
         clean=True,
     )
     doc.close()
+    temp_out.replace(output_pdf)
 
     print(f"[inject_toc] Successfully wrote {output_pdf.stat().st_size / (1024 * 1024):.2f} MB")
     return output_pdf
