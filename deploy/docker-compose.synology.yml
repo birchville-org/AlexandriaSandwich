@@ -10,6 +10,10 @@ services:
       - MISTRAL_API_KEY=${MISTRAL_API_KEY:-gXPoVcq4fJNauhGybs6GuRfEu1KOVGDq}
       - N8N_WEBHOOK_URL=http://192.168.1.250:5678/webhook/alexandria/ocr
       - FALLBACK_N8N_URL=http://192.168.1.250:5678/webhook/alexandria/ocr
+      - PUBLIC_URL=https://alex.birchville.org
+      - AUTH_LOGIN_URL=https://auth.birchville.cc/?rd=https://alex.birchville.org/upload
+      - SHOW_PROJECT_LINKS=true
+      - INGRESS_LABEL=Traefik v3 + Authelia 2FA (alex.birchville.org)
     volumes:
       - ./data/input:/data/input
       - ./data/processing:/data/processing

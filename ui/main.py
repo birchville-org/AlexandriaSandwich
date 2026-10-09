@@ -41,11 +41,26 @@ VALID_IMG_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".pnm", ".pp
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "http://localhost:5678/webhook/alexandria/ocr")
 FALLBACK_N8N_URL = os.getenv("FALLBACK_N8N_URL", "http://192.168.1.250:5678/webhook/alexandria/ocr")
 N8N_WEBHOOK_TIMEOUT = float(os.getenv("N8N_WEBHOOK_TIMEOUT", "180"))
+PUBLIC_URL = os.getenv("PUBLIC_URL", "http://localhost:8080").rstrip("/")
+AUTH_LOGIN_URL = os.getenv("AUTH_LOGIN_URL", "").strip()
+SHOW_PROJECT_LINKS = os.getenv("SHOW_PROJECT_LINKS", "false").lower() in {"1", "true", "yes"}
+INGRESS_LABEL = os.getenv("INGRESS_LABEL", "Traefik v3 + Authelia 2FA" if AUTH_LOGIN_URL else "Lokal / Standalone")
+SITE_NAME = os.getenv("SITE_NAME", "AlexandriaSandwich")
+BRAND_LOGO = os.getenv("BRAND_LOGO", "/static/birchville_logo.png")
+
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
 
-app = FastAPI(title="AlexandriaSandwich UI")
+app = FastAPI(title=f"{SITE_NAME} UI")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+templates.env.globals.update({
+    "site_name": SITE_NAME,
+    "public_url": PUBLIC_URL,
+    "auth_login_url": AUTH_LOGIN_URL,
+    "show_project_links": SHOW_PROJECT_LINKS,
+    "ingress_label": INGRESS_LABEL,
+    "brand_logo": BRAND_LOGO,
+})
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
@@ -431,7 +446,7 @@ def _probe_system_status() -> dict[str, Any]:
     # 1. UI Host
     ui_status = {
         "id": "ui",
-        "name": "Alexandria Web Portal (FastAPI)",
+        "name": f"{SITE_NAME} Web Portal (FastAPI)",
         "role": "Upload-Ingress, Job-Verwaltung & Status-Dashboard",
         "status": "healthy",
         "badge": "ONLINE",
@@ -440,7 +455,7 @@ def _probe_system_status() -> dict[str, Any]:
         "os": f"{platform.system()} {platform.release()}",
         "hostname": platform.node(),
         "pid": os.getpid(),
-        "ingress": "Traefik v3 + Authelia 2FA (alex.birchville.cc)",
+        "ingress": INGRESS_LABEL,
     }
 
     # 2. n8n Engine Probe
@@ -693,6 +708,7 @@ def _probe_system_status() -> dict[str, Any]:
         "overall_status": overall_status,
         "overall_text": overall_text,
         "host": ui_status,
+        "ui": ui_status,
         "n8n": n8n_status,
         "worker": worker_status,
         "storage": storage_status,
@@ -969,7 +985,9 @@ async def portal_redirect():
 
 @app.api_route("/login", methods=["GET", "HEAD"])
 async def login_redirect():
-    return RedirectResponse(url="https://auth.birchville.cc/?rd=https://alex.birchville.cc/upload", status_code=302)
+    if AUTH_LOGIN_URL:
+        return RedirectResponse(url=AUTH_LOGIN_URL, status_code=302)
+    return RedirectResponse(url="/upload", status_code=302)
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
@@ -977,7 +995,7 @@ async def health():
     data = await asyncio.to_thread(_probe_system_status)
     return {
         "status": data["overall_status"],
-        "service": "AlexandriaSandwich",
+        "service": SITE_NAME,
         "timestamp": data["timestamp_utc"],
         "n8n": data["n8n"]["badge"],
         "storage_free_gb": data["storage"]["free_gb"],

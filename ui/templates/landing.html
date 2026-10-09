@@ -316,9 +316,11 @@
     <a href="/dashboard" class="btn btn-secondary" style="font-size:1.05rem; padding: 0.8rem 1.6rem;">
       <span>📊</span> Job-Dashboard
     </a>
+    {% if show_project_links %}
     <a href="https://birchville-org.github.io/brhadaranyaka/" target="_blank" class="btn btn-secondary" style="font-size:1.05rem; padding: 0.8rem 1.6rem;">
       <span>📖</span> Live-Synopse (BĀU I.4) ↗
     </a>
+    {% endif %}
   </div>
 
   <div class="hero-stats-row">
@@ -540,6 +542,7 @@
   </div>
 </section>
 
+{% if show_project_links %}
 <!-- Case Studies -->
 <section class="cases-section" id="case-studies">
   <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
@@ -585,21 +588,38 @@
     </div>
   </div>
 </section>
+{% endif %}
 
-<!-- Auth / SSO Action Card -->
+<!-- Auth / Call to action -->
 <section class="auth-banner">
+  {% if auth_login_url %}
   <span class="badge badge-gold" style="margin-bottom:1rem;">Zentraler Zugriffsschutz</span>
   <h2 style="font-size:2.2rem; margin-bottom:1rem;">Bereit für die nächste Edition?</h2>
   <p style="max-width:650px; margin:0 auto 2rem; color:var(--text-muted); font-size:1.05rem;">
-    Das Upload-Portal und das Job-Dashboard stehen autorisierten Wissenschaftlern über das zentrale Birchville Single-Sign-On (Authelia 2FA) zur Verfügung.
+    Das Upload-Portal und das Job-Dashboard stehen autorisierten Wissenschaftlern über Single-Sign-On (2FA) zur Verfügung.
   </p>
   <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
     <a href="/login" class="btn btn-primary" style="font-size:1.1rem; padding:0.85rem 2.2rem;">
-      🔐 Mit Birchville SSO anmelden
+      🔐 Mit SSO anmelden
     </a>
     <a href="/upload" class="btn btn-secondary" style="font-size:1.1rem; padding:0.85rem 1.8rem;">
       📤 Direkt zum Upload-Portal
     </a>
   </div>
+  {% else %}
+  <span class="badge badge-gold" style="margin-bottom:1rem;">Digitale Editionen & Scans</span>
+  <h2 style="font-size:2.2rem; margin-bottom:1rem;">Bereit für die nächste Edition?</h2>
+  <p style="max-width:650px; margin:0 auto 2rem; color:var(--text-muted); font-size:1.05rem;">
+    Starten Sie direkt mit der Einbettung von Inhaltsverzeichnissen im TOC Studio oder laden Sie Scans für die Vektor-Digitalisierung hoch.
+  </p>
+  <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+    <a href="/toc" class="btn btn-primary" style="font-size:1.1rem; padding:0.85rem 2.2rem;">
+      📑 Zum TOC Studio
+    </a>
+    <a href="/upload" class="btn btn-secondary" style="font-size:1.1rem; padding:0.85rem 1.8rem;">
+      📤 Zum Scan-Upload
+    </a>
+  </div>
+  {% endif %}
 </section>
 {% endblock %}

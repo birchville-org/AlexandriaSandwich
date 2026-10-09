@@ -39,6 +39,10 @@ services:
       - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
       - DATA_DIR=/data
       - N8N_WEBHOOK_URL=http://alexandria_n8n:5678/webhook/alexandria/ocr
+      - PUBLIC_URL=${PUBLIC_URL:-http://localhost:8080}
+      - AUTH_LOGIN_URL=${AUTH_LOGIN_URL:-}
+      - SHOW_PROJECT_LINKS=${SHOW_PROJECT_LINKS:-false}
+      - INGRESS_LABEL=${INGRESS_LABEL:-Lokal / Standalone}
     volumes:
       - ${DATA_DIR:-./data}/input:/data/input
       - ${DATA_DIR:-./data}/processing:/data/processing
