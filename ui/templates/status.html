@@ -501,8 +501,8 @@
       <div class="kv-row"><span class="kv-key">Service</span><span class="kv-val">FastAPI + Uvicorn</span></div>
       <div class="kv-row"><span class="kv-key">Port / Bind</span><span class="kv-val">0.0.0.0:8080</span></div>
       <div class="kv-row"><span class="kv-key">Host-Knoten</span><span class="kv-val">{{ status_data.host.hostname }}</span></div>
-      <div class="kv-row"><span class="kv-key">Ingress-Proxy</span><span class="kv-val">Traefik v3 + Authelia 2FA</span></div>
-      <div class="kv-row"><span class="kv-key">Öffentliche URL</span><span class="kv-val">https://alex.birchville.cc</span></div>
+      <div class="kv-row"><span class="kv-key">Ingress-Proxy</span><span class="kv-val">{{ status_data.host.ingress or ingress_label }}</span></div>
+      <div class="kv-row"><span class="kv-key">Öffentliche URL</span><span class="kv-val"><a href="{{ public_url }}" target="_blank" style="color: inherit;">{{ public_url }}</a></span></div>
       <div class="kv-row"><span class="kv-key">PDF Extraktion</span><span class="kv-val">{% if status_data.tools.poppler.present %}✅ pdftoppm aktiv{% else %}⚠️ pdftoppm fehlt{% endif %}</span></div>
     </div>
   </div>
