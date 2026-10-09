@@ -30,7 +30,7 @@ AlexandriaSandwich resolves this dilemma with a **4-tier architecture** where ev
               ┌───────────────────┴───────────────────┐
               │ 4. Facsimile & Proof Layer            │
               │    • <id>.sandwich.pdf (Scan + Layer) │
-              │    • <id>.pathb.pdf    (Mistral-Clean)│
+              │    • <id>.aligned.pdf  (AI-Aligned)   │
               └───────────────────────────────────────┘
 ```
 
@@ -38,12 +38,12 @@ AlexandriaSandwich resolves this dilemma with a **4-tier architecture** where ev
 
 ## 2. Target Formats in Detail
 
-### 1. Facsimile Layer: Sandwich PDF (`*.sandwich.pdf` / `*.pathb.pdf`)
+### 1. Facsimile Layer: Sandwich PDF (`*.sandwich.pdf` / `*.aligned.pdf`)
 * **Role:** Authentic, citable document archive.
 * **Architecture:**
   * Visual top: 300 DPI high-resolution facsimile scan with original letterpress fonts, marginalia, and layout.
   * Invisible bottom: Vector text layer with pixel-exact bounding-box coordinates for every word.
-* **Path B (Mistral Token Alignment):** The invisible text layer is synchronized with Mistral OCR. OCR errors and noise hallucinations (e.g. along dotted leader lines) are eliminated while preserving exact bounding box coordinates.
+* **Post-Assembly Textlayer Correction (AI Alignment):** The invisible text layer is synchronized with Mistral OCR. OCR errors and noise hallucinations (e.g. along dotted leader lines) are eliminated while preserving exact bounding box coordinates (`*.aligned.pdf`).
 
 ### 2. Machine-Readable Single Source of Truth: `book.json` (AST)
 * **Role:** Central, software-agnostic intermediate format.
@@ -86,7 +86,7 @@ By strictly separating image data, geometric coordinates, and semantic text, Ale
 
 ### Strategy 1: Reproducing the Original Layout
 
-1. **As Facsimile (`*.pathb.pdf`):**
+1. **As AI-Aligned Facsimile (`*.aligned.pdf`):**
    * The historical print layout is retained 1:1. Line breaks, hyphens, printer quirks, ligatures, and footnote placements remain identical to the physical library copy.
 2. **As Geometric Vector Reset:**
    * Because `book.json` stores bounding boxes (`bbox`), line heights, and column widths, the original layout can be mathematically reconstructed in modern vector typesetting engines (identical page grid, but without scan noise).
@@ -111,7 +111,7 @@ Every work processed by AlexandriaSandwich generates the following standardized 
 ```text
 output/books/<book_id>/
 ├── <book_id>.sandwich.pdf   # 1:1 Facsimile + Tesseract text layer
-├── <book_id>.pathb.pdf      # Facsimile + Mistral-aligned text layer (0 noise)
+├── <book_id>.aligned.pdf    # Facsimile + Mistral-aligned text layer (0 noise)
 ├── <book_id>.digital.pdf    # Vector reset via Typst
 ├── <book_id>.epub           # Reflowable eBook with embedded fonts
 ├── <book_id>.tei.xml        # TEI-P5 Archival XML

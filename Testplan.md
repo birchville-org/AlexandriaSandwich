@@ -41,14 +41,14 @@ Pre‑process (ImgMagick + unpaper)	processing/preprocessed/<JOB_NAME>/	page
 Qualitäts‑Check	processing/quality/<JOB_NAME>/	<page>.quality.json (enthält mean_confidence, decision)
 Markdown‑Zwischenschritt	output/markdown/<JOB_NAME>/	<page>.md (OCR‑Text)
 Pipeline‑Report	output/reports/<JOB_NAME>.pipeline.json	Gesamter Lauf‑Report (ähnlich e2e_m1.pipeline.json)
-Endprodukte	output/pdf/<JOB_NAME>/	<JOB_NAME>.sandwich.pdf (OCRmyPDF‑Sandwich)
-<JOB_NAME>.pathb.pdf (Post‑PDF‑Text‑Layer)
+Endprodukte	output/pdf/<JOB_NAME>/	<JOB_NAME>.sandwich.pdf (Standard-Faksimile Sandwich)
+<JOB_NAME>.aligned.pdf (KI-synchronisiertes Faksimile)
 Side‑Car‑Text	output/pdf/<JOB_NAME>.sidecar.txt	Klartext‑Version des Sandwich PDFs (falls erzeugt)
 6. Erfolgskriterien prüfen
 Der pipeline‑Report muss "status": "PASS" enthalten.
 Alle Seiten müssen "decision": "pass" und mean_confidence ≥ 85 zeigen (sonst wird automatisch das Mistral‑Fall‑back getriggert – das ist ebenfalls OK, solange am Ende ein PDF entsteht).
 Die beiden PDF‑Dateien existieren und sind nicht leer (ls -lh).
-Optional: öffne das PDF und prüfe, dass der Text layer vorhanden (bei Path‑B) bzw. das Bild‑Overlay (bei Sandwich).
+Optional: öffne das PDF und prüfe, dass der Text layer vorhanden (bei aligned) bzw. das Bild‑Overlay (bei Sandwich).
 7. Fehlerdiagnose (falls etwas fehlschlägt)
 Symptom	Wo nachschauen
 Webhook liefert 404	Sicherstellen, dass der Workflow aktiv ist und die URL exakt /webhook/alexandria/ocr lautet (nicht /webhook-test/).

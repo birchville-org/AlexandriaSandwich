@@ -2,10 +2,10 @@
 """
 AlexandriaSandwich — align_mistral_pdf.py
 
-Automatic Token Alignment (Weg B):
-Aligns Tesseract-generated OCR text layer inside an assembled sandwich PDF
+Post-Assembly Textlayer-Korrektur:
+Aligns Tesseract-generated OCR text layer inside an assembled facsimile PDF
 with high-precision Mistral OCR text, and injects the corrected words
-into the PDF text layer to produce an ultra-accurate Sandwich PDF (<job>.pathb.pdf).
+into the PDF text layer to produce an ultra-accurate aligned facsimile PDF (<job>.aligned.pdf).
 Preserves pixel-exact bounding-box coordinates while correcting OCR errors and
 stripping dot-line / noise hallucinations.
 """
@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
-# Import Path B PDF text stream replacement engine
+# Import Post-Assembly PDF text stream replacement engine
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 try:
@@ -282,10 +282,10 @@ def align_page_tokens(
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(
-        description="AlexandriaSandwich — Align Mistral OCR with Sandwich PDF text layer (Weg B)"
+        description="AlexandriaSandwich — Align Mistral OCR with Facsimile PDF text layer (Post-Assembly Textlayer-Korrektur)"
     )
     parser.add_argument("--pdf", type=Path, required=True, help="Input Sandwich PDF (<job>.sandwich.pdf)")
-    parser.add_argument("--output", "-o", type=Path, required=True, help="Output aligned PDF (<job>.pathb.pdf)")
+    parser.add_argument("--output", "-o", type=Path, required=True, help="Output aligned PDF (<job>.aligned.pdf)")
     parser.add_argument("--mistral-dir", type=Path, default=None, help="Directory containing *.mistral.md files")
     parser.add_argument("--book-json", type=Path, default=None, help="Optional consolidated book.json path")
     parser.add_argument("--corrections", type=Path, default=None, help="Path to write generated corrections JSON")

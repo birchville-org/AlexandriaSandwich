@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AlexandriaSandwich — Path B: Post-PDF invisible text-layer correction
+AlexandriaSandwich — Post-Assembly Textlayer-Korrektur (In-PDF invisible text-layer correction)
 
 OCRmyPDF sandwich PDFs store invisible text in Form XObjects using
 GlyphLessFont + Identity-H. Operators look like:
@@ -324,7 +324,7 @@ def iter_stream_objects(pdf: Pdf) -> Iterable[Tuple[str, Object]]:
             if subtype == Name("/Image"):
                 continue
             if is_form or hasattr(xobj, "read_bytes"):
-                # Only Form streams carry text for Path B
+                # Only Form streams carry text for post-assembly textlayer correction
                 if subtype == Name("/Form") or (hasattr(xobj, "read_bytes") and subtype != Name("/Image")):
                     if subtype == Name("/Form"):
                         add(f"{prefix}.xobject{name}", xobj)
@@ -437,8 +437,8 @@ def cmd_replace(args: argparse.Namespace) -> int:
     if not mapping:
         die("provide --corrections and/or --subst OLD=NEW with actual changes")
 
-    out = args.output or args.pdf.with_name(args.pdf.stem + ".pathb.pdf")
-    with tempfile.TemporaryDirectory(prefix="as-pathb-") as tmp:
+    out = args.output or args.pdf.with_name(args.pdf.stem.replace(".sandwich", "") + ".aligned.pdf")
+    with tempfile.TemporaryDirectory(prefix="as-aligned-") as tmp:
         tmp_out = Path(tmp) / "out.pdf"
         summary = replace_in_pdf(args.pdf, tmp_out, mapping)
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -450,7 +450,7 @@ def cmd_replace(args: argparse.Namespace) -> int:
         print(json.dumps(summary, ensure_ascii=False, indent=2))
     else:
         print(
-            f"Path B: hits={summary['replacement_hits']} "
+            f"Post-Assembly Textlayer: hits={summary['replacement_hits']} "
             f"streams={len(summary['streams_touched'])} -> {out}",
             file=sys.stderr,
         )
@@ -479,7 +479,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         },
         "replace": {tok: tok for tok in tokens[:50]},
     }
-    out = args.output or Path(str(args.pdf) + ".pathb.corrections.json")
+    out = args.output or Path(str(args.pdf) + ".aligned.corrections.json")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(template, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {out}", file=sys.stderr)
@@ -487,7 +487,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Path B post-PDF text-layer correction")
+    p = argparse.ArgumentParser(description="Post-Assembly In-PDF text-layer correction (aligned PDF)")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     d = sub.add_parser("dump", help="Extract text from sandwich PDF")
@@ -504,7 +504,7 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--json", action="store_true")
     r.set_defaults(func=cmd_replace)
 
-    i = sub.add_parser("init", help="Create Path B corrections template")
+    i = sub.add_parser("init", help="Create aligned corrections template")
     i.add_argument("pdf", type=Path)
     i.add_argument("-o", "--output", type=Path)
     i.set_defaults(func=cmd_init)

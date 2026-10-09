@@ -1,6 +1,6 @@
-# Correction Paths A and B
+# Correction Workflows: Pre-Assembly vs. Post-Assembly
 
-## Path A — Pre-PDF hOCR correction
+## Pre-Assembly hOCR Correction
 
 Correct OCR tokens in hOCR before or beside sandwich assembly.
 
@@ -42,15 +42,16 @@ python3 scripts/hocr_correct.py text path/to/page.corrected.hocr -o page.txt
 /data/output/pdf/<job>.sandwich.pdf
 ```
 
-### Limits
+### Constraints
 
-- Path A edits hOCR for review / export / HITL.
+- Pre-Assembly edits hOCR for review / export / HITL.
 - `assemble_sandwich.py` builds the 1:1 image layer from page images via OCRmyPDF sandwich.
-- Optional future work: inject corrected hOCR without re-OCR.
 
-## Path B — Post-PDF text layer edit
+---
 
-Edit the **invisible** OCR text inside a finished sandwich PDF. The image layer is untouched.
+## Post-Assembly Textlayer Correction (In-PDF)
+
+Edit or align the **invisible** OCR text inside a finished facsimile PDF. The visual image layer is 100% untouched.
 
 OCRmyPDF sandwich text lives in Form XObjects using GlyphLessFont / Identity-H as UTF-16BE hex strings, e.g. `[ <0041006C...> ] TJ`.
 
@@ -61,13 +62,19 @@ OCRmyPDF sandwich text lives in Form XObjects using GlyphLessFont / Identity-H a
 python3 scripts/pdf_text_correct.py dump path/to/book.sandwich.pdf
 
 # Template from tokens
-python3 scripts/pdf_text_correct.py init path/to/book.sandwich.pdf -o book.pathb.corrections.json
+python3 scripts/pdf_text_correct.py init path/to/book.sandwich.pdf -o book.aligned.corrections.json
 
-# Apply map and/or inline substitutions
+# Apply manual map and/or inline substitutions
 python3 scripts/pdf_text_correct.py replace path/to/book.sandwich.pdf \
-  -c book.pathb.corrections.json \
+  -c book.aligned.corrections.json \
   -s 'Teh=The' \
-  -o path/to/book.pathb.pdf --json
+  -o path/to/book.aligned.pdf --json
+
+# Fully automatic AI token alignment (Mistral -> PDF Content-Stream)
+python3 scripts/align_mistral_pdf.py \
+  --pdf path/to/book.sandwich.pdf \
+  --mistral-dir path/to/markdown/ \
+  -o path/to/book.aligned.pdf
 ```
 
 ### corrections.json
@@ -76,7 +83,7 @@ python3 scripts/pdf_text_correct.py replace path/to/book.sandwich.pdf \
 {
   "replace": {
     "12345": "99999",
-    "Second": "SECOND"
+    "Secvnd": "Second"
   }
 }
 ```
@@ -84,11 +91,11 @@ python3 scripts/pdf_text_correct.py replace path/to/book.sandwich.pdf \
 ### Verify
 
 ```bash
-pdftotext -layout book.pathb.pdf -
+pdftotext -layout book.aligned.pdf -
 ```
 
-### Limits
+### Constraints
 
 - Targets OCRmyPDF sandwich fonts (UTF-16BE hex in TJ arrays); also handles plain PDF literal strings.
-- Best for token/phrase fixes, not full reflow or font metrics changes.
-- Always write to a new output file; keep the original sandwich as archive master.
+- Best for token/phrase fixes and AI alignment without altering bounding boxes.
+- Always write to `<job>.aligned.pdf`; keep the original sandwich as archive master.

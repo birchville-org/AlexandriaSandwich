@@ -30,7 +30,7 @@ AlexandriaSandwich löst dieses Problem durch eine **4-Ebenen-Architektur**, in 
               ┌───────────────────┴───────────────────┐
               │ 4. Faksimile- & Beweisebene           │
               │    • <id>.sandwich.pdf (Scan + Layer) │
-              │    • <id>.pathb.pdf    (Mistral-Clean)│
+              │    • <id>.aligned.pdf  (KI-synchron)  │
               └───────────────────────────────────────┘
 ```
 
@@ -38,12 +38,12 @@ AlexandriaSandwich löst dieses Problem durch eine **4-Ebenen-Architektur**, in 
 
 ## 2. Die einzelnen Zielformate im Detail
 
-### 1. Faksimile-Ebene: Sandwich-PDF (`*.sandwich.pdf` / `*.pathb.pdf`)
+### 1. Faksimile-Ebene: Sandwich-PDF (`*.sandwich.pdf` / `*.aligned.pdf`)
 * **Funktion:** Originaltreues, zitierfähiges Dokumentenarchiv.
 * **Aufbau:** 
   * Oben: Unverändertes 300-DPI-Scanbild (Faksimile) mit historischem Bleisatzbild, Marginalien, Vergilbung und Original-Typographie.
   * Unten: Unsichtbarer Vektor-Textlayer mit pixelgenauen Bounding-Box-Koordinaten für jedes Wort.
-* **Weg B (Mistral Token Alignment):** Der unsichtbare Textlayer wird mit der semantischen Erkennung von Mistral OCR synchronisiert. Erkennungsfehler und Rausch-Halluzinationen (z. B. auf gepunkteten Leitlinien) werden bereinigt, während die exakten Pixel-Koordinaten des Originaldrucks erhalten bleiben.
+* **Post-Assembly Textlayer-Korrektur (KI-Synchronisation):** Der unsichtbare Textlayer wird mit der semantischen Erkennung von Mistral OCR synchronisiert. Erkennungsfehler und Rausch-Halluzinationen (z. B. auf gepunkteten Leitlinien) werden bereinigt, während die exakten Pixel-Koordinaten des Originaldrucks erhalten bleiben (`*.aligned.pdf`).
 
 ### 2. Maschinenlesbare "Single Source of Truth": `book.json` (AST)
 * **Funktion:** Zentrales, softwareunabhängiges Zwischenformat.
@@ -88,7 +88,7 @@ Durch die strikte Trennung von Bilddaten, geometrischen Koordinaten und semantis
 
 ### Strategie 1: Reproduktion des Originallayouts
 
-1. **Als Faksimile (`*.pathb.pdf`):**
+1. **Als KI-synchronisiertes Faksimile (`*.aligned.pdf`):**
    * Das historische Druckbild bleibt 1:1 sichtbar. Zeilenumbrüche, Trennstriche, Schriftsetzerfehler, Ligaturen und Fußnotenpositionen bleiben identisch zum Originalexemplar der Bibliothek.
 2. **Als geometrischer Vektor-Nachsatz:**
    * Da in `book.json` für jedes Wort und jede Zeile die geometrische Position (`bbox`), Zeilenabstände und Schriftgrößen hinterlegt sind, kann das Original-Layout mathematisch exakt mit modernen Vektorschriften neu gesetzt werden (identischer Satzspiegel, aber ohne Scan-Körnigkeit).
@@ -113,7 +113,7 @@ Jedes von AlexandriaSandwich verarbeitete Werk erzeugt die folgende einheitliche
 ```text
 output/books/<buch_id>/
 ├── <buch_id>.sandwich.pdf   # 1:1 Faksimile + Tesseract Textlayer
-├── <buch_id>.pathb.pdf      # Faksimile + Mistral-korrigierter Textlayer (0 Rauschen)
+├── <buch_id>.aligned.pdf    # Faksimile + Mistral-korrigierter Textlayer (0 Rauschen)
 ├── <buch_id>.digital.pdf    # Vektor-Neusatz via Typst
 ├── <buch_id>.epub           # Reflowable eBook mit eingebetteten Schriften
 ├── <buch_id>.tei.xml        # TEI-P5 Langzeitarchiv-XML

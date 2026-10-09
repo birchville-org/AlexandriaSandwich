@@ -2,6 +2,17 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.2.1] - 2026-10-09
+
+### Changed
+- **Terminologie-Refactoring (Sandwich & Aligned):**
+  - Unspezifische Begriffe „Weg A / Weg B“ und „Path A / Path B“ durch präzise Fachbegriffe ersetzt:
+    - Standard-Faksimile: `<job>.sandwich.pdf`
+    - KI-synchronisiertes Faksimile: `<job>.aligned.pdf`
+    - Vor-Montage-Ebene: „Pre-Assembly hOCR-Korrektur“ (`scripts/hocr_correct.py`)
+    - Nach-Montage-Ebene: „Post-Assembly Textlayer-Korrektur“ (`scripts/pdf_text_correct.py`, `scripts/align_mistral_pdf.py`)
+  - Volle Abwärtskompatibilität: Pipeline-Reports und UI erkennen weiterhin bestehende `.pathb.pdf`-Artefakte nahtlos.
+
 ## [1.2.0] - 2026-09-28
 
 ### Added
