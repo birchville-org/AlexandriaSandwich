@@ -453,7 +453,7 @@
         <span class="status-dot {% if status_data.mistral.status == 'healthy' %}healthy{% else %}warning{% endif %}"></span>
       </div>
       <div class="pipeline-node-desc">
-        Tesseract 5 (Lokal 0,00 $), Mistral Document AI (Cloud 0,004 $) &amp; optionales Qwen2.5-VL.
+        Tesseract 5 (Lokal 0,00 $) &amp; Mistral Document AI (Cloud 0,004 $).
       </div>
       <div class="pipeline-node-meta">
         <span class="badge badge-gold">Hybrid</span>
@@ -639,28 +639,7 @@
     </div>
   </div>
 
-  <!-- Card 6: Local Vision Qwen2.5-VL -->
-  <div class="component-card">
-    <div class="component-card-header">
-      <div>
-        <div class="component-card-title">Qwen2.5-VL Vision (Lokal)</div>
-        <div class="component-card-role">{{ status_data.qwen.role }}</div>
-      </div>
-      <span class="badge {% if status_data.qwen.status == 'healthy' %}badge-pass{% else %}badge-secondary{% endif %}" id="qwenBadge">
-        {{ status_data.qwen.badge }}
-      </span>
-    </div>
 
-    <div class="kv-list">
-      <div class="kv-row"><span class="kv-key">Inferenz-Host</span><span class="kv-val" style="font-family: var(--font-mono); font-size: 0.8rem;">{{ status_data.qwen.endpoint }}</span></div>
-      <div class="kv-row">
-        <span class="kv-key">Verbindungsstatus</span>
-        <span class="kv-val" id="qwenStatus">{{ status_data.qwen.message }}</span>
-      </div>
-      <div class="kv-row"><span class="kv-key">Kosten</span><span class="kv-val">{{ status_data.qwen.cost_rate }}</span></div>
-      <div class="kv-row"><span class="kv-key">Rolle</span><span class="kv-val">Lokale GPU-Alternative für hochpräzise Transkription</span></div>
-    </div>
-  </div>
 </div>
 
 <!-- 4. Recent Jobs & Activity -->
@@ -1044,9 +1023,7 @@ async function refreshStatus(manual = false) {
         : `<span style="color: #fbbf24;">⚠️ ${data.mistral.message}</span>`;
     }
 
-    // Update Qwen details
-    const qwenStatus = document.getElementById("qwenStatus");
-    if (qwenStatus) qwenStatus.textContent = data.qwen.message;
+
 
     // Refresh active job progress
     if (currentSelectedJob) {

@@ -71,7 +71,7 @@ Ziel des Projekts ist die Erzeugung eines mehrschichtigen, archivfesten Digitali
 * **Kosten:** 478 Seiten x 0,004 USD = exakt **1,912 USD** für das gesamte Werk.
 
 ### Schritt 2.1: Lokale VLM-Alternative & Modell-Benchmark (Mistral OCR vs. Qwen2.5-VL)
-Um neben der Cloud-API (`mistral-ocr-latest`) eine autarke, offlinefähige Alternative für sensible Digitalisierungsprojekte und Air-Gap-Deployments bereitzustellen, wurde eine lokale Vision-Language-Modell-Pipeline ([scripts/qwen_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/qwen_ocr.py), [scripts/benchmark_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/benchmark_ocr.py)) mit **Qwen2.5-VL** (via MLX auf Apple Silicon) evaluiert:
+Um neben der Cloud-API (`mistral-ocr-latest`) eine autarke, offlinefähige Alternative für sensible Digitalisierungsprojekte und Air-Gap-Deployments bereitzustellen, wurde eine lokale Vision-Language-Modell-Pipeline mit **Qwen2.5-VL** (via MLX auf Apple Silicon) evaluiert:
 
 #### 1. Antiqua / Einleitungsseiten (Lateinische Schrift & Fließtext, z. B. S. 5)
 Bei rein lateinischem Satzbild und deutschsprachigen Erläuterungen erreicht das lokale Modell nahezu vollständige Deckungsgleichheit:

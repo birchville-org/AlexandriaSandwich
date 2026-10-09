@@ -38,12 +38,6 @@ Der Prozess ist auf spezialisierte Knoten im Birchville-Netzwerk verteilt:
 │ Compute Node (Proxmox VM: alex.local)                       │
 │ • alexandria_worker  (ImageMagick, unpaper, Tesseract, OCR) │
 │ • alexandria_n8n     (Workflow-Orchestrierung & Webhooks)   │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ Optionale lokale Vision-Inferenz
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│ GPU Node (Lokaler VLM-Server: nyx.local:8088)               │
-│ • Qwen2.5-VL Vision-Language OCR (100% lokal, 0,00 $ Cloud) │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -53,7 +47,6 @@ Der Prozess ist auf spezialisierte Knoten im Birchville-Netzwerk verteilt:
 | :--- | :--- | :---: | :--- |
 | **`alex.local`** | `alexandria_worker`, `n8n` | **Ja (Pflicht)** | Führt die Pipeline und Cloud-OCR-Aufrufe aus (`MISTRAL_API_KEY` in `/opt/alexandria/.env`). |
 | **`synology.local`** | `alexandria_ui`, Traefik, Authelia | **Ja (Monitoring)**| Prüft die API-Erreichbarkeit gegen `api.mistral.ai` und aggregiert Job-Kosten. |
-| **`nyx.local`** | `nyx.local:8088` (Qwen2.5-VL) | **Nein** | 100 % lokale GPU-Inferenz ohne Cloud-Abhängigkeiten. |
 
 ---
 
@@ -128,10 +121,8 @@ AlexandriaSandwich trennt strikt zwischen **Geometrie** (visuelle Positionierung
 
 ---
 
-### Schritt 4: Bedingter KI-Fallback & Vision-Language-Modelle (`scripts/mistral_ocr.py`, `scripts/qwen_ocr.py`)
-- **Engine A (Cloud-API):** Mistral OCR API (`mistral-ocr-latest`) greift bei komplexen Layouts, vergilbten Vorlagen, Frakturschriften oder polyglotten Drucken (z. B. historische indische Schriften) mit minimaler Latenz und höchster Ligatur-Treue.
-- **Engine B (Offline / Air-Gap):** Qwen2.5-VL ([scripts/qwen_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/qwen_ocr.py)) ermöglicht die vollständige lokale Verarbeitung auf eigener Hardware (z. B. MLX auf Apple Silicon) ohne Datenabfluss oder API-Kosten (99,96 % Textübereinstimmung bei lateinischen Schriftsätzen).
-- **Benchmark & Modellvergleich:** Über [scripts/benchmark_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/benchmark_ocr.py) können beide Engines direkt auf Testseiten verglichen und Side-by-Side-HTML-Diffs erzeugt werden. Detaillierte Kennzahlen siehe [Fallstudie Böhtlingk 1887](case-study.md#schritt-21-lokale-vlm-alternative-modell-benchmark-mistral-ocr-vs-qwen25-vl).
+### Schritt 4: Bedingter KI-Fallback (`scripts/mistral_ocr.py`)
+- **Mistral Document AI:** Die Mistral OCR API (`mistral-ocr-latest`) greift bei komplexen Layouts, vergilbten Vorlagen, Frakturschriften oder polyglotten Drucken (z. B. historische indische Schriften) mit minimaler Latenz und höchster Ligatur-Treue. Sie liefert strukturierte Markdown-Transkripte sowie Bounding-Boxen für Neusatz und Textabgleich.
 
 ---
 
