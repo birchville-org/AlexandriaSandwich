@@ -203,15 +203,17 @@ else
   PDF_OUT=""
 fi
 
-# Multi-format outputs: TEI-P5 XML, Typst Digital PDF & EPUB 3
+# Multi-format outputs: TEI-P5 XML, Typst Digital PDF, Typeset Edition & EPUB 3
 CONSOLIDATE="${SCRIPT_DIR}/consolidate_book.py"
 EXPORT_TEI="${SCRIPT_DIR}/export_tei.py"
 RENDER_DIGITAL="${SCRIPT_DIR}/render_digital_pdf.py"
+BUILD_TYPESET="${SCRIPT_DIR}/build_typeset_edition.py"
 EXPORT_EPUB="${SCRIPT_DIR}/export_epub.py"
 
 BOOK_DIR="${OUT_DIR}/books/${JOB_NAME}"
 TEI_OUT="${OUT_DIR}/tei/${JOB_NAME}.tei.xml"
 DIGITAL_PDF_OUT="${OUT_DIR}/pdf/${JOB_NAME}.digital.pdf"
+TYPESET_PDF_OUT="${OUT_DIR}/pdf/${JOB_NAME}.typeset_edition.pdf"
 EPUB_OUT="${BOOK_DIR}/${JOB_NAME}.epub"
 mkdir -p "$BOOK_DIR" "$(dirname "$TEI_OUT")"
 
@@ -254,6 +256,20 @@ else
   DIGITAL_PDF_OUT=""
 fi
 
+if [[ -f "$BUILD_TYPESET" && -f "${BOOK_DIR}/book.json" ]]; then
+  log "build semantic typeset edition (Boethlingk model) -> $TYPESET_PDF_OUT"
+  set +e
+  python3 "$BUILD_TYPESET" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$TYPESET_PDF_OUT" --markdown-dir "$MD_DIR"
+  typeset_rc=$?
+  set -e
+  if [[ "$typeset_rc" -ne 0 ]]; then
+    log "warn: build_typeset_edition failed (rc=$typeset_rc)"
+    TYPESET_PDF_OUT=""
+  fi
+else
+  TYPESET_PDF_OUT=""
+fi
+
 if [[ -f "$EXPORT_EPUB" && -f "${BOOK_DIR}/book.json" ]]; then
   log "export epub 3 -> $EPUB_OUT"
   set +e
@@ -293,6 +309,29 @@ else
   ALIGNED_PDF=""
 fi
 
+# Build Publication-Grade Perfect Sandwich PDF (Leveling, Unsharp, Thumb/Border mask)
+PERFECT_SANDWICH_SCRIPT="${SCRIPT_DIR}/build_perfect_sandwich.py"
+PERFECT_SANDWICH_OUT="${OUT_DIR}/pdf/${JOB_NAME}.perfect_sandwich.pdf"
+BASE_SANDWICH_SOURCE="${ALIGNED_PDF:-$PDF_OUT}"
+if [[ -f "$PERFECT_SANDWICH_SCRIPT" && -n "$BASE_SANDWICH_SOURCE" && -f "$BASE_SANDWICH_SOURCE" ]]; then
+  log "build perfect sandwich pdf -> $PERFECT_SANDWICH_OUT"
+  set +e
+  python3 "$PERFECT_SANDWICH_SCRIPT" \
+    --input-pdf "$BASE_SANDWICH_SOURCE" \
+    --output "$PERFECT_SANDWICH_OUT" \
+    --jobs 4
+  perfect_rc=$?
+  set -e
+  if [[ "$perfect_rc" -eq 0 && -f "$PERFECT_SANDWICH_OUT" ]]; then
+    log "perfect sandwich pdf ok: $PERFECT_SANDWICH_OUT"
+  else
+    log "warn: build_perfect_sandwich failed (rc=$perfect_rc)"
+    PERFECT_SANDWICH_OUT=""
+  fi
+else
+  PERFECT_SANDWICH_OUT=""
+fi
+
 # Hierarchical Outline (TOC) & Metadata Injection into PDF artifacts
 INJECT_TOC="${SCRIPT_DIR}/inject_toc.py"
 TOC_FILE=""
@@ -309,7 +348,7 @@ for cand in \
 done
 
 if [[ -f "$INJECT_TOC" ]]; then
-  for pdf in "$PDF_OUT" "$ALIGNED_PDF" "$DIGITAL_PDF_OUT"; do
+  for pdf in "$PDF_OUT" "$ALIGNED_PDF" "$PERFECT_SANDWICH_OUT" "$DIGITAL_PDF_OUT" "$TYPESET_PDF_OUT"; do
     if [[ -n "$pdf" && -f "$pdf" ]]; then
       log "inject toc / metadata into $pdf"
       set +e
@@ -326,6 +365,7 @@ REPORT="$(JOB_NAME="$JOB_NAME" INPUT_DIR="$INPUT_DIR" PRE_DIR="$PRE_DIR" \
 THRESHOLD="$THRESHOLD" LANG_OCR="$LANG_OCR" PASS_N="$PASS_N" FAIL_N="$FAIL_N" \
 MISTRAL_N="$MISTRAL_N" TOTAL="${#PAGES[@]}" PAGES_JSONL="$PAGES_JSONL" \
 PDF_OUT="${PDF_OUT:-}" ALIGNED_PDF="${ALIGNED_PDF:-}" SIDECAR_OUT="${SIDECAR_OUT:-}" \
+PERFECT_SANDWICH_OUT="${PERFECT_SANDWICH_OUT:-}" TYPESET_PDF_OUT="${TYPESET_PDF_OUT:-}" \
 TEI_OUT="${TEI_OUT:-}" DIGITAL_PDF_OUT="${DIGITAL_PDF_OUT:-}" EPUB_OUT="${EPUB_OUT:-}" \
 python3 - <<'PY'
 import json, os
@@ -347,11 +387,13 @@ report = {
     "fail": int(os.environ["FAIL_N"]),
     "mistral_ok": int(os.environ["MISTRAL_N"]),
     "sandwich_pdf": os.environ.get("PDF_OUT") or None,
+    "perfect_sandwich_pdf": os.environ.get("PERFECT_SANDWICH_OUT") or None,
     "aligned_pdf": aligned_pdf,
     "pathb_pdf": aligned_pdf,
     "sidecar_txt": os.environ.get("SIDECAR_OUT") or None,
     "tei_xml": os.environ.get("TEI_OUT") or None,
     "digital_pdf": os.environ.get("DIGITAL_PDF_OUT") or None,
+    "typeset_edition_pdf": os.environ.get("TYPESET_PDF_OUT") or None,
     "epub": os.environ.get("EPUB_OUT") or None,
     "pages": pages,
 }
