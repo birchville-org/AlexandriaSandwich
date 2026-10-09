@@ -25,27 +25,27 @@
   // Typography rules
   set text(
     font: book_fonts,
-    size: if preserve_pages { 9pt } else { 10pt },
+    size: if preserve_pages { 9.5pt } else { 10pt },
     lang: lang,
     hyphenate: true
   )
 
   set par(
     justify: true,
-    leading: if preserve_pages { 0.52em } else { 0.72em },
+    leading: if preserve_pages { 0.55em } else { 0.72em },
     first-line-indent: if preserve_pages { 0em } else { 1.4em }
   )
 
   if preserve_pages {
-    set block(spacing: 0.55em)
+    set block(spacing: 0.65em)
   }
 
   // Headings
   show heading: it => {
     set text(font: book_fonts, weight: "bold")
     if preserve_pages {
-      let sz = if it.level == 1 { 10.5pt } else if it.level == 2 { 9.8pt } else { 9.2pt }
-      block(above: 0.6em, below: 0.4em)[#text(size: sz)[#it.body]]
+      let sz = if it.level == 1 { 12pt } else if it.level == 2 { 10.5pt } else { 9.8pt }
+      block(above: 0.9em, below: 0.4em)[#text(size: sz)[#it.body]]
     } else {
       if it.level == 1 {
         pagebreak(weak: true)

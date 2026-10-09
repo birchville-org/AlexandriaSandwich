@@ -40,8 +40,98 @@ def escape_typst(text: str) -> str:
     return text
 
 
+def calibrate_layout_from_pdf(pdf_path: Path) -> Optional[Dict[str, float]]:
+    """
+    Extract median page dimensions and printable text bounding box from reference PDF (aligned/sandwich).
+    Returns dict with width, height, left, right, top, bottom in points.
+    """
+    try:
+        try:
+            import fitz
+        except ImportError:
+            import pymupdf as fitz
+    except ImportError:
+        log("PyMuPDF (fitz) not available; skipping automated layout calibration.")
+        return None
+
+    if not pdf_path.exists():
+        return None
+
+    try:
+        import statistics
+
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        if total_pages == 0:
+            return None
+
+        # Sample up to 50 pages from the main body (avoiding cover/blank pages)
+        start_p = min(10, max(0, total_pages - 1))
+        end_p = min(60, total_pages)
+        if end_p - start_p < 5:
+            start_p = 0
+            end_p = total_pages
+
+        page_widths: List[float] = []
+        page_heights: List[float] = []
+        left_margins: List[float] = []
+        right_margins: List[float] = []
+        top_margins: List[float] = []
+        bottom_margins: List[float] = []
+
+        for pno in range(start_p, end_p):
+            page = doc[pno]
+            rect = page.rect
+            page_widths.append(rect.width)
+            page_heights.append(rect.height)
+
+            blocks = [b for b in page.get_text("blocks") if len(b[4].strip()) > 5]
+            if len(blocks) < 3:
+                continue
+
+            min_x = min(b[0] for b in blocks)
+            max_x = max(b[2] for b in blocks)
+            min_y = min(b[1] for b in blocks)
+            max_y = max(b[3] for b in blocks)
+
+            left_margins.append(min_x)
+            right_margins.append(rect.width - max_x)
+            top_margins.append(min_y)
+            bottom_margins.append(rect.height - max_y)
+
+        doc.close()
+
+        if not left_margins:
+            return None
+
+        w = round(statistics.median(page_widths), 1)
+        h = round(statistics.median(page_heights), 1)
+        l = round(statistics.median(left_margins), 1)
+        r = round(statistics.median(right_margins), 1)
+        t = round(statistics.median(top_margins), 1)
+
+        # Bottom margin: use the 20th percentile to measure full text pages (ignoring short chapter ends)
+        sorted_b = sorted(bottom_margins)
+        idx_20 = max(0, int(len(sorted_b) * 0.20))
+        b = round(sorted_b[idx_20], 1)
+
+        cal = {
+            "width": w,
+            "height": h,
+            "left": l,
+            "right": r,
+            "top": t,
+            "bottom": b,
+        }
+        log(f"Calibrated layout from {pdf_path.name}: {cal}")
+        return cal
+    except Exception as e:
+        log(f"Warning: layout calibration failed: {e}")
+        return None
+
+
 def format_markdown_table(table_rows: List[str]) -> str:
-    """Convert contiguous markdown table rows into native Typst #table."""
+    """Convert contiguous markdown table rows into native Typst #table with content-calibrated column widths."""
     data = []
     for r in table_rows:
         cells = [c.strip() for c in r.strip().strip("|").split("|")]
@@ -54,24 +144,59 @@ def format_markdown_table(table_rows: List[str]) -> str:
     num_cols = max(len(r) for r in data)
     if num_cols == 0:
         return ""
-    
-    col_spec = ", ".join(["1fr"] * (num_cols - 1) + ["auto"]) if num_cols > 1 else "1fr"
-    typ_cells = []
+
     for row in data:
         while len(row) < num_cols:
             row.append("")
+
+    # Determine column widths heuristically based on cell contents
+    content_rows = data[1:] if len(data) > 1 else data
+    col_widths = []
+    col_aligns = []
+    for c_idx in range(num_cols):
+        col_cells = [r[c_idx] for r in content_rows]
+        max_len = max((len(c) for c in col_cells), default=0)
+        is_numeric = all(c == "" or c.isdigit() or len(c) <= 2 or c in {",,", '"', "°"} for c in col_cells)
+
+        if is_numeric or max_len <= 3:
+            col_widths.append("auto")
+            col_aligns.append("center")
+        elif max_len <= 8:
+            col_widths.append("1.2fr")
+            col_aligns.append("left")
+        elif max_len <= 16:
+            col_widths.append("2fr")
+            col_aligns.append("left")
+        else:
+            col_widths.append("3fr")
+            col_aligns.append("left")
+
+    if all(w == "auto" for w in col_widths):
+        col_widths = ["1fr"] * num_cols
+
+    col_spec = ", ".join(col_widths)
+    typ_cells = []
+    for row in data:
         for c in row:
             tc = escape_typst(c)
             typ_cells.append(f"[{tc}]")
     cells_str = ", \n    ".join(typ_cells)
-    align_fn = f"(col, row) => if col == {num_cols - 1} {{ right }} else {{ left }}" if num_cols > 1 else "left"
-    return f"""#table(
+
+    align_entries = [f"if col == {i} {{ {align} }}" for i, align in enumerate(col_aligns)]
+    align_fn = f"(col, row) => {' else '.join(align_entries)} else {{ left }}" if num_cols > 1 else "left"
+
+    t_font_size = "8pt" if len(data) > 28 else ("8.5pt" if len(data) > 15 else "9pt")
+
+    return f"""#align(center)[#block(width: 100%)[
+#set text(size: {t_font_size})
+#table(
   columns: ({col_spec}),
   stroke: none,
-  fill: (x, y) => if y == 0 {{ luma(245) }} else {{ none }},
+  inset: (x: 3.5pt, y: 2pt),
+  fill: (x, y) => if y == 0 {{ luma(240) }} else {{ none }},
   align: {align_fn},
   {cells_str}
-)"""
+)]]"""
 
 
 def build_typst_document(
@@ -79,6 +204,7 @@ def build_typst_document(
     template_path: str = "/templates/book.typ",
     paper: Optional[str] = None,
     preserve_pages: bool = True,
+    layout_calibration: Optional[Dict[str, float]] = None,
 ) -> str:
     """Generate complete Typst source code from book dictionary."""
     meta = book_data.get("metadata", {})
@@ -98,14 +224,17 @@ def build_typst_document(
     # Determine page dimensions
     pages = book_data.get("pages", [])
     dim_args: List[str] = []
-    
-    if paper:
+
+    if layout_calibration:
+        dim_args.append(f'  width: {layout_calibration["width"]}pt,')
+        dim_args.append(f'  height: {layout_calibration["height"]}pt,')
+        dim_args.append(f'  margin: (left: {layout_calibration["left"]}pt, right: {layout_calibration["right"]}pt, top: {layout_calibration["top"]}pt, bottom: {layout_calibration["bottom"]}pt),')
+    elif paper:
         dim_args.append(f'  paper: "{paper}",')
     elif preserve_pages and pages:
         # Check if first page has geometry bbox [ymin, xmin, ymax, xmax] or [x0, y0, x1, y1]
         bbox = pages[0].get("bbox", [])
         if len(bbox) == 4 and bbox[2] > 0 and bbox[3] > 0:
-            # bbox in pixels at 300 DPI -> convert to points (72 pt / inch)
             w_px = bbox[2] - bbox[0] if bbox[2] > bbox[0] else bbox[2]
             h_px = bbox[3] - bbox[1] if bbox[3] > bbox[1] else bbox[3]
             w_pt = round(w_px / 300.0 * 72.0, 1)
@@ -115,7 +244,6 @@ def build_typst_document(
                 dim_args.append(f'  height: {h_pt}pt,')
     
     if not dim_args:
-        # Default scholarly format
         dim_args.append('  paper: "b5",')
 
     lines = [
@@ -131,18 +259,17 @@ def build_typst_document(
         '',
         '// Auto-scale layout macro ensuring each original page stays strictly within 1 page',
         '#let page_content(body) = layout(size => context {',
-        '  let m = measure(body)',
+        '  let content_block = block(width: size.width)[#body]',
+        '  let m = measure(content_block)',
         '  if m.height > size.height {',
-        '    let scale_factor = (size.height / m.height) * 0.96',
-        '    place(top + left)[',
-        '      #scale(x: scale_factor * 100%, y: scale_factor * 100%, origin: top + left)[',
+        '    let scale_factor = (size.height / m.height) * 0.95',
+        '    align(center + top)[',
+        '      #scale(x: scale_factor * 100%, y: scale_factor * 100%, reflow: true)[',
         '        #block(width: size.width / scale_factor)[#body]',
         '      ]',
         '    ]',
         '  } else {',
-        '    place(top + left)[',
-        '      #block(width: size.width)[#body]',
-        '    ]',
+        '    content_block',
         '  }',
         '})',
         ''
@@ -193,7 +320,7 @@ def build_typst_document(
         if preserve_pages:
             lines.append(f"#page_content[\n{content_body}\n]")
             if idx < len(pages) - 1:
-                lines.append("#pagebreak()")
+                lines.append("#pagebreak(weak: true)")
         else:
             lines.append(content_body)
         lines.append("")
@@ -208,6 +335,7 @@ def render_pdf(
     project_root: Path,
     paper: Optional[str] = None,
     preserve_pages: bool = True,
+    reference_pdf: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Compile Typst document into high-quality digital PDF."""
     start_time = time.time()
@@ -229,7 +357,26 @@ def render_pdf(
     else:
         raise ValueError(f"Unsupported input file format: {input_file}")
 
-    # 2. Generate Typst source
+    # 2. Automated Satzspiegel- & Layout-Kalibrierung from reference PDF if available
+    layout_cal: Optional[Dict[str, float]] = None
+    if preserve_pages:
+        candidate_refs: List[Path] = []
+        if reference_pdf:
+            candidate_refs.append(reference_pdf)
+        pdf_dir = output_file.parent
+        candidate_refs.extend([
+            pdf_dir / f"{job_name}.aligned.pdf",
+            pdf_dir / f"{job_name}.sandwich.pdf",
+            pdf_dir / f"{job_name}.pdf",
+            input_file.parent / f"{job_name}.aligned.pdf",
+        ])
+        for cand in candidate_refs:
+            if cand.exists():
+                layout_cal = calibrate_layout_from_pdf(cand)
+                if layout_cal:
+                    break
+
+    # 3. Generate Typst source
     template_file = (project_root / "templates" / "book.typ").resolve()
     if not template_file.exists():
         template_file = (Path(__file__).resolve().parent.parent / "templates" / "book.typ").resolve()
@@ -239,15 +386,16 @@ def render_pdf(
         template_path=str(template_file),
         paper=paper,
         preserve_pages=preserve_pages,
+        layout_calibration=layout_cal,
     )
 
-    # 3. Write temp .typ file in job directory
+    # 4. Write temp .typ file in job directory
     output_file.parent.mkdir(parents=True, exist_ok=True)
     temp_typ = output_file.parent / f"{job_name}.digital.typ"
     with open(temp_typ, "w", encoding="utf-8") as f:
         f.write(typst_code)
 
-    # 4. Check for typst binary
+    # 5. Check for typst binary
     typst_cmd = shutil.which("typst")
     if not typst_cmd:
         if Path("/usr/local/bin/typst").exists():
@@ -284,6 +432,7 @@ def main():
     parser.add_argument("--job", "-j", required=True, help="Job name (e.g. e2e_m1)")
     parser.add_argument("--input", "-i", help="Path to book.json or book.md (default: /data/output/books/<job>/book.json)")
     parser.add_argument("--output", "-o", help="Path to output PDF (default: /data/output/pdf/<job>.digital.pdf)")
+    parser.add_argument("--reference-pdf", "-r", help="Reference scan PDF for automated layout calibration (default: autodetect aligned/sandwich)")
     parser.add_argument("--paper", default=None, help="Paper size (b5, a4, a5, etc., default: matches source scan geometry)")
     parser.add_argument("--no-preserve-pages", action="store_true", help="Disable 1:1 page break preservation")
     parser.add_argument("--root", help="Project root for Typst imports (default: repo root)")
@@ -299,6 +448,7 @@ def main():
 
     input_file = Path(args.input) if args.input else data_dir / "output" / "books" / args.job / "book.json"
     output_file = Path(args.output) if args.output else data_dir / "output" / "pdf" / f"{args.job}.digital.pdf"
+    ref_pdf = Path(args.reference_pdf) if args.reference_pdf else None
 
     render_pdf(
         job_name=args.job,
@@ -307,6 +457,7 @@ def main():
         project_root=project_root,
         paper=args.paper,
         preserve_pages=not args.no_preserve_pages,
+        reference_pdf=ref_pdf,
     )
 
 
