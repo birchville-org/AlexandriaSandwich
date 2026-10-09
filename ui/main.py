@@ -55,9 +55,9 @@ def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
                     if "sandwich" in p.name:
                         title = "1:1 Sandwich-PDF"
                         desc = "Originalscan + native OCR-Textebene"
-                    elif "pathb" in p.name:
-                        title = "KI-synchronisiertes Sandwich-PDF"
-                        desc = "Mistral-bereinigter Textlayer (Path B)"
+                    elif "aligned" in p.name or "pathb" in p.name:
+                        title = "KI-synchronisiertes Faksimile"
+                        desc = "Mistral-bereinigter Textlayer (.aligned.pdf)"
                     elif "digital" in p.name:
                         title = "Digitales Neusatz-PDF"
                         desc = "Typst wissenschaftlicher Buchsatz"
@@ -96,7 +96,7 @@ def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
         # Aktueller Lauf
         candidates = [
             (PDF_DIR / f"{job}.sandwich.pdf", "pdf", "1:1 Sandwich-PDF", "Originalscan + native OCR-Textebene"),
-            (PDF_DIR / f"{job}.pathb.pdf", "pdf", "KI-synchronisiertes Sandwich-PDF", "Mistral-abgeglichene Textebene (Path B)"),
+            (PDF_DIR / f"{job}.aligned.pdf" if (PDF_DIR / f"{job}.aligned.pdf").exists() else PDF_DIR / f"{job}.pathb.pdf", "pdf", "KI-synchronisiertes Faksimile", "Post-Assembly KI-Textlayer-Synchronisation (.aligned.pdf)"),
             (PDF_DIR / f"{job}.digital.pdf", "pdf", "Digitales Neusatz-PDF", "Moderner Typst Vektorsatz"),
             (TEI_DIR / f"{job}.tei.xml", "tei", "Generisches TEI-P5 XML", "Bibliotheksstandard zur Langzeitarchivierung"),
             (BOOKS_DIR / job / f"{job}.epub", "books", "Reflowable EPUB 3 E-Book", "Mobilgeräte & E-Reader mit eingebetteten Schriften"),
@@ -376,7 +376,7 @@ def _list_jobs():
             jobs[name] = entry
     if PDF_DIR.is_dir():
         for f in PDF_DIR.glob("*.pdf"):
-            name = f.stem.replace(".sandwich", "").replace(".pathb", "").replace(".digital", "")
+            name = f.stem.replace(".sandwich", "").replace(".aligned", "").replace(".pathb", "").replace(".digital", "")
             if name in jobs: jobs[name]["has_pdf"] = True
     if TEI_DIR.is_dir():
         for f in TEI_DIR.glob("*.tei.xml"):
@@ -717,7 +717,9 @@ def _get_job_progress(job: str) -> dict[str, Any]:
     md_files = list(md_dir.glob("*.md")) if md_dir.is_dir() else []
     sandwich_pdf = PDF_DIR / f"{job}.sandwich.pdf"
     digital_pdf = PDF_DIR / f"{job}.digital.pdf"
-    pathb_pdf = PDF_DIR / f"{job}.pathb.pdf"
+    aligned_pdf = PDF_DIR / f"{job}.aligned.pdf"
+    if not aligned_pdf.exists():
+        aligned_pdf = PDF_DIR / f"{job}.pathb.pdf"
     tei_file = TEI_DIR / f"{job}.tei.xml"
     epub_file = BOOKS_DIR / job / f"{job}.epub"
     if not epub_file.exists():
@@ -827,17 +829,17 @@ def _get_job_progress(job: str) -> dict[str, Any]:
         "seconds": s6_dur
     })
 
-    # 7. KI-Textlayer-Synchronisation (In-PDF)
-    s7_done = pathb_pdf.exists() or has_report
+    # 7. Post-Assembly Textlayer-Korrektur (In-PDF)
+    s7_done = aligned_pdf.exists() or has_report
     s7_dur = round(max(2.0, min(12.0, pages_total * 0.3 + 3.0)), 1)
-    pathb_kb = round(pathb_pdf.stat().st_size / 1024, 1) if pathb_pdf.exists() else 0
+    aligned_kb = round(aligned_pdf.stat().st_size / 1024, 1) if aligned_pdf.exists() else 0
     stages.append({
         "id": 7,
-        "name": "KI-Textlayer-Synchronisation (In-PDF)",
+        "name": "Post-Assembly Textlayer-Korrektur (In-PDF)",
         "tool": "align_mistral_pdf.py",
         "status": "completed" if s7_done else "pending",
         "progress": 100 if s7_done else 0,
-        "info": f"KI-präzisiertes Sandwich-PDF ({pathb_kb} KB)" if pathb_pdf.exists() else "Präzisions-Token-Austausch im PDF Content-Stream",
+        "info": f"KI-synchronisiertes Faksimile ({aligned_kb} KB)" if aligned_pdf.exists() else "Präzisions-Token-Austausch im PDF Content-Stream",
         "duration_str": f"{s7_dur} s" if s7_done else f"~{s7_dur} s",
         "seconds": s7_dur
     })
@@ -1257,9 +1259,12 @@ async def job_detail(job: str, request: Request):
     info["markdown_files"] = sorted([p.name for p in md_dir.glob("*.md")]) if md_dir.is_dir() else []
     info["pdfs"] = []
     if PDF_DIR.is_dir():
-        for pattern in [f"{job}.sandwich.pdf", f"{job}.digital.pdf", f"{job}.pathb.pdf"]:
+        for pattern in [f"{job}.sandwich.pdf", f"{job}.aligned.pdf", f"{job}.pathb.pdf", f"{job}.digital.pdf"]:
             p = PDF_DIR / pattern
-            if p.exists(): info["pdfs"].append({"name": p.name, "size_kb": round(p.stat().st_size / 1024, 1), "kind": "digital" if "digital" in p.name else ("sandwich" if "sandwich" in p.name else "pathb")})
+            if p.exists():
+                kind = "digital" if "digital" in p.name else ("sandwich" if "sandwich" in p.name else "aligned")
+                if not any(x["name"] == p.name or (kind == "aligned" and x.get("kind") == "aligned") for x in info["pdfs"]):
+                    info["pdfs"].append({"name": p.name, "size_kb": round(p.stat().st_size / 1024, 1), "kind": kind})
     
     tei_file = TEI_DIR / f"{job}.tei.xml"
     info["tei_xml"] = {"name": tei_file.name, "size_kb": round(tei_file.stat().st_size / 1024, 1)} if tei_file.exists() else None
@@ -1585,13 +1590,23 @@ async def job_correct(job: str, body: dict = None):
     # Save corrections for audit trail
     qc_dir = PROC_DIR / "quality" / job
     qc_dir.mkdir(parents=True, exist_ok=True)
-    corr_file = qc_dir / "pathb_corrections.json"
+    corr_file = qc_dir / "aligned_corrections.json"
     corr_file.write_text(json.dumps({"corrections": mapping}, ensure_ascii=False, indent=2))
 
-    # Apply corrections
-    out_pdf = PDF_DIR / f"{job}.pathb.pdf"
+    # Apply corrections (generate .aligned.pdf and update .pathb.pdf link for compatibility)
+    out_pdf = PDF_DIR / f"{job}.aligned.pdf"
+    pathb_pdf = PDF_DIR / f"{job}.pathb.pdf"
     try:
         summary = _replace_in_pdf(pdf, out_pdf, mapping)
+        try:
+            if pathb_pdf.exists() or pathb_pdf.is_symlink():
+                pathb_pdf.unlink()
+            os.link(out_pdf, pathb_pdf)
+        except Exception:
+            try:
+                shutil.copy2(out_pdf, pathb_pdf)
+            except Exception:
+                pass
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 

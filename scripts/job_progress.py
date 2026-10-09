@@ -30,7 +30,9 @@ def get_job_progress(job):
     md_files = list(md_dir.glob('*.md')) if md_dir.is_dir() else []
     sandwich_pdf = PDF_DIR / f"{job}.sandwich.pdf"
     digital_pdf = PDF_DIR / f"{job}.digital.pdf"
-    pathb_pdf = PDF_DIR / f"{job}.pathb.pdf"
+    aligned_pdf = PDF_DIR / f"{job}.aligned.pdf"
+    if not aligned_pdf.exists():
+        aligned_pdf = PDF_DIR / f"{job}.pathb.pdf"
     tei_file = TEI_DIR / f"{job}.tei.xml"
     epub_file = BOOKS_DIR / job / f"{job}.epub"
     
@@ -124,15 +126,15 @@ def get_job_progress(job):
         'seconds': s6_dur
     })
 
-    # Stage 7: Path B Token Alignment
-    s7_done = pathb_pdf.exists() or has_report
+    # Stage 7: Post-Assembly Textlayer-Korrektur (In-PDF)
+    s7_done = aligned_pdf.exists() or has_report
     s7_dur = round(max(2.0, min(12.0, pages_total * 0.3 + 3.0)), 1)
-    pathb_kb = round(pathb_pdf.stat().st_size / 1024, 1) if pathb_pdf.exists() else 0
+    aligned_kb = round(aligned_pdf.stat().st_size / 1024, 1) if aligned_pdf.exists() else 0
     stages.append({
-        'id': 7, 'name': 'KI-Textlayer-Synchronisation (In-PDF)',
+        'id': 7, 'name': 'Post-Assembly Textlayer-Korrektur (In-PDF)',
         'status': 'completed' if s7_done else 'pending',
         'progress': 100 if s7_done else 0,
-        'info': f"KI-präzisiertes Sandwich-PDF ({pathb_kb} KB)" if pathb_pdf.exists() else "Präzisions-Ersetzung im PDF Stream",
+        'info': f"KI-synchronisiertes Faksimile ({aligned_kb} KB)" if aligned_pdf.exists() else "Präzisions-Token-Austausch im PDF Content-Stream",
         'duration_str': f"{s7_dur} s" if s7_done else f"~{s7_dur} s",
         'seconds': s7_dur
     })

@@ -23,7 +23,7 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ Storage & Web Portal (Synology NAS: synology.local)          │
-│ • alexandria_ui      (FastAPI Dashboard, Path B Editor)     │
+│ • alexandria_ui      (FastAPI Dashboard, Textlayer Editor)  │
 │ • Traefik Reverse-Proxy + Authelia 2FA SSO (alex.birchville)│
 │ • Central NFS storage:                                       │
 │   ├── /data/input       (Incoming raw scans)                │
@@ -80,7 +80,7 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
    └── Typst Digital PDF (render_digital_pdf.py)
    │
    ▼
-[6. QA & Correction] ────► Path A (hOCR pre-assembly) OR Path B (Post-PDF layer)
+[6. QA & Correction] ────► Pre-Assembly (hOCR) OR Post-Assembly (Textlayer / .aligned.pdf)
 ```
 
 ---

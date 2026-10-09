@@ -74,7 +74,7 @@ Base image: `python:3.12-slim`.
 | `jinja2` | 3.1+ | HTML5 templates (QA Viewer, Dashboard, Job Detail) |
 | `httpx` | 0.27+ | Async HTTP client for n8n webhook triggers |
 | `python-multipart` | 0.0.9+ | Multipart file upload parsing |
-| `poppler-utils` | OS package | PDF page rasterization for Path B editor |
+| `poppler-utils` | OS package | PDF page rasterization for textlayer editor |
 
 ---
 

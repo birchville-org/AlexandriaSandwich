@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-AlexandriaSandwich — Path A: Pre-PDF hOCR correction helpers
+AlexandriaSandwich — Pre-Assembly hOCR-Korrektur (Pre-PDF hOCR correction helpers)
 
-Path A corrects the OCR text layer before sandwich assembly:
+Pre-Assembly hOCR-Korrektur optimizes the OCR text layer before sandwich assembly:
   1) dump low-confidence / all words from hOCR (or TSV)
   2) edit a corrections JSON
   3) apply patches back into hOCR (preserves bboxes; optional conf bump)
@@ -290,7 +290,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Path A hOCR correction tools")
+    p = argparse.ArgumentParser(description="Pre-Assembly hOCR correction tools")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     d = sub.add_parser("dump", help="Dump words from hOCR/TSV as JSON")

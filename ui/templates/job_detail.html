@@ -208,19 +208,19 @@
         </td>
       </tr>
 
-      <!-- 2. KI-synchronisiertes Sandwich-PDF (Mistral Aligned) -->
+      <!-- 2. KI-synchronisiertes Faksimile (Mistral Aligned) -->
       {% set sandwich = info.pdfs | selectattr("kind", "equalto", "sandwich") | first | default(none) %}
-      {% set pathb = info.pdfs | selectattr("kind", "equalto", "pathb") | first | default(none) %}
-      {% if pathb %}
+      {% set aligned = (info.pdfs | selectattr("kind", "equalto", "aligned") | first) or (info.pdfs | selectattr("kind", "equalto", "pathb") | first) | default(none) %}
+      {% if aligned %}
       <tr style="background: rgba(16, 185, 129, 0.08);">
-        <td><strong>2. KI-synchronisiertes Sandwich-PDF</strong><br><small class="text-muted">Originalscan + KI-bereinigte Mistral-Textebene (0 Rauschzeilen, wortgenau ausgerichtet)</small></td>
-        <td><span class="badge" style="background:#059669;color:#fff;">Sandwich (KI-Textlayer)</span></td>
+        <td><strong>2. KI-synchronisiertes Faksimile</strong><br><small class="text-muted">Originalscan + KI-bereinigte Mistral-Textebene (0 Rauschzeilen, wortgenau ausgerichtet)</small></td>
+        <td><span class="badge" style="background:#059669;color:#fff;">Faksimile (KI-aligned)</span></td>
         <td>
-          <code>{{ pathb.name }}</code> ({{ pathb.size_kb }} KB)
+          <code>{{ aligned.name }}</code> ({{ aligned.size_kb }} KB)
         </td>
         <td>
-          <a href="/browse/pdf/{{ job }}/{{ pathb.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
-          <a href="/download/pdf/{{ job }}/{{ pathb.name }}" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;background:#059669;color:#fff;">⬇ Download</a>
+          <a href="/browse/pdf/{{ job }}/{{ aligned.name }}" target="_blank" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Vorschau</a>
+          <a href="/download/pdf/{{ job }}/{{ aligned.name }}" class="btn" style="padding:0.25rem 0.6rem;font-size:0.8rem;background:#059669;color:#fff;">⬇ Download</a>
           <a href="/jobs/{{ job }}/edit" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">✏️ Editor</a>
         </td>
       </tr>

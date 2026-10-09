@@ -25,7 +25,7 @@ Der Prozess ist auf spezialisierte Knoten im Birchville-Netzwerk verteilt:
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ Storage & Web Portal (Synology NAS: synology.local)          │
-│ • alexandria_ui      (FastAPI Dashboard, Path B Editor)     │
+│ • alexandria_ui      (FastAPI Dashboard, Textlayer-Editor)  │
 │ • Traefik Reverse-Proxy + Authelia 2FA SSO (alex.birchville)│
 │ • Zentraler NFS-Speicher:                                    │
 │   ├── /data/input       (Eingehende Rohscans)               │
@@ -124,7 +124,7 @@ AlexandriaSandwich trennt strikt zwischen **Geometrie** (visuelle Positionierung
 | **`san`** | Reines Sanskrit Devanagari | Reine Sanskrit-Originale, Manuskripte, Anthologien |
 
 > **Warum die Sprachwahl auch bei 100 % Mistral AI entscheidend ist:**  
-> Mistral AI ist für den Volltext (Typst-Neusatz, EPUB 3, TEI XML) sprachagnostisch. Das 1:1 Sandwich-PDF (Weg A & Weg B) benötigt jedoch pixelgenaue Wort-Bounding-Boxes von Tesseract (`ocrmypdf`). Fehlt `san`, kann Tesseract Devanagari nicht segmentieren: Im Sandwich-PDF sind die Sanskrit-Zitate dann weder durchsuchbar noch markierbar.
+> Mistral AI ist für den Volltext (Typst-Neusatz, EPUB 3, TEI XML) sprachagnostisch. Das 1:1 Sandwich-PDF & KI-synchronisierte Faksimile benötigen jedoch pixelgenaue Wort-Bounding-Boxes von Tesseract (`ocrmypdf`). Fehlt `san`, kann Tesseract Devanagari nicht segmentieren: Im Sandwich-PDF sind die Sanskrit-Zitate dann weder durchsuchbar noch markierbar.
 
 ---
 
@@ -144,29 +144,29 @@ AlexandriaSandwich trennt strikt zwischen **Geometrie** (visuelle Positionierung
 
 ---
 
-## 4. Die Korrekturverfahren (Double Correction Paths)
+## 4. Die Korrekturverfahren (Pre-Assembly vs. Post-Assembly)
 
 AlexandriaSandwich implementiert zwei getrennte Korrekturmechanismen für unterschiedliche Szenarien:
 
-| Kriterium | Pfad A (Pre-PDF) | Pfad B (Post-PDF) |
+| Kriterium | Pre-Assembly hOCR-Korrektur | Post-Assembly Textlayer-Korrektur |
 |---|---|---|
 | **Eingriffspunkt** | Vor der PDF-Erstellung (auf hOCR-Ebene) | Direkt im fertigen Sandwich-PDF |
-| **Werkzeug** | `scripts/hocr_correct.py` | `scripts/pdf_text_correct.py` |
+| **Werkzeug** | `scripts/hocr_correct.py` | `scripts/pdf_text_correct.py`, `align_mistral_pdf.py` |
 | **Mechanismus** | Patching von XML/hOCR-Tokens anhand von Wort-IDs | Modifikation von PDF-Content-Streams (`TJ`-Operatoren, UTF-16BE) |
 | **Bildintegrität** | Unberührt | 100 % unberührt (kein Re-Encoding des Bildes) |
-| **Anwendungsfall** | Batch-Korrekturen vor Endmontage; automatisierte Textbereinigung | Nachträgliche redaktionelle Korrektur einzelner Wörter im Archiv |
+| **Anwendungsfall** | Batch-Korrekturen vor Endmontage; automatisierte Textbereinigung | Nachträgliche redaktionelle Korrektur oder KI-Synchronisation (`.aligned.pdf`) |
 
-### Pfad A: Pre-PDF Korrektur
+### Pre-Assembly hOCR-Korrektur
 1. Wörter mit Konfidenz unterhalb eines Schwellenwerts werden per CLI extrahiert:
    `python3 scripts/hocr_correct.py dump seite.hocr --max-conf 90 -o words.json`
 2. Eine Korrekturdatei (`corrections.json`) definiert Ersetzungen per Wort-ID oder Volltext-Muster.
 3. Die Korrekturen werden in eine neue `seite.corrected.hocr` eingebacken.
 
-### Pfad B: Post-PDF Textebenen-Korrektur
+### Post-Assembly Textlayer-Korrektur
 1. Im fertigen Sandwich-PDF liegt der Text in Form-XObjects unter Verwendung von `GlyphLessFont` / `Identity-H` als UTF-16BE hex-kodierte Strings vor:
    Beispiel: `[ <0041006C...> ] TJ`
 2. `pdf_text_correct.py` parst diese Ströme und ersetzt gezielt fehlerhafte Zeichenketten direkt im Binärstrom, ohne die Geometrie oder das darunterliegende Bild anzutasten.
-3. Die Originaldatei bleibt als unverändertes Master-Exemplar erhalten; die Korrektur erzeugt eine neue `.pathb.pdf`.
+3. Die Originaldatei bleibt als unverändertes Master-Exemplar erhalten; die Korrektur erzeugt eine neue `.aligned.pdf`.
 
 ---
 
@@ -175,7 +175,7 @@ AlexandriaSandwich implementiert zwei getrennte Korrekturmechanismen für unters
 Zur Steuerung und manuellen Qualitätskontrolle dient die Weboberfläche auf `alex.local:8080`:
 - **Dashboard:** Anzeige aller aktiven und abgeschlossenen Verarbeitungsjobs.
 - **Upload & Trigger:** Direkter Datei-Upload und Anstoßen der n8n-Pipeline.
-- **Visueller Pfad-B-Editor:** Direkte Nebeneinander-Darstellung von Originalscan und editierbarer OCR-Textebene im Browser. Änderungen werden serverseitig über Pfad B direkt in die PDF-Textebene geschrieben.
+- **Visueller Textlayer-Editor:** Direkte Nebeneinander-Darstellung von Originalscan und editierbarer OCR-Textebene im Browser. Änderungen werden serverseitig direkt in die PDF-Textebene geschrieben (`.aligned.pdf`).
 
 ---
 

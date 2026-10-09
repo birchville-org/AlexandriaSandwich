@@ -74,7 +74,7 @@ Basis: `python:3.12-slim`.
 | `jinja2` | 3.1+ | HTML5-Templates (QA Viewer, Dashboard, Job Detail) |
 | `httpx` | 0.27+ | Asynchroner HTTP-Client für n8n-Webhook-Trigger |
 | `python-multipart` | 0.0.9+ | Datei-Upload via Formular |
-| `poppler-utils` | OS-Paket | PDF-Seitenrasterung für Path B Editor |
+| `poppler-utils` | OS-Paket | PDF-Seitenrasterung für Textlayer-Editor |
 
 ---
 
