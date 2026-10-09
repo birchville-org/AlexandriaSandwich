@@ -15,12 +15,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 try:
-    import pymupdf as fitz
+    import pymupdf
 except ImportError:
     try:
-        import fitz
+        import fitz as pymupdf
     except ImportError:
-        fitz = None
+        pymupdf = None
 
 BASE_DIR = Path(__file__).resolve().parent
 _default_data = "/data" if Path("/data").exists() else str(BASE_DIR.parent / "data")
@@ -1108,13 +1108,13 @@ async def toc_studio_page(request: Request):
 @app.post("/toc/inspect")
 async def toc_inspect_pdf(pdf_file: UploadFile = File(...)):
     """Liest ein PDF und extrahiert Metadaten, Seitenzahl und vorhandene Lesezeichen."""
-    if not fitz:
+    if not pymupdf:
         return JSONResponse({"ok": False, "error": "PyMuPDF ist auf diesem Server nicht verfügbar."}, status_code=500)
     try:
         content = await pdf_file.read()
         if not content:
             return JSONResponse({"ok": False, "error": "Leere Datei empfangen."}, status_code=400)
-        doc = fitz.open(stream=content, filetype="pdf")
+        doc = pymupdf.open(stream=content, filetype="pdf")
         total_pages = len(doc)
         meta = doc.metadata or {}
         raw_toc = doc.get_toc() or []
@@ -1158,7 +1158,7 @@ async def toc_inject_pdf(
     arabic_start: str = Form(""),
 ):
     """Injiziert hierarchische Lesezeichen, Metadaten und Paginierung in ein PDF (100% lokal, 0 Fremdkosten)."""
-    if not fitz:
+    if not pymupdf:
         return JSONResponse({"ok": False, "error": "PyMuPDF ist auf diesem Server nicht verfügbar."}, status_code=500)
 
     t0 = time.time()
@@ -1169,7 +1169,7 @@ async def toc_inject_pdf(
 
         toc_entries = parse_toc_content(toc_content)
 
-        doc = fitz.open(stream=content, filetype="pdf")
+        doc = pymupdf.open(stream=content, filetype="pdf")
         total_pages = len(doc)
 
         # 1. Metadaten aktualisieren

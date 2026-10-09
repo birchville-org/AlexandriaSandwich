@@ -37,15 +37,15 @@
   )
 
   if preserve_pages {
-    set block(spacing: 0.65em)
+    set block(spacing: 0.52em)
   }
 
   // Headings
   show heading: it => {
     set text(font: book_fonts, weight: "bold")
     if preserve_pages {
-      let sz = if it.level == 1 { 12pt } else if it.level == 2 { 10.5pt } else { 9.8pt }
-      block(above: 0.9em, below: 0.4em)[#text(size: sz)[#it.body]]
+      let sz = if it.level == 1 { 11.5pt } else if it.level == 2 { 10.2pt } else { 9.6pt }
+      block(above: 0.65em, below: 0.35em)[#text(size: sz)[#it.body]]
     } else {
       if it.level == 1 {
         pagebreak(weak: true)

@@ -47,11 +47,11 @@ def calibrate_layout_from_pdf(pdf_path: Path) -> Optional[Dict[str, float]]:
     """
     try:
         try:
-            import fitz
+            import pymupdf
         except ImportError:
-            import pymupdf as fitz
+            import fitz as pymupdf
     except ImportError:
-        log("PyMuPDF (fitz) not available; skipping automated layout calibration.")
+        log("PyMuPDF not available; skipping automated layout calibration.")
         return None
 
     if not pdf_path.exists():
@@ -60,7 +60,7 @@ def calibrate_layout_from_pdf(pdf_path: Path) -> Optional[Dict[str, float]]:
     try:
         import statistics
 
-        doc = fitz.open(pdf_path)
+        doc = pymupdf.open(pdf_path)
         total_pages = len(doc)
         if total_pages == 0:
             return None
@@ -185,14 +185,15 @@ def format_markdown_table(table_rows: List[str]) -> str:
     align_entries = [f"if col == {i} {{ {align} }}" for i, align in enumerate(col_aligns)]
     align_fn = f"(col, row) => {' else '.join(align_entries)} else {{ left }}" if num_cols > 1 else "left"
 
-    t_font_size = "8pt" if len(data) > 28 else ("8.5pt" if len(data) > 15 else "9pt")
+    t_font_size = "7.5pt" if len(data) > 28 else ("8.2pt" if len(data) > 14 else "8.8pt")
+    inset_y = "1.2pt" if len(data) > 14 else "1.8pt"
 
     return f"""#align(center)[#block(width: 100%)[
 #set text(size: {t_font_size})
 #table(
   columns: ({col_spec}),
   stroke: none,
-  inset: (x: 3.5pt, y: 2pt),
+  inset: (x: 3pt, y: {inset_y}),
   fill: (x, y) => if y == 0 {{ luma(240) }} else {{ none }},
   align: {align_fn},
   {cells_str}
@@ -257,15 +258,15 @@ def build_typst_document(
         f'  lang: "{typst_lang}"',
         f')',
         '',
-        '// Auto-scale layout macro ensuring each original page stays strictly within 1 page',
+        '// Auto-scale layout macro ensuring each original page stays strictly within 1 page without row clumping',
         '#let page_content(body) = layout(size => context {',
-        '  let content_block = block(width: size.width)[#body]',
+        '  let content_block = block(width: size.width, height: auto, breakable: false)[#body]',
         '  let m = measure(content_block)',
         '  if m.height > size.height {',
-        '    let scale_factor = (size.height / m.height) * 0.95',
-        '    align(center + top)[',
-        '      #scale(x: scale_factor * 100%, y: scale_factor * 100%, reflow: true)[',
-        '        #block(width: size.width / scale_factor)[#body]',
+        '    let scale_factor = (size.height / m.height) * 0.97',
+        '    align(top + left)[',
+        '      #scale(x: scale_factor * 100%, y: scale_factor * 100%, origin: top + left)[',
+        '        #block(width: size.width, height: m.height + 10pt)[#body]',
         '      ]',
         '    ]',
         '  } else {',
@@ -289,6 +290,9 @@ def build_typst_document(
                     page_elements.append(tbl_typ)
                 table_acc.clear()
 
+        p_blocks = []
+        has_table = False
+
         for block in blocks:
             b_type = block.get("type", "p")
             text = block.get("text", "").strip()
@@ -301,6 +305,7 @@ def build_typst_document(
                 continue
 
             if b_type == "table_row":
+                has_table = True
                 table_acc.append(text)
                 continue
             
@@ -311,11 +316,44 @@ def build_typst_document(
                 eqs = "=" * level
                 page_elements.append(f"{eqs} {escape_typst(text)}")
             else:
+                p_blocks.append(text)
                 page_elements.append(escape_typst(text))
 
         flush_table()
 
-        content_body = "\n\n".join(page_elements)
+        # Multi-column heuristic: detect dictionary, list, or vocabulary pages without table syntax
+        is_narrow_list = False
+        if not has_table and len(p_blocks) >= 16:
+            lens = [len(t) for t in p_blocks]
+            avg_l = sum(lens) / len(lens) if lens else 0
+            max_l = max(lens) if lens else 0
+            if avg_l <= 45 and max_l < 120:
+                is_narrow_list = True
+
+        if is_narrow_list:
+            lead_headings = []
+            list_items = []
+            for elem in page_elements:
+                if not list_items and elem.startswith("="):
+                    lead_headings.append(elem)
+                else:
+                    list_items.append(elem)
+
+            if list_items:
+                half = (len(list_items) + 1) // 2
+                col1 = "\n\n".join(list_items[:half])
+                col2 = "\n\n".join(list_items[half:])
+                two_cols = f"{col1}\n\n#colbreak()\n\n{col2}"
+                col_block = f"#set text(size: 8.5pt)\n#set block(spacing: 0.25em)\n#set par(leading: 0.35em)\n#columns(2, gutter: 14pt)[\n{two_cols}\n]"
+                if lead_headings:
+                    content_body = "\n\n".join(lead_headings) + "\n\n" + col_block
+                else:
+                    content_body = col_block
+            else:
+                content_body = "\n\n".join(page_elements)
+        else:
+            content_body = "\n\n".join(page_elements)
+
         lines.append(f"// --- Original Page {p_num} ---")
         if preserve_pages:
             lines.append(f"#page_content[\n{content_body}\n]")
@@ -359,6 +397,7 @@ def render_pdf(
 
     # 2. Automated Satzspiegel- & Layout-Kalibrierung from reference PDF if available
     layout_cal: Optional[Dict[str, float]] = None
+    cal_ref_used: Optional[Path] = None
     if preserve_pages:
         candidate_refs: List[Path] = []
         if reference_pdf:
@@ -374,6 +413,7 @@ def render_pdf(
             if cand.exists():
                 layout_cal = calibrate_layout_from_pdf(cand)
                 if layout_cal:
+                    cal_ref_used = cand
                     break
 
     # 3. Generate Typst source
@@ -418,12 +458,26 @@ def render_pdf(
     pdf_size = output_file.stat().st_size
     log(f"Successfully generated digital vector PDF ({pdf_size} bytes in {elapsed}s): {output_file}")
 
+    # 6. Automated Optical & Vector Layout Audit
+    audit_res = None
+    try:
+        from audit_digital_layout import audit_pdf_layout
+        ref_for_audit = cal_ref_used if 'cal_ref_used' in locals() and cal_ref_used else (reference_pdf if reference_pdf else None)
+        audit_res = audit_pdf_layout(output_file, reference_pdf=ref_for_audit)
+        audit_json = output_file.parent / f"{job_name}.audit.json"
+        with open(audit_json, "w", encoding="utf-8") as f:
+            json.dump(audit_res, f, indent=2, ensure_ascii=False)
+        log(f"Layout Audit: {audit_res['clean_pages']}/{audit_res['total_pages']} clean pages ({audit_res['quality_score_pct']}%), {audit_res['collisions_count']} collisions, {audit_res['narrow_columns_count']} narrow columns, {audit_res['extreme_font_count']} overscaled")
+    except Exception as e:
+        log(f"Note: layout audit skipped: {e}")
+
     return {
         "job": job_name,
         "digital_pdf": str(output_file),
         "size_bytes": pdf_size,
         "elapsed_sec": elapsed,
-        "paper": paper
+        "paper": paper,
+        "audit": audit_res
     }
 
 
