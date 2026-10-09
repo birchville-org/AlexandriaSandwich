@@ -323,11 +323,11 @@ def build_typst_document(
 
         # Multi-column heuristic: detect dictionary, list, or vocabulary pages without table syntax
         is_narrow_list = False
-        if not has_table and len(p_blocks) >= 16:
+        if not has_table and len(p_blocks) >= 12:
             lens = [len(t) for t in p_blocks]
             avg_l = sum(lens) / len(lens) if lens else 0
             max_l = max(lens) if lens else 0
-            if avg_l <= 45 and max_l < 120:
+            if avg_l <= 55 and max_l < 140:
                 is_narrow_list = True
 
         if is_narrow_list:
@@ -343,8 +343,20 @@ def build_typst_document(
                 half = (len(list_items) + 1) // 2
                 col1 = "\n\n".join(list_items[:half])
                 col2 = "\n\n".join(list_items[half:])
-                two_cols = f"{col1}\n\n#colbreak()\n\n{col2}"
-                col_block = f"#set text(size: 8.5pt)\n#set block(spacing: 0.25em)\n#set par(leading: 0.35em)\n#columns(2, gutter: 14pt)[\n{two_cols}\n]"
+                col_block = f"""#set text(size: 8.5pt)
+#set block(spacing: 0.25em)
+#set par(leading: 0.35em)
+#grid(
+  columns: (1fr, 1fr),
+  gutter: 16pt,
+  [
+{col1}
+  ],
+  grid.vline(stroke: 0.4pt + luma(90)),
+  [
+{col2}
+  ]
+)"""
                 if lead_headings:
                     content_body = "\n\n".join(lead_headings) + "\n\n" + col_block
                 else:
