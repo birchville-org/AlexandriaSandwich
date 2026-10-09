@@ -14,18 +14,19 @@ Zur Optimierung von Betriebskosten, Datenschutz und Verarbeitungsgeschwindigkeit
 
 ## 2. Systemarchitektur & Topologie
 
-Der Prozess ist auf drei Knoten verteilt:
+Der Prozess ist auf spezialisierte Knoten im Birchville-Netzwerk verteilt:
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│ Dev Node (Mac mini M2)                                      │
+│ Dev Node (Mac mini M2: hermes.local)                        │
 │ • Entwicklung & Multi-Arch Docker Builds (ARM64 / AMD64)    │
 └──────────────────────────────┬──────────────────────────────┘
-                               │ Git / Docker Registry
+                               │ Git / Rsync
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Control Node (NAS)                                          │
-│ • n8n Workflow-Orchestrierung                               │
+│ Storage & Web Portal (Synology NAS: synology.local)          │
+│ • alexandria_ui      (FastAPI Dashboard, Path B Editor)     │
+│ • Traefik Reverse-Proxy + Authelia 2FA SSO (alex.birchville)│
 │ • Zentraler NFS-Speicher:                                    │
 │   ├── /data/input       (Eingehende Rohscans)               │
 │   ├── /data/processing  (Zwischenstufen auf NVMe-Cache)     │
@@ -36,9 +37,23 @@ Der Prozess ist auf drei Knoten verteilt:
 ┌─────────────────────────────────────────────────────────────┐
 │ Compute Node (Proxmox VM: alex.local)                       │
 │ • alexandria_worker  (ImageMagick, unpaper, Tesseract, OCR) │
-│ • alexandria_ui      (FastAPI Dashboard & Path B Editor)    │
+│ • alexandria_n8n     (Workflow-Orchestrierung & Webhooks)   │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Optionale lokale Vision-Inferenz
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ GPU Node (Lokaler VLM-Server: nyx.local:8088)               │
+│ • Qwen2.5-VL Vision-Language OCR (100% lokal, 0,00 $ Cloud) │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Rollen & API-Key-Zuständigkeit
+
+| Host | Dienste | Mistral API Key? | Rolle / Begründung |
+| :--- | :--- | :---: | :--- |
+| **`alex.local`** | `alexandria_worker`, `n8n` | **Ja (Pflicht)** | Führt die Pipeline und Cloud-OCR-Aufrufe aus (`MISTRAL_API_KEY` in `/opt/alexandria/.env`). |
+| **`synology.local`** | `alexandria_ui`, Traefik, Authelia | **Ja (Monitoring)**| Prüft die API-Erreichbarkeit gegen `api.mistral.ai` und aggregiert Job-Kosten. |
+| **`nyx.local`** | `nyx.local:8088` (Qwen2.5-VL) | **Nein** | 100 % lokale GPU-Inferenz ohne Cloud-Abhängigkeiten. |
 
 ---
 
@@ -96,12 +111,27 @@ Der Gesamtprozess gliedert sich in sechs aufeinanderfolgende Schritte:
   - **85 % oder tiefer (Massendigitalisierung 100.000+ Seiten):** Signifikanter Kostenhebel (400 $ statt 4.000 $ pro 100k Seiten) und Vermeidung von Cloud-Rate-Limits.
   - **`--no-mistral` (Sensible Akten & Air-Gap):** 100 % offline, volle Datenhoheit und DSGVO-Konformität auf dem lokalen Server.
 
+#### Sprachprofile & Bounding-Box-Geometrie
+
+AlexandriaSandwich trennt strikt zwischen **Geometrie** (visuelle Positionierung im Faksimile) und **Semantik** (Zeichenbedeutung im Volltext):
+
+| Profil (`--lang`) | Sprachkombination | Typischer Anwendungsbereich |
+| :--- | :--- | :--- |
+| **`eng+san`** | Englisch + Sanskrit Devanagari | Englische Indologie, Lexika, Grammatiken (z. B. George Cardona 1976 *Panini*) |
+| **`deu+san`** | Deutsch + Sanskrit Devanagari | Historische deutsche Indologie (z. B. Otto Böhtlingk 1887 *Sanskrit-Chrestomathie*) |
+| **`deu+eng+san`** | Trilingual | Kritische Editionen mit englischen Texten, deutschen Scholien & Devanagari |
+| **`deu+eng`** | Deutsch + Englisch | Standard für westliche Antiqua- und Frakturbestände |
+| **`san`** | Reines Sanskrit Devanagari | Reine Sanskrit-Originale, Manuskripte, Anthologien |
+
+> **Warum die Sprachwahl auch bei 100 % Mistral AI entscheidend ist:**  
+> Mistral AI ist für den Volltext (Typst-Neusatz, EPUB 3, TEI XML) sprachagnostisch. Das 1:1 Sandwich-PDF (Weg A & Weg B) benötigt jedoch pixelgenaue Wort-Bounding-Boxes von Tesseract (`ocrmypdf`). Fehlt `san`, kann Tesseract Devanagari nicht segmentieren: Im Sandwich-PDF sind die Sanskrit-Zitate dann weder durchsuchbar noch markierbar.
+
 ---
 
-### Schritt 4: Bedingter KI-Fallback (`scripts/mistral_ocr.py`)
-- **Engine:** Mistral OCR API (`mistral-ocr-latest`).
-- **Einsatz:** Greift bei komplexen Layouts, vergilbten Vorlagen, Frakturschriften oder schlechter Druckqualität, an denen die klassische lokale OCR scheitert.
-- **Funktion:** Liefert hochpräzise Transkriptionen und strukturiertes Markdown zur Ergänzung oder Korrektur.
+### Schritt 4: Bedingter KI-Fallback & Vision-Language-Modelle (`scripts/mistral_ocr.py`, `scripts/qwen_ocr.py`)
+- **Engine A (Cloud-API):** Mistral OCR API (`mistral-ocr-latest`) greift bei komplexen Layouts, vergilbten Vorlagen, Frakturschriften oder polyglotten Drucken (z. B. historische indische Schriften) mit minimaler Latenz und höchster Ligatur-Treue.
+- **Engine B (Offline / Air-Gap):** Qwen2.5-VL ([scripts/qwen_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/qwen_ocr.py)) ermöglicht die vollständige lokale Verarbeitung auf eigener Hardware (z. B. MLX auf Apple Silicon) ohne Datenabfluss oder API-Kosten (99,96 % Textübereinstimmung bei lateinischen Schriftsätzen).
+- **Benchmark & Modellvergleich:** Über [scripts/benchmark_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/benchmark_ocr.py) können beide Engines direkt auf Testseiten verglichen und Side-by-Side-HTML-Diffs erzeugt werden. Detaillierte Kennzahlen siehe [Fallstudie Böhtlingk 1887](case-study.md#schritt-21-lokale-vlm-alternative-modell-benchmark-mistral-ocr-vs-qwen25-vl).
 
 ---
 

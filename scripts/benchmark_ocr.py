@@ -269,10 +269,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     print(f"1. Mistral OCR Cloud API: {'✅ Bereit (API-Key konfiguriert)' if mistral_ready else '❌ MISTRAL_API_KEY nicht gesetzt'}")
 
     # 2. Check Qwen VLM
-    qwen_ok, qwen_models, qwen_note = qwen_ocr.check_health(args.endpoint)
+    qwen_ok, qwen_models, qwen_loaded, qwen_note = qwen_ocr.check_health(args.endpoint)
     print(f"2. Qwen2.5-VL Lokal ({args.endpoint}):")
     if qwen_ok:
-        print(f"   ✅ Server online! Modelle: {qwen_models}")
+        print(f"   ✅ Server online! Aktiv geladen: {qwen_loaded or 'Kein Modell als loaded markiert'}")
+        print(f"      Verfügbare Modelle: {', '.join(qwen_models)}")
     else:
         print(f"   ⏳ Wartet auf Server: {qwen_note}")
         print(f"      (Sobald nyx.local:8088 online ist, kann der Test ausgeführt werden)")

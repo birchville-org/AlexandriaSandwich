@@ -28,15 +28,19 @@ const container = String(body.container || process.env.ALEXANDRIA_CONTAINER || '
 const scripts = String(body.scripts_path || process.env.ALEXANDRIA_SCRIPTS || '/opt/alexandria/scripts');
 const cmd = [
   'docker','exec',
-  '-e','MISTRAL_API_KEY',
   '-e',`OCR_LANG=${lang}`,
   '-e',`OCR_CONFIDENCE_THRESHOLD=${threshold}`,
+];
+if (process.env.MISTRAL_API_KEY) {
+  cmd.push('-e', `MISTRAL_API_KEY=${process.env.MISTRAL_API_KEY}`);
+}
+cmd.push(
   container,
   'bash', `${scripts}/run_pipeline.sh`,
   '--job', job,
   '--lang', lang,
   '--threshold', threshold,
-];
+);
 if (pull) cmd.push('--pull');
 if (push) cmd.push('--push');
 if (noMistral) cmd.push('--no-mistral');

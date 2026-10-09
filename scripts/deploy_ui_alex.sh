@@ -12,7 +12,7 @@ rsync -az "$ROOT/scripts/" "$REMOTE:$APP/scripts/"
 rsync -az "$ROOT/deploy/docker-compose.ui.yml" "$REMOTE:$APP/deploy/"
 
 echo "2) build + start on alex.local (context = project root for scripts/ access)"
-ssh "$REMOTE" "cd $APP && docker compose -f deploy/docker-compose.ui.yml up -d --build"
+ssh "$REMOTE" "cd $APP && docker compose --env-file .env -f deploy/docker-compose.ui.yml up -d --build"
 
 echo "3) verify"
 sleep 3

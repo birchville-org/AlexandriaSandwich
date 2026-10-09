@@ -129,10 +129,10 @@ chmod 600 .env
 
 Example content:
 ```bash
-# Mistral API Key for OCR fallback (optional)
+# Mistral API Key for OCR fallback (required on alex.local, monitoring on synology.local)
 MISTRAL_API_KEY=your_mistral_api_key_here
 
-# Pipeline Defaults
+# Pipeline Defaults (deu+eng, eng+san, deu+san, deu+eng+san, san)
 OCR_LANG=deu+eng
 OCR_CONFIDENCE_THRESHOLD=85
 DATA_DIR=./data

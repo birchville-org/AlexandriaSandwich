@@ -86,6 +86,8 @@
         <input type="text" class="param-input" id="langInput" name="lang" value="{{ info.report.lang|default('deu+eng') }}" required>
         <div class="quick-pills">
           <button type="button" class="quick-pill" onclick="setLang('deu+eng')">deu+eng (Deutsch/Englisch)</button>
+          <button type="button" class="quick-pill" onclick="setLang('eng+san')">eng+san (Englisch + Sanskrit)</button>
+          <button type="button" class="quick-pill" onclick="setLang('deu+san')">deu+san (Deutsch + Sanskrit)</button>
           <button type="button" class="quick-pill" onclick="setLang('deu+eng+san')">deu+eng+san (+Sanskrit)</button>
           <button type="button" class="quick-pill" onclick="setLang('san')">san (Reines Sanskrit)</button>
           <button type="button" class="quick-pill" onclick="setLang('fra+eng')">fra+eng (Französisch)</button>
@@ -161,8 +163,28 @@
 </div>
 {% endif %}
 
-<div class="card">
-  <h2>🏛️ Zielformate & Artefakte</h2>
+<div class="card" id="artifactsCard">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+    <div>
+      <h2 style="margin: 0 0 0.25rem 0;">🏛️ Zielformate &amp; Artefakte</h2>
+      <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+        Aktuell publizierte Ausgaben (Dual-Layer PDF, Typst, TEI-P5, EPUB 3 &amp; AST)
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+      {% if info.artifacts.has_any %}
+      <a href="/jobs/{{ job }}/download-zip" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; box-shadow: 0 4px 14px rgba(217,119,6,0.3);">
+        <span>📦</span> Alle Artefakte als ZIP herunterladen ({{ info.artifacts.total_size_mb }} MB)
+      </a>
+      {% endif %}
+      <form action="/jobs/{{ job }}/runs/archive" method="post" style="display: inline;">
+        <input type="hidden" name="note" value="Manueller Snapshot aus Job-Detail">
+        <button type="submit" class="btn btn-secondary btn-sm" title="Aktuellen Stand als Vorlauf sichern">
+          <span>💾</span> Stand als Vorlauf archivieren
+        </button>
+      </form>
+    </div>
+  </div>
   <table>
     <thead><tr><th>Artefakt</th><th>Format</th><th>Datei & Größe</th><th>Aktionen</th></tr></thead>
     <tbody>
@@ -318,6 +340,81 @@
   {% endif %}
 </div>
 
+<!-- Vorgängige Läufe dieses Jobs separat mit Löschmöglichkeit -->
+<div class="card" id="runsSection" style="margin-top: 2rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <h2 style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
+        <span>🕒</span> Vorgängige Läufe dieses Jobs
+      </h2>
+      <span class="badge badge-gold">{{ info.runs|length }} Vorläufe</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+      <form action="/jobs/{{ job }}/runs/archive" method="post" style="display: inline;">
+        <input type="hidden" name="note" value="Manueller Snapshot aus Job-Detail">
+        <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">
+          <span>💾</span> Stand als Vorlauf archivieren
+        </button>
+      </form>
+      {% if info.runs %}
+      <form action="/jobs/{{ job }}/runs/clear" method="post" style="display: inline;" onsubmit="return confirm('Möchten Sie wirklich ALLE {{ info.runs|length }} archivierten Vorläufe dieses Jobs unwiderruflich löschen?');">
+        <button type="submit" class="btn-danger btn-danger-sm" title="Alle Vorläufe löschen">
+          <span>🗑️</span> Alle Vorläufe bereinigen
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if info.runs %}
+  <div class="runs-list">
+    {% for run in info.runs %}
+    <div class="run-card" id="runCard_{{ run.run_id }}">
+      <div class="run-card-top">
+        <div class="run-title-group">
+          <span class="run-id-code">{{ run.run_id }}</span>
+          <span class="badge {% if run.status == 'PASS' %}badge-pass{% else %}badge-gold{% endif %}">{{ run.status }}</span>
+          <span class="run-time-str">Archiviert am {{ run.archived_str }}</span>
+        </div>
+        <div class="run-actions-group">
+          <a href="{{ run.zip_download_url }}" class="btn btn-sm btn-secondary" style="font-size: 0.78rem;" title="Alle Artefakte dieses Vorlaufs herunterladen">
+            <span>📦</span> ZIP herunterladen ({{ run.total_size_mb }} MB)
+          </a>
+          <form action="/jobs/{{ job }}/runs/{{ run.run_id }}/delete" method="post" style="display: inline;" onsubmit="return confirm('Vorlauf {{ run.run_id }} unwiderruflich löschen?');">
+            <button type="submit" class="btn-danger btn-danger-sm" title="Diesen Vorlauf löschen">
+              <span>🗑️</span> Löschen
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="run-meta-row">
+        <div class="run-meta-item">Notiz: <strong>{{ run.note }}</strong></div>
+        <div class="run-meta-item">Schwellenwert: <strong>{{ run.threshold }} %</strong></div>
+        <div class="run-meta-item">Sprache: <strong>{{ run.lang }}</strong></div>
+        <div class="run-meta-item">Seiten: <strong>{{ run.pages_total }}</strong></div>
+        <div class="run-meta-item">Mistral AI: <strong>{{ run.mistral_ok }} S. (${{ "%.4f"|format(run.mistral_cost_usd) }})</strong></div>
+        <div class="run-meta-item">Artefakte: <strong>{{ run.artifacts_count }} Dateien</strong></div>
+      </div>
+
+      <div class="run-artifacts-wrap">
+        <span style="font-size: 0.75rem; color: var(--text-dim); margin-right: 4px;">Dateien:</span>
+        {% for item in run.artifacts %}
+        <a href="{{ item.download_url }}" class="run-artifact-pill" title="{{ item.title }} ({{ item.size_kb }} KB)">
+          <span>⬇</span> {{ item.name }} <small style="opacity: 0.7;">({{ item.size_kb }} KB)</small>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="background: rgba(11, 15, 23, 0.4); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; color: var(--text-muted); font-size: 0.88rem;">
+    Noch keine früheren Vorläufe für diesen Job archiviert. Bei einem Re-Run mit modifizierten Parametern wird der bisherige Stand hier automatisch als Vorlauf abgelegt.
+  </div>
+  {% endif %}
+</div>
+
 {% if info.report and info.report.pages %}
 <div class="card">
   <h2>📊 Seiten-Qualität</h2>
@@ -405,6 +502,25 @@
   </details>
 </div>
 {% endif %}
+
+<!-- Gefahrenzone: Job löschen -->
+<div class="card" style="border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.04); margin-top: 2rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h3 style="margin: 0 0 0.25rem 0; color: #fca5a5; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+        <span>⚠️</span> Gefahrenzone: Job vollständig entfernen
+      </h3>
+      <p style="margin: 0; font-size: 0.82rem; color: var(--text-muted);">
+        Löscht alle Rohbilder im Input-Ordner, Zwischenverarbeitungen, alle fertigen Artefakte sowie sämtliche archivierten Vorläufe dieses Jobs.
+      </p>
+    </div>
+    <form action="/jobs/{{ job }}/delete" method="post" onsubmit="return confirm('Soll der Job \'{{ job }}\' samt allen Eingabebildern, Artefakten und Vorläufen wirklich UNWIDERRUFLICH gelöscht werden?');">
+      <button type="submit" class="btn-danger" style="padding: 0.45rem 0.95rem; font-weight: 600;">
+        <span>🗑️</span> Gesamten Job '{{ job }}' löschen
+      </button>
+    </form>
+  </div>
+</div>
 
 {% endblock %}
 

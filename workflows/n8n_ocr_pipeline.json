@@ -21,7 +21,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body ?? $json;\nconst job = body.job || body.job_name || `job-${Date.now()}`;\nconst payload = JSON.stringify({\n  job,\n  pull: body.pull === true || body.pull === 'true' || body.pull === 1,\n  push: body.push === true || body.push === 'true' || body.push === 1,\n  lang: body.lang || 'deu+eng',\n  threshold: body.threshold ?? 85,\n  limit: body.limit ?? 0,\n  no_mistral: body.no_mistral === true,\n  container: body.container || 'alexandria_worker',\n  scripts_path: body.scripts_path || '/opt/alexandria/scripts',\n});\nconst escaped = payload.replace(/'/g, `'\\\\''`);\nconst command = `/opt/alexandria/scripts/n8n_run_job.sh '${escaped}'`;\nreturn [{ json: { job, payload: JSON.parse(payload), command, request: body } }];"
+        "jsCode": "const body = $json.body ?? $json;\nconst job = body.job || body.job_name || `job-${Date.now()}`;\nconst payload = JSON.stringify({\n  job,\n  pull: body.pull === true || body.pull === 'true' || body.pull === 1,\n  push: body.push === true || body.push === 'true' || body.push === 1,\n  lang: body.lang || 'deu+eng',\n  threshold: body.threshold ?? 85,\n  limit: body.limit ?? 0,\n  no_mistral: body.no_mistral === true,\n  skip_preprocess: body.skip_preprocess === true || body.skip_preprocess === 'true' || body.skip_preprocess === 1,\n  container: body.container || 'alexandria_worker',\n  scripts_path: body.scripts_path || '/opt/alexandria/scripts',\n});\nconst escaped = payload.replace(/'/g, `'\\\\''`);\nconst command = `/opt/alexandria/scripts/n8n_run_job.sh '${escaped}'`;\nreturn [{ json: { job, payload: JSON.parse(payload), command, request: body } }];"
       },
       "id": "prep-command",
       "name": "Build docker exec command",

@@ -60,34 +60,42 @@ def guess_mime(path: Path) -> str:
     }.get(ext, "image/png")
 
 
-def check_health(endpoint: str, timeout: float = 3.0) -> Tuple[bool, List[str], str]:
-    """Check connectivity to endpoint and return list of available models."""
+def check_health(endpoint: str, timeout: float = 3.0) -> Tuple[bool, List[str], Optional[str], str]:
+    """Check connectivity to endpoint and return list of available models and currently loaded model."""
     url = f"{endpoint}/models"
     req = urllib.request.Request(url, headers={"User-Agent": "AlexandriaSandwich-QwenOCR/1.0"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             models = []
-            if isinstance(data, dict) and "data" in data:
-                models = [m.get("id", "") for m in data["data"] if isinstance(m, dict)]
-            elif isinstance(data, list):
-                models = [m.get("id", "") for m in data if isinstance(m, dict)]
-            return True, [m for m in models if m], "ok"
+            loaded_model = None
+            raw_list = data.get("data", []) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+            for item in raw_list:
+                if isinstance(item, dict):
+                    mid = item.get("id", "")
+                    if mid:
+                        models.append(mid)
+                    if item.get("loaded") is True and not loaded_model:
+                        loaded_model = mid
+            return True, [m for m in models if m], loaded_model, "ok"
     except urllib.error.HTTPError as exc:
-        return False, [], f"HTTP {exc.code}: {exc.reason}"
+        return False, [], None, f"HTTP {exc.code}: {exc.reason}"
     except urllib.error.URLError as exc:
-        return False, [], f"Connection failed: {exc.reason}"
+        return False, [], None, f"Connection failed: {exc.reason}"
     except Exception as exc:
-        return False, [], str(exc)
+        return False, [], None, str(exc)
 
 
 def auto_detect_model(endpoint: str, preferred: str = "") -> str:
-    """Detect available models from server and pick preferred or first matching Qwen/VL model."""
+    """Detect available models from server and pick preferred, loaded, or matching Qwen/VL model."""
     if preferred:
         return preferred
-    ok, models, err = check_health(endpoint)
+    ok, models, loaded, err = check_health(endpoint)
+    # If the server reports a model that is already loaded in memory (e.g. mlx_vlm.server), use it directly
+    if loaded:
+        return loaded
     if not ok or not models:
-        return "qwen2.5-vl:7b"  # Sensible fallback default
+        return "mlx-community/Qwen2.5-VL-7B-Instruct-bf16"
 
     # Look for Qwen2.5-VL variants
     for m in models:
@@ -126,7 +134,7 @@ def ocr_image(
     prompt: str = DEFAULT_OCR_PROMPT,
     temperature: float = 0.0,
     max_tokens: int = 4096,
-    timeout: float = 120.0,
+    timeout: float = 600.0,
 ) -> Dict[str, Any]:
     """Execute high-precision OCR on image via OpenAI-compatible vision endpoint."""
     if not image_path.is_file():
@@ -148,7 +156,7 @@ def ocr_image(
                 ],
             }
         ],
-        "temperature": temperature,
+        "temperature": 0 if temperature == 0.0 else temperature,
         "max_tokens": max_tokens,
     }
 
@@ -216,7 +224,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--prompt", default=DEFAULT_OCR_PROMPT, help="Custom OCR system/user prompt")
     parser.add_argument("--temperature", type=float, default=0.0, help="Sampling temperature (default: 0.0)")
     parser.add_argument("--max-tokens", type=int, default=4096, help="Max generated tokens (default: 4096)")
-    parser.add_argument("--timeout", type=float, default=180.0, help="HTTP request timeout in seconds")
+    parser.add_argument("--timeout", type=float, default=600.0, help="HTTP request timeout in seconds (default: 600)")
     parser.add_argument("--health", action="store_true", help="Check health and available models at endpoint, then exit")
     parser.add_argument("--input-dir", type=Path, help="Batch directory of image pages")
     parser.add_argument("--output-dir", type=Path, help="Batch output directory for *.qwen.md")
@@ -226,12 +234,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if args.health:
         print(f"Checking VLM endpoint: {args.endpoint} ...")
-        ok, models, note = check_health(args.endpoint)
+        ok, models, loaded, note = check_health(args.endpoint)
         if ok:
             print(f"✅ Connection successful! Status: {note}")
             print(f"Available models ({len(models)}):")
             for m in models:
-                print(f"  - {m}")
+                tag = " (currently loaded)" if m == loaded else ""
+                print(f"  - {m}{tag}")
             selected = auto_detect_model(args.endpoint, args.model)
             print(f"Selected OCR model: {selected}")
             return 0

@@ -63,9 +63,16 @@
         {% for j in jobs %}
         <tr>
           <td>
-            <a href="/jobs/{{ j.name }}" style="font-family: var(--font-heading); font-weight: 700; color: var(--gold-light);">
-              {{ j.name }}
-            </a>
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <a href="/jobs/{{ j.name }}" style="font-family: var(--font-heading); font-weight: 700; color: var(--gold-light);">
+                {{ j.name }}
+              </a>
+              {% if j.runs_count > 0 %}
+              <a href="/jobs/{{ j.name }}#runsSection" class="badge badge-gold" style="font-size: 0.7rem; padding: 0.1rem 0.45rem;" title="{{ j.runs_count }} archivierte Vorläufe vorhanden">
+                {{ j.runs_count }} Vorläufe
+              </a>
+              {% endif %}
+            </div>
           </td>
           <td>
             {% if j.status == "PASS" %}<span class="badge badge-pass">✓ PASS</span>
@@ -84,10 +91,21 @@
           <td>{% if j.has_pdf %}<span title="PDF-Sandwich vorhanden">✅ PDF</span>{% else %}<span style="color:var(--text-dim);">—</span>{% endif %}</td>
           <td style="color: var(--text-dim); font-size: 0.82rem;">{{ j.modified|default("—") }}</td>
           <td>
-            <form method="post" action="/jobs/{{ j.name }}/trigger" style="display:inline;"
-                  onsubmit="return confirm('Job {{ j.name }} starten?');">
-              <button type="submit" class="btn btn-secondary btn-sm">▶ Start</button>
-            </form>
+            <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+              {% if j.has_artifacts %}
+              <a href="/jobs/{{ j.name }}/download-zip" class="btn btn-primary btn-sm" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" title="Alle generierten Artefakte als ZIP herunterladen">
+                📦 ZIP
+              </a>
+              {% endif %}
+              <form method="post" action="/jobs/{{ j.name }}/trigger" style="display:inline;"
+                    onsubmit="return confirm('Job {{ j.name }} starten?');">
+                <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">▶ Start</button>
+              </form>
+              <form method="post" action="/jobs/{{ j.name }}/delete" style="display:inline;"
+                    onsubmit="return confirm('Job {{ j.name }} samt allen Vorläufen und Artefakten wirklich löschen?');">
+                <button type="submit" class="btn-danger btn-danger-sm" title="Job löschen" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">🗑️</button>
+              </form>
+            </div>
           </td>
         </tr>
         {% endfor %}

@@ -1082,6 +1082,218 @@ pre {
   display: inline;
 }
 
+/* ── Artefakte nach Abschluss: Download-Hero & Grid ── */
+.artifacts-completion-card {
+  background: linear-gradient(145deg, rgba(15, 30, 53, 0.95) 0%, rgba(10, 22, 40, 0.92) 100%);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(234, 179, 8, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.artifacts-completion-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--emerald-light) 50%, var(--blue) 100%);
+}
+.artifacts-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.artifacts-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  color: #fff;
+  margin: 0;
+}
+.artifacts-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.artifact-card-item {
+  background: rgba(11, 15, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: var(--transition);
+}
+.artifact-card-item:hover {
+  border-color: rgba(234, 179, 8, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  background: rgba(17, 24, 39, 0.85);
+}
+.artifact-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.artifact-item-title {
+  font-weight: 700;
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+.artifact-item-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+.artifact-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.artifact-size-badge {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+.artifact-item-actions {
+  display: flex;
+  gap: 0.35rem;
+}
 
+/* ── Vorgängige Läufe (Historical Runs) ── */
+.runs-section {
+  margin-top: 2rem;
+}
+.runs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.runs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.run-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius-md);
+  padding: 1.15rem 1.25rem;
+  transition: var(--transition);
+}
+.run-card:hover {
+  border-color: rgba(234, 179, 8, 0.35);
+  background: var(--bg-card-hover);
+}
+.run-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.run-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.run-id-code {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--gold-light);
+  font-size: 0.95rem;
+}
+.run-time-str {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+.run-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.run-meta-item strong {
+  color: var(--text-main);
+}
+.run-artifacts-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.run-artifact-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+.run-artifact-pill:hover {
+  background: rgba(234, 179, 8, 0.15);
+  border-color: var(--gold);
+  color: #fff;
+}
+.run-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-
+/* ── Danger & Lösch-Buttons ── */
+.btn-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+}
+.btn-danger-sm {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+}

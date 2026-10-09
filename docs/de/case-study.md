@@ -68,7 +68,36 @@ Ziel des Projekts ist die Erzeugung eines mehrschichtigen, archivfesten Digitali
 * **Erzeugte Artefakte:**
   * `.mistral.md`: Semantisch strukturiertes Markdown mit Überschriftshierarchien und Fließtext.
   * `.mistral.json`: Detaillierte Antwort mit Seitendimensionen, Textblöcken und Bounding-Box-Koordinaten für die spätere Sandwich-PDF-Schichtung.
-* **Kosten:** 478 Seiten x 0,004 $ = exakt **1,912 $** für das gesamte Werk.
+* **Kosten:** 478 Seiten x 0,004 USD = exakt **1,912 USD** für das gesamte Werk.
+
+### Schritt 2.1: Lokale VLM-Alternative & Modell-Benchmark (Mistral OCR vs. Qwen2.5-VL)
+Um neben der Cloud-API (`mistral-ocr-latest`) eine autarke, offlinefähige Alternative für sensible Digitalisierungsprojekte und Air-Gap-Deployments bereitzustellen, wurde eine lokale Vision-Language-Modell-Pipeline ([scripts/qwen_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/qwen_ocr.py), [scripts/benchmark_ocr.py](file:///Volumes/SanDisk1TB/proj/AlexandriaSandwich/scripts/benchmark_ocr.py)) mit **Qwen2.5-VL** (via MLX auf Apple Silicon) evaluiert:
+
+#### 1. Antiqua / Einleitungsseiten (Lateinische Schrift & Fließtext, z. B. S. 5)
+Bei rein lateinischem Satzbild und deutschsprachigen Erläuterungen erreicht das lokale Modell nahezu vollständige Deckungsgleichheit:
+
+| Metrik | Mistral Document AI (Cloud) | Qwen2.5-VL (Lokal, BF16 / 8-Bit) | Differenz / Bewertung |
+| :--- | :--- | :--- | :--- |
+| **Ähnlichkeit (Similarity)** | Referenz | **99,96 %** | Nahezu identischer Textauszug |
+| **Zeichenanzahl** | 2.437 Zeichen | 2.435 Zeichen | -2 Zeichen |
+| **Wortanzahl** | 338 Wörter | 337 Wörter | -1 Wort |
+| **Laufzeit pro Seite** | ca. 1,8 s | ca. 161 s | Cloud ca. 90x schneller |
+| **Fremdkosten** | 0,004 USD / Seite | **0,00 USD (Lokal)** | 100 % kostenfrei & offline |
+
+#### 2. Polyglotter Satz / Historische Devanāgarī (z. B. S. 108)
+Bei hochkomplexem 19.-Jahrhundert-Devanāgarī-Bleisatz mit Ligaturen, Virāmas und gemischtem Kommentar zeigt sich der Spezialisierungsgrad:
+
+| Metrik | Mistral Document AI (Cloud) | Qwen2.5-VL BF16 (Lokal) | Qwen2.5-VL 8-Bit (Lokal) |
+| :--- | :--- | :--- | :--- |
+| **Ähnlichkeit (Similarity)** | Referenz | **66,59 %** | **65,32 %** |
+| **Devanāgarī-Zeichen** | 1.304 Zeichen | 1.212 Zeichen (-92) | 1.210 Zeichen (-94) |
+| **Zeichenanzahl gesamt** | 1.825 Zeichen | 1.782 Zeichen (-43) | 1.779 Zeichen (-46) |
+| **Laufzeit pro Seite** | ca. 1,8 s | 293,7 s (~4,9 Min.) | **196,5 s (~3,3 Min., +33 % Tempo)** |
+| **Fremdkosten** | 0,004 USD / Seite | **0,00 USD** | **0,00 USD** |
+
+#### Fazit & Architekturentscheidung:
+- **Mistral OCR:** Goldstandard für historische indische Schriften und Massenverarbeitung (hohe Erkennungsgenauigkeit komplexer Ligaturen, minimale Latenz).
+- **Qwen2.5-VL 8-Bit (Lokal):** Robuste, datenschutzkonforme Alternative für moderne und rein europäische Drucke (99,96 % Genauigkeit). Durch die 8-Bit-Quantisierung sinkt die Verarbeitungszeit um 33 % bei vernachlässigbarem Zeichenverlust (-0,2 %).
 
 ### Schritt 3: Kanonisches Alignment & Korrektur-Heuristik (`scripts/align_mistral_sutras.py`)
 Die größte technische Hürde historischer Buch-Digitalisate liegt in Scan-Artefakten, Zahlendrehern und Formatbrüchen:
