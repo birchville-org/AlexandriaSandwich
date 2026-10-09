@@ -120,9 +120,11 @@ def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
     else:
         # Aktueller Lauf
         candidates = [
+            (PDF_DIR / f"{job}.perfect_sandwich.pdf", "pdf", "Restauriertes Perfect-Sandwich-PDF", "Binarisiertes Faksimile (98% #FFFFFF) mit unsichtbarer Vektor-Textebene"),
+            (PDF_DIR / f"{job}.typeset_edition.pdf", "pdf", "Typografische Vektor-Neuedition", "Freilaufender zweispaltiger Typst-Neusatz (Boethlingk-Architektur)"),
             (PDF_DIR / f"{job}.sandwich.pdf", "pdf", "1:1 Sandwich-PDF", "Originalscan + native OCR-Textebene"),
             (PDF_DIR / f"{job}.aligned.pdf" if (PDF_DIR / f"{job}.aligned.pdf").exists() else PDF_DIR / f"{job}.pathb.pdf", "pdf", "KI-synchronisiertes Faksimile", "Post-Assembly KI-Textlayer-Synchronisation (.aligned.pdf)"),
-            (PDF_DIR / f"{job}.digital.pdf", "pdf", "Digitales Neusatz-PDF", "Moderner Typst Vektorsatz"),
+            (PDF_DIR / f"{job}.digital.pdf", "pdf", "Digitales Scan-Klon-PDF", "Moderner Typst Vektorsatz"),
             (TEI_DIR / f"{job}.tei.xml", "tei", "Generisches TEI-P5 XML", "Bibliotheksstandard zur Langzeitarchivierung"),
             (BOOKS_DIR / job / f"{job}.epub", "books", "Reflowable EPUB 3 E-Book", "Mobilgeräte & E-Reader mit eingebetteten Schriften"),
             (BOOKS_DIR / job / "book.json", "books", "Hierarchischer AST (book.json)", "Single Source of Truth mit Bounding Boxes"),
