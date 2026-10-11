@@ -1,8 +1,8 @@
 # Deploy — alex.local
 
 ## Target
-- Host: `alex.local` (alex.local)
-- SSH user: `marco` (sudo + docker group)
+- Host: `alex.local`
+- SSH user: `<deploy-user>` (sudo + docker group)
 - App dir: `/opt/alexandria`
 - Data: `/data/{input,processing,output}`
 - Container: `alexandria_worker` (`alexandria-worker:latest`)
@@ -13,7 +13,7 @@ From the repo on the build host (amd64 image required for alex):
 
 ```bash
 bash scripts/deploy_alex.sh
-# env: AS_WORKER_HOST=alex.local AS_WORKER_USER=marco
+# env: AS_WORKER_HOST=alex.local AS_WORKER_USER=<deploy-user>
 ```
 
 What it does:
@@ -32,7 +32,7 @@ pdftotext -layout /data/output/pdf/smoke.sandwich.pdf -
 ```
 
 ## Notes
-- Root SSH is disabled; use `marco`.
+- Root SSH is disabled; use a non-root user with sudo privileges.
 - After first `usermod -aG docker`, new login/`sg docker` may be required.
 - NFS to NAS is optional (`alexandria_nfs_mount` in ansible group_vars).
 - Rebuild image on hermes/dev after Dockerfile changes, then re-run deploy.
@@ -70,8 +70,8 @@ volumes:
 
 ## Web Portal Deploy — synology.local
 
-- **Host:** `synology.local` (synology.local)
-- **SSH user:** `marco`
+- **Host:** `synology.local`
+- **SSH user:** `<nas-user>`
 - **App dir:** `/volume1/docker/alexandria`
 - **Compose:** `deploy/docker-compose.synology.yml`
 - **Routing:** Traefik Reverse Proxy + Authelia 2FA SSO (`alex.birchville.cc`)

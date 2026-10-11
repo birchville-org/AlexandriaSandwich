@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-REMOTE="${AS_SYNOLOGY_HOST:-<nas-user>@synology.local}"
+REMOTE="${AS_SYNOLOGY_HOST:-${USER}@synology.local}"
 APP="/volume1/docker/alexandria"
 
 echo "1) Sync templates, static & main.py to synology.local ($APP/ui/)"

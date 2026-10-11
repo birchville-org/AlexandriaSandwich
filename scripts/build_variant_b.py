@@ -659,13 +659,17 @@ def main():
         raise SystemExit(res.returncode)
     print(f"   -> Wrote Pages 1-7 PDF: {part1_pdf}")
 
-    # Transfer part1 PDF to alex.local and merge with original pages 8-11 using qpdf
-    print("3) Syncing to alex.local and merging with original pages 8-11...")
-    scp_cmd = f"scp {part1_pdf} <deploy-user>@alex.local:/data/output/pdf/RV_9.1_part1_pages1_7.pdf"
+    # Transfer part1 PDF to compute worker and merge with original pages 8-11 using qpdf
+    print("3) Syncing to compute worker and merging with original pages 8-11...")
+    worker_user = os.environ.get("AS_WORKER_USER", os.environ.get("USER", "deploy"))
+    worker_host = os.environ.get("AS_WORKER_HOST", "alex.local")
+    remote_target = f"{worker_user}@{worker_host}"
+
+    scp_cmd = f"scp {part1_pdf} {remote_target}:/data/output/pdf/RV_9.1_part1_pages1_7.pdf"
     subprocess.run(scp_cmd, shell=True, check=True)
 
     remote_merge = (
-        'ssh <deploy-user>@alex.local "'
+        f'ssh {remote_target} "'
         'docker exec alexandria_worker qpdf --warning-exit-0 --empty '
         '--pages /data/output/pdf/RV_9.1_part1_pages1_7.pdf 1-7 /data/input/RV_9.1.pdf 8-11 '
         '-- /data/output/pdf/RV_9.1_clean_layout.pdf && '
@@ -678,7 +682,7 @@ def main():
         raise SystemExit(res_merge.returncode)
 
     # Fetch merged PDF back to local
-    fetch_cmd = f"scp <deploy-user>@alex.local:/data/output/pdf/RV_9.1_clean_layout.pdf {final_pdf}"
+    fetch_cmd = f"scp {remote_target}:/data/output/pdf/RV_9.1_clean_layout.pdf {final_pdf}"
     subprocess.run(fetch_cmd, shell=True, check=True)
     print(f"   -> Final merged PDF ready at: {final_pdf} ({final_pdf.stat().st_size} bytes)")
 

@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-REMOTE="<deploy-user>@alex.local"
+REMOTE="${AS_WORKER_USER:-${USER}}@${AS_WORKER_HOST:-alex.local}"
 APP="/opt/alexandria"
 
 echo "1) rsync UI + scripts"

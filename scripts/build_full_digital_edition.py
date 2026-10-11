@@ -169,7 +169,7 @@ def main() -> int:
     parser.add_argument("-i", "--input", type=Path, default=Path("data/input/Cardona_1976_Panini_A_Survey_of_Research_outline.pdf"))
     parser.add_argument("-t", "--toc", type=Path, default=Path("data/toc_cardona_1976.json"))
     parser.add_argument("-o", "--output", type=Path, default=Path("data/output/cardona_complete.typ"))
-    parser.add_argument("--pdf", type=Path, default=Path("data/input/Cardona_1976_Panini_complete_digital.pdf"))
+    parser.add_argument("--pdf", type=Path, default=Path("data/output/Cardona_1976_Panini_complete_digital.pdf"))
 
     args = parser.parse_args()
     build_full_digital_edition(args.input, args.toc, args.output)

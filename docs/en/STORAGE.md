@@ -4,8 +4,8 @@
 
 | Role | Host | Storage & Service Role |
 |------|------|------------------------|
-| Storage / Web Portal | `synology.local` (synology.local) | **Source of truth** for job data (`/volume1/docker/alexandria/data`), Traefik + Authelia Portal (`alexandria_ui`) |
-| Compute | `alex.local` (alex.local) | OCR worker (`alexandria_worker`), n8n; mounts NAS shares |
+| Storage / Web Portal | `synology.local` | **Source of truth** for job data (`/volume1/docker/alexandria/data`), Traefik + Authelia Portal (`alexandria_ui`) |
+| Compute | `alex.local` | OCR worker (`alexandria_worker`), n8n; mounts NAS shares |
 | Dev | Mac mini M2 / `hermes.local` | Code + local docker smoke tests |
 
 ## Canonical paths
