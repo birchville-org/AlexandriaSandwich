@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# AlexandriaSandwich — Pre-Push Security & Quality Gate
+# ==============================================================================
+set -euo pipefail
+
+echo "🔒 [pre-push] Running AlexandriaSandwich security & privacy gate..."
+
+PYTHON_BIN="python3"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+    if command -v python >/dev/null 2>&1; then
+        PYTHON_BIN="python"
+    else
+        echo "❌ [pre-push] Error: Python 3 is required for pre-push checks." >&2
+        exit 1
+    fi
+fi
+
+# Run scanner over diff between local HEAD and remote tracking branch
+"$PYTHON_BIN" scripts/security_check.py --scope=diff
+CHECK_STATUS=$?
+
+if [ $CHECK_STATUS -ne 0 ]; then
+    echo "❌ [pre-push] Push aborted due to security or privacy violations." >&2
+    echo "   Ensure private IPs, personal user paths, and unmasked API keys are purged." >&2
+    exit $CHECK_STATUS
+fi
+
+echo "✅ [pre-push] Security gate passed."
+exit 0
