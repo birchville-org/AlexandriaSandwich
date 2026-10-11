@@ -16,7 +16,7 @@ rsync -az --delete \
   --exclude '__pycache__/' \
   --exclude '.env' \
   "$ROOT/scripts" "$ROOT/docker" "$ROOT/deploy" "$ROOT/docs" \
-  "$ROOT/templates" "$ROOT/ansible" "$ROOT/README.md" \
+  "$ROOT/templates" "$ROOT/ansible" "$ROOT/README.md" "$ROOT/data" \
   "$REMOTE:${REMOTE_APP}/"
 ssh "$REMOTE" "cp -f ${REMOTE_APP}/deploy/docker-compose.alex.yml ${REMOTE_APP}/docker-compose.yml && mkdir -p ${REMOTE_APP}/scripts"
 # scripts is nested after rsync of scripts dir: /opt/alexandria/scripts
