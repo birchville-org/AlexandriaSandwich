@@ -1,7 +1,10 @@
 # 📚 AlexandriaSandwich
 
 > **Automatisierte Buch-Digitalisierung mit Hybrid-OCR (Tesseract + Mistral AI), GSD-Pipeline & Perfect Sandwich-PDF Output.**
+> 
+> 🌐 **Zentrale Online-Dokumentation & Fallstudien (GitHub Pages):** [birchville-org.github.io/AlexandriaSandwich](https://birchville-org.github.io/AlexandriaSandwich/)
 
+[![GitHub Pages](https://img.shields.io/badge/docs-gh--pages-blue?logo=github)](https://birchville-org.github.io/AlexandriaSandwich/)
 ![Build Status](https://img.shields.io/badge/docker-multi--arch-blue)
 ![Release](https://img.shields.io/badge/release-v1.2.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
