@@ -1,8 +1,8 @@
 # Case Study & Architecture: Dhātu-Pāṭha (Böhtlingk Standard)
 
 > **Canonical ground truth, bilingual facing-page alignment pipeline, and hybrid Typst vector typesetting for 2,259 verbal roots across 410 book pages.**
-> 
-> 🔗 **Primary Artifacts:** `Dhatu-patha.perfect_sandwich.pdf` (Facsimile) & `Dhatu-patha.typeset_edition.pdf` (Vector Edition)
+> 🔗 **Project Repository:** [github.com/birchville-org/dhatupatha](https://github.com/birchville-org/dhatupatha)  
+> 🌐 **Live QA Viewer:** [birchville-org.github.io/dhatupatha](https://birchville-org.github.io/dhatupatha/)
 
 ---
 
