@@ -273,10 +273,18 @@ else
   DIGITAL_PDF_OUT=""
 fi
 
-if [[ -f "$BUILD_TYPESET" && -f "${BOOK_DIR}/book.json" ]]; then
+if [[ -f "$BUILD_TYPESET" ]]; then
   log "build semantic typeset edition (Boethlingk model) -> $TYPESET_PDF_OUT"
   set +e
-  python3 "$BUILD_TYPESET" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$TYPESET_PDF_OUT" --markdown-dir "$MD_DIR"
+  COMPLETE_JSON="${OUT_DIR}/../dhatupatha_complete.json"
+  if [[ ! -f "$COMPLETE_JSON" ]]; then
+    COMPLETE_JSON="${SCRIPT_DIR}/../data/dhatupatha_complete.json"
+  fi
+  if [[ -f "$COMPLETE_JSON" ]]; then
+    python3 "$BUILD_TYPESET" --job "$JOB_NAME" --complete-json "$COMPLETE_JSON" --output "$TYPESET_PDF_OUT" --source-pdf "$PERFECT_SANDWICH_OUT"
+  elif [[ -f "${BOOK_DIR}/book.json" ]]; then
+    python3 "$BUILD_TYPESET" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$TYPESET_PDF_OUT"
+  fi
   typeset_rc=$?
   set -e
   if [[ "$typeset_rc" -ne 0 ]]; then

@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-linuxlibertine \
     fonts-dejavu-core \
     fonts-noto-core \
+    fonts-noto-extra \
     xz-utils \
     tar \
     # Python
@@ -52,7 +53,7 @@ RUN set -e; \
     typst --version
 
 RUN python3 -m pip install --no-cache-dir --break-system-packages \
-      ocrmypdf img2pdf mistralai
+      ocrmypdf img2pdf mistralai pymupdf
 
 # Allow ImageMagick PDF read/write (IM6 and IM7 paths)
 RUN set -e; \

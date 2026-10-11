@@ -88,9 +88,11 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
    * Retains the authentic historical scan image with zero visual distortion.
    * Inconspicuous vector glyph layer for search and clipboard operations.
 
-3. **Digital Vector PDF (`<job>.digital.pdf`):**
-   * Built from an Abstract Syntax Tree (`book.json` / `book.md`) via Typst 0.11+.
-   * Clean typography, selectable vector fonts (Linux Libertine, DejaVu, Noto), optimized for reading and printing.
+3. **Typographical Vector Edition (`<job>.typeset_edition.pdf` / `<job>.digital.pdf`):**
+   * Built from a canonical Abstract Syntax Tree (`book.json` / `dhatupatha_complete.json`) via Typst 0.11+.
+   * Section-specific layout: Single-column continuous prose for front matter, dual-column dictionary grid with vertical rule (`grid.vline`) for lexicographical listings.
+   * Hermetic font vendoring in `data/fonts/` (*Noto Serif Devanagari*, *Linux Libertine O*) avoiding tofu boxes (`?`) on headless Linux environments.
+   * Marginal scan concordance markers (`[S. XX]`) linking the typeset vector output directly to historical facsimile pages.
 
 ---
 
@@ -98,4 +100,8 @@ The pipeline follows a **Local-First approach with AI Fallback**: regular scans 
 
 * **[Pāṇini's Grammar (Otto von Böhtlingk, 1887)](case-study.md):**
   Complete scholarly digitization, multi-script OCR, canonical alignment, TEI-P5 modeling, and [OCR engine benchmark (Mistral vs. local Qwen2.5-VL)](case-study.md#step-21-local-vlm-alternative-model-benchmark-mistral-ocr-vs-qwen25-vl) across 3,997 Sūtras on 478 book pages.
+* **[Dhātu-Pāṭha under the Böhtlingk Standard](case-study-dhatupatha.md):**
+  Canonical ground truth, bilingual facing-page alignment pipeline, and section-specific Typst vector edition for 2,259 verbal roots across 410 book pages, with font vendoring and headless Linux container hardening.
+* **[Bṛhadāraṇyaka-Upaniṣad I.4](case-study-bau.md):**
+  Multilateral philological alignment of three textual witnesses (Devanāgarī, IAST, 2 German translations) into a 33-page synoptic edition and interactive QA viewer.
 

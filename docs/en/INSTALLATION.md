@@ -53,7 +53,9 @@ Base image: `ubuntu:24.04` (Multi-Arch: AMD64 & ARM64).
 | **Typesetting (Digital PDF)** | `typst` | **0.11.1+** (Fast Rust-based vector typesetting engine) |
 | | `fonts-linuxlibertine` | Classical book serif (Linux Libertine O) |
 | | `fonts-dejavu-core` | Serif & Sans fallbacks |
-| | `fonts-noto-core` | Full Unicode coverage for diacritics and special scripts |
+| | `fonts-noto-core` | Unicode coverage for basic diacritics |
+| | `fonts-noto-extra` | **Mandatory on Ubuntu 24.04:** Indic scripts (Devanāgarī etc.) |
+| | Hermetic Font Vendoring | Master OpenType fonts in `data/fonts/` (`NotoSerifDevanagari`, `Linux Libertine O`) |
 | **Python Runtime** | `python3` (3.12+), `pip` | Execution runtime for pipeline scripts |
 
 #### Python Packages in Worker:
@@ -61,6 +63,7 @@ Base image: `ubuntu:24.04` (Multi-Arch: AMD64 & ARM64).
 - `img2pdf` (0.5+): Lossless raster image embedding into PDF wrappers.
 - `mistralai` (1.x / 2.x): API client for vision-based OCR fallback when Tesseract confidence is low.
 - `pikepdf` & `lxml`: Low-level manipulation of PDF objects and hOCR/XML DOM trees.
+- `pymupdf` (1.24+): Bounding box auditing, text layer inspection, and automated vector layout validation.
 
 ---
 

@@ -126,12 +126,23 @@ AlexandriaSandwich trennt strikt zwischen **Geometrie** (visuelle Positionierung
 
 ---
 
+---
+
 ### Schritt 5: Sandwich-Assembly (`scripts/assemble_sandwich.py`)
 - **Werkzeuge:** OCRmyPDF und `img2pdf`.
 - **Generierung:** 
   - Die bereinigte Scan-Bilddatei wird als verlustfreie/optimierte Bildebene eingebettet.
   - Die erkannten Zeichen werden als unsichtbare Vektor-Textebene exakt an den geometrischen Koordinaten der Scan-Wörter hinterlegt.
-- **Ergebnis:** Standardkonformes PDF/A, durchsuchbar in jedem PDF-Viewer.
+- **Ergebnis:** Standardkonformes PDF/A (`*.sandwich.pdf` bzw. `*.perfect_sandwich.pdf`), durchsuchbar in jedem PDF-Viewer bei 100 % Erhalt des historischen Druckbildes.
+
+---
+
+### Schritt 6: Kanonisches Alignment & Typst-Vektorneuedition (`scripts/align_*.py`, `scripts/build_typeset_edition.py`)
+Parallel zur 1:1-Faksimile-Ebene generiert die Pipeline eine publikationsreife Vektor-Neuedition:
+- **Kanonischer Datenabgleich:** Anstatt unstrukturierten OCR-Text blind in ein starres Layout zu zwingen, wird der Text per Fuzzy-Matching (`SequenceMatcher`) gegen eine maschinenlesbare Referenzdatenbank (z. B. 3.997 Sūtras in `sutras.json` oder 2.259 Wurzeln in `dhatupatha_canonical.json`) validiert.
+- **Bilinguale Facing-Page-Heuristik:** Bei Werken mit gegenüberliegenden Seiten (z. B. ungerade Devanāgarī, gerade IAST) gleicht die Statusmaschine beide Schriftsysteme parallel ab, um Lesefehler der Gegenseite gegenseitig zu kompensieren.
+- **Sektionsspezifischer Vektorsatz via Typst:** Dynamische Trennung von einspaltigem Fließtext (Front Matter) und zweispaltigem Gitter mit vertikaler Trennlinie (`grid.vline`) für Wörterbücher, inklusive lebender Kolumnentitel und Marginal-Konkordanz (`[S. XX]`).
+- **Hermetisches Font-Vendoring:** Einbettung freier OpenType-Schriften unter `data/fonts/` (`NotoSerifDevanagari`, `Linux Libertine O`) zur Vermeidung von Tofu-Fragezeichen (`?`) auf Headless-Linux-Deployments.
 
 ---
 
@@ -172,7 +183,8 @@ Zur Steuerung und manuellen Qualitätskontrolle dient die Weboberfläche auf `al
 
 ## 6. Zusammenfassung der Kernvorteile
 
-- **100 % Bildtreue:** Das Originaldokument wird visuell niemals verändert oder degradiert.
+- **100 % Bildtreue:** Das Originaldokument wird visuell niemals verändert oder degradiert (`*.perfect_sandwich.pdf`).
+- **Publikationsreife Vektor-Neuedition:** Perfekt lesbarer Neusatz auf Knopfdruck (`*.typeset_edition.pdf`) via Typst mit sektionsspezifischer Layout-Architektur.
 - **Kostenkontrolle:** Lokale OCR übernimmt das Gros der Seiten; externe API-Aufrufe erfolgen ausschließlich bei Bedarf.
 - **Chirurgische Korrigierbarkeit:** Durch Pfad B können typische OCR-Fehler korrigiert werden, ohne dass die gesamte Pipeline oder das PDF neu gerechnet werden müssen.
 
@@ -182,4 +194,8 @@ Zur Steuerung und manuellen Qualitätskontrolle dient die Weboberfläche auf `al
 
 * **[Pāṇinis Grammatik (Otto von Böhtlingk, 1887)](case-study.md):**
   Vollständige Digitalisierung und kanonische Textschichtung von 3.997 Sūtras auf 478 Buchseiten historischer Mehrschriftigkeit (Devanāgarī, Fraktur/Antiqua, IAST) mit autarkem QA-Viewer.
+* **[Dhātu-Pāṭha nach dem Böhtlingk-Standard](case-study-dhatupatha.md):**
+  Kanonische Ground-Truth, bilinguale Facing-Page-Alignment-Pipeline und Typst-Vektorneuedition für 2.259 Verbalwurzeln auf 410 Buchseiten mit sektionsspezifischer Layout-Treue (1-Spalten Front Matter vs. 2-Spalten Wörterbuch mit `grid.vline`), Font-Vendoring und Headless-Linux-Härtung.
+* **[Bṛhadāraṇyaka-Upaniṣad I.4](case-study-bau.md):**
+  Multilaterales philologisches Alignment dreier Textzeugen (Devanāgarī, IAST, 2 deutsche Übersetzungen) zu einer 33-seitigen synoptischen Edition und interaktivem QA-Viewer.
 

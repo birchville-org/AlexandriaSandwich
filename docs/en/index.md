@@ -112,6 +112,8 @@ Raw Scans (PNG / TIFF / JPEG)
 | Script | Type | Description |
 | :--- | :--- | :--- |
 | [`run_pipeline.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/run_pipeline.sh) | Bash | Master pipeline orchestrator (Preprocessing, Quality Check, Fallback, Assembly, Multi-Format Exports). |
+| [`build_typeset_edition.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/build_typeset_edition.py) | Python | Compiles section-specific Typst vector editions (Böhtlingk Standard) with font vendoring. |
+| [`align_dhatupatha.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/align_dhatupatha.py) | Python | Bilingual facing-page alignment engine: Matches Devanāgarī & IAST against canonical ground truth. |
 | [`align_mistral_pdf.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/align_mistral_pdf.py) | Python | Post-Assembly: Injects Mistral OCR corrections directly into PDF text streams matching Tesseract geometry (`.aligned.pdf`). |
 | [`export_epub.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/export_epub.py) | Python | Compiles standard EPUB 3 eBooks with semantic XHTML and embedded Unicode fonts. |
 | [`render_digital_pdf.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/render_digital_pdf.py) | Python | Typesets publication-grade digital vector PDF using Typst 0.11+. |
@@ -156,7 +158,11 @@ The pipeline runs out-of-the-box on any local workstation with Docker (`localhos
 
 ## 📖 Documentation & Links
 
+* 🏛️ **Case Study Dhātu-Pāṭha (Böhtlingk Standard):** [`case-study-dhatupatha.md`](case-study-dhatupatha.md)
+* 📜 **Case Study Pāṇini's Grammar (Böhtlingk 1887):** [`case-study.md`](case-study.md)
+* ⚖️ **Target Formats & Dual Layout:** [`TARGET_FORMATS.md`](TARGET_FORMATS.md)
 * 🇬🇧 **Installation Guide:** [`INSTALLATION.md`](INSTALLATION.md)
 * 🛠️ **Correction Strategies (Pre-Assembly vs Post-Assembly):** [`CORRECTION_PATHS.md`](CORRECTION_PATHS.md)
-* ⚡ **n8n Operations & Setup:** [`N8N.md`](N8N.md)
-* 🗄️ **Storage Architecture:** [`STORAGE.md`](STORAGE.md)
+* ⚡ **n8n Workflow & Operations:** [`N8N.md`](N8N.md)
+* 🗄️ **Storage Layout:** [`STORAGE.md`](STORAGE.md)
+* 🧪 **Pipeline Architecture & History:** [`WIKI_VERFAHREN.md`](WIKI_VERFAHREN.md)

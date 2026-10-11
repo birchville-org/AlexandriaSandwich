@@ -112,6 +112,8 @@ Scans (PNG / TIFF / JPEG)
 | Skript | Typ | Funktion |
 | :--- | :--- | :--- |
 | [`run_pipeline.sh`](scripts/run_pipeline.sh) | Bash | Haupt-Orchestrator: steuert Preprocessing, Quality Gate, Fallback, Assembly und Multi-Format-Exporte. |
+| [`build_typeset_edition.py`](scripts/build_typeset_edition.py) | Python | Erzeugt sektionsspezifische Typst-Vektorneueditionen (Böhtlingk-Standard) mit automatischem Font-Vendoring. |
+| [`align_dhatupatha.py`](scripts/align_dhatupatha.py) | Python | Bilinguale Facing-Page-Alignment-Engine: Gleicht Devanāgarī & IAST gegen kanonische Ground-Truth ab. |
 | [`align_mistral_pdf.py`](scripts/align_mistral_pdf.py) | Python | Post-Assembly: Synchronisiert Mistral-Text mit Tesseract-Bounding-Boxes direkt im PDF-Inhaltsstrom (`.aligned.pdf`). |
 | [`export_epub.py`](scripts/export_epub.py) | Python | Baut standardkonformes EPUB 3 mit semantischem XHTML und eingebetteten Unicode-Schriften. |
 | [`render_digital_pdf.py`](scripts/render_digital_pdf.py) | Python | Erzeugt ein typografisches Neusatz-PDF mit modernem Schriftsatz via Typst-Engine. |
@@ -156,9 +158,13 @@ Das Standard-Setup läuft vollständig auf jedem Entwicklungsrechner mit Docker 
 
 ## 📖 Dokumentation & weiterführende Links
 
+* 🏛️ **Fallstudie Dhātu-Pāṭha (Böhtlingk-Standard):** [`docs/de/case-study-dhatupatha.md`](docs/de/case-study-dhatupatha.md)
+* 📜 **Fallstudie Pāṇinis Grammatik (Böhtlingk 1887):** [`docs/de/case-study.md`](docs/de/case-study.md)
+* ⚖️ **Zielformate & Dualität:** [`docs/de/TARGET_FORMATS.md`](docs/de/TARGET_FORMATS.md)
 * 🇩🇪 **Installationsanleitung (DE):** [`docs/de/INSTALLATION.md`](docs/de/INSTALLATION.md)
 * 🇬🇧 **Installation Guide (EN):** [`docs/en/INSTALLATION.md`](docs/en/INSTALLATION.md)
 * 🛠️ **Korrekturpfade (Pfad A vs. Pfad B):** [`docs/de/CORRECTION_PATHS.md`](docs/de/CORRECTION_PATHS.md)
 * ⚡ **n8n Workflow & Betrieb:** [`docs/de/N8N.md`](docs/de/N8N.md)
 * 🗄️ **Storage & Verzeichnisstruktur:** [`docs/de/STORAGE.md`](docs/de/STORAGE.md)
+* 🧪 **Pipeline-Verfahren & Historie:** [`docs/de/WIKI_VERFAHREN.md`](docs/de/WIKI_VERFAHREN.md)
 * 📚 **Vollständige MkDocs Dokumentation:** [`docs/de/index.md`](docs/de/index.md)

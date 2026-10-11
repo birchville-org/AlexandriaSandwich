@@ -112,6 +112,8 @@ Scans (PNG / TIFF / JPEG)
 | Skript | Typ | Funktion |
 | :--- | :--- | :--- |
 | [`run_pipeline.sh`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/run_pipeline.sh) | Bash | Haupt-Orchestrator: steuert Preprocessing, Quality Gate, Fallback, Assembly und Multi-Format-Exporte. |
+| [`build_typeset_edition.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/build_typeset_edition.py) | Python | Erzeugt sektionsspezifische Typst-Vektorneueditionen (Böhtlingk-Standard) mit automatischem Font-Vendoring. |
+| [`align_dhatupatha.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/align_dhatupatha.py) | Python | Bilinguale Facing-Page-Alignment-Engine: Gleicht Devanāgarī & IAST gegen kanonische Ground-Truth ab. |
 | [`align_mistral_pdf.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/align_mistral_pdf.py) | Python | Post-Assembly: Synchronisiert Mistral-Text mit Tesseract-Bounding-Boxes direkt im PDF-Inhaltsstrom (`.aligned.pdf`). |
 | [`export_epub.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/export_epub.py) | Python | Baut standardkonformes EPUB 3 mit semantischem XHTML und eingebetteten Unicode-Schriften. |
 | [`render_digital_pdf.py`](https://github.com/birchville-org/AlexandriaSandwich/blob/main/scripts/render_digital_pdf.py) | Python | Erzeugt ein typografisches Neusatz-PDF mit modernem Schriftsatz via Typst-Engine. |
@@ -156,6 +158,9 @@ Das Standard-Setup läuft vollständig auf jedem Entwicklungsrechner mit Docker 
 
 ## 📖 Dokumentation & weiterführende Links
 
+* 🏛️ **Fallstudie Dhātu-Pāṭha (Böhtlingk-Standard):** [`case-study-dhatupatha.md`](case-study-dhatupatha.md)
+* 📜 **Fallstudie Pāṇinis Grammatik (Böhtlingk 1887):** [`case-study.md`](case-study.md)
+* ⚖️ **Zielformate & Dualität:** [`TARGET_FORMATS.md`](TARGET_FORMATS.md)
 * 🇩🇪 **Installationsanleitung:** [`INSTALLATION.md`](INSTALLATION.md)
 * 🛠️ **Korrekturverfahren (Pre-Assembly vs. Post-Assembly):** [`CORRECTION_PATHS.md`](CORRECTION_PATHS.md)
 * ⚡ **n8n Workflow & Betrieb:** [`N8N.md`](N8N.md)

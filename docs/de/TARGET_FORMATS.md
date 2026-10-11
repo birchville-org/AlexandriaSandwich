@@ -99,24 +99,53 @@ Durch die strikte Trennung von Bilddaten, geometrischen Koordinaten und semantis
    * Der semantische Text fließt frei. Auf kleinen Bildschirmen passt sich der Zeilenumbruch an; Schriftart, Kontrast und Zeilenhöhe werden vom Leser bestimmt.
 2. **Neues Print-Format (z. B. Studien-Arbeitsbuch via Typst):**
    * Aus dem konsolidierten Text (`book.json` / `book.md`) wird auf Knopfdruck ein neues Werk generiert:
-     * Formatwechsel (z. B. von historischem Klein-Oktav zu DIN A4).
+     * Formatwechsel (z. B. von historischem Klein-Oktav zu DIN A4 oder ISO-B5).
      * Großzügiger Korrekturrand für studentische Notizen.
-     * Moderne Typographie (z. B. *EB Garamond* + *Noto Serif Devanagari*).
+     * Moderne Typographie (z. B. *Linux Libertine O* + *Noto Serif Devanagari*).
      * Parallele Synopsen (Originaltext links, deutsche Übersetzung rechts).
 
 ---
 
-## 4. Standard-Ordnerstruktur pro Buch
+## 4. Semantischer Neusatz vs. Reverse-Layout-Rekonstruktion (Das Böhtlingk- & Dhātupāṭha-Modell)
+
+Aus den praktischen Fallstudien (*Böhtlingk 1887* und *Dhātu-Pāṭha*) leitet sich eine zentrale editionsphilologische Erkenntnis für die AlexandriaSandwich-Architektur ab:
+
+### 4.1 Warum blindes "Reverse-Layout" scheitert
+Versucht eine Pipeline, aus rohem, unstrukturiertem OCR-Fließtext das visuelle Seitenbild eines komplexen Werkes krampfhaft Seite für Seite geometrisch nachzubauen, scheitert der typografische Vektorneusatz:
+* **Serialisierungsverlust:** Eine OCR-Engine liest mehrspaltige Tabellenwerke (z. B. Wurzelspalte links, Bedeutungsspalte rechts) sequentiell aus. Die 2D-Tabellenflucht wird zu einem flachen 1D-Fließtext reduziert.
+* **Layout-Raten:** Typst muss ohne semantisches Modell raten, wo Spalten brechen, wodurch optische Unwuchten, asymmetrische Satzspiegel oder Zeilenüberläufe entstehen („digitalisiert, aber ohne Layout“).
+
+### 4.2 Die Lösung: Die 3 Säulen der Dual-Path-Architektur
+
+1. **Pfad 1: Die Faksimile-Garantie (`*.perfect_sandwich.pdf`)**
+   * Das hochauflösende Originalscanbild bleibt zu 100 % erhalten.
+   * Der OCR-Text wird unsichtbar an exakten Bounding-Box-Koordinaten als Suchlayer projiziert (PDF Text Rendering Mode 3).
+   * **Garantie:** 100 % Original-Layout, 0 % Layout-Risiko, absolute historische Zitierfähigkeit.
+
+2. **Pfad 2: Kanonisches Ground-Truth-Alignment (`scripts/align_*.py`)**
+   * Anstatt den Scan blind geometrisch nachzuahmen, wird der OCR-Text per Fuzzy Matching (`difflib.SequenceMatcher`) gegen eine maschinenlesbare Referenzdatenbank (z. B. 3.997 Sūtras in `sutras.json` oder 2.259 Wurzeln in `dhatupatha_canonical.json`) abgeglichen.
+   * OCR-Fehler bei komplexen Ligaturen werden automatisch repariert und der Text in eine strukturierte Master-JSON (`dhatupatha_complete.json`) überführt.
+
+3. **Layout-Treue zum Original durch sektionsspezifische Typografie**
+   * Kein starres globales 2-Spalten-Zwangskorsett über das gesamte Buch:
+     * **Front Matter (Vorwort, Einleitung):** Einspaltiger, eleganter Fließtext mit Originalabsätzen und Randverweisen auf die Originalscans (`[S. 6]`).
+     * **Hauptteil (Wörterbuch/Tabellen):** Zweispaltiger Satz mit vertikalem Trennstrich (`grid.vline`) und zentrierten Kolophonen.
+     * **Back Matter (Register/Anhänge):** Strukturgetreue Darstellung der historischen Verzeichnisse.
+
+---
+
+## 5. Standard-Ordnerstruktur pro Buch
 
 Jedes von AlexandriaSandwich verarbeitete Werk erzeugt die folgende einheitliche Ordnerstruktur:
 
 ```text
 output/books/<buch_id>/
-├── <buch_id>.sandwich.pdf   # 1:1 Faksimile + Tesseract Textlayer
-├── <buch_id>.aligned.pdf    # Faksimile + Mistral-korrigierter Textlayer (0 Rauschen)
-├── <buch_id>.digital.pdf    # Vektor-Neusatz via Typst
-├── <buch_id>.epub           # Reflowable eBook mit eingebetteten Schriften
-├── <buch_id>.tei.xml        # TEI-P5 Langzeitarchiv-XML
-├── book.json                # Vollständiger semantischer Syntaxbaum (AST)
-└── book.md                  # Konsolidierter UTF-8 Markdown-Volltext
+├── <buch_id>.sandwich.pdf          # 1:1 Faksimile + Tesseract Textlayer
+├── <buch_id>.perfect_sandwich.pdf  # Restauriertes Faksimile + optimierter Mistral-Textlayer
+├── <buch_id>.typeset_edition.pdf   # Semantische Vektor-Neuedition via Typst (Böhtlingk-Standard)
+├── <buch_id>.digital.pdf           # 1:1 Page-Concordance Digital-PDF
+├── <buch_id>.epub                  # Reflowable eBook mit eingebetteten Schriften
+├── <buch_id>.tei.xml               # TEI-P5 Langzeitarchiv-XML
+├── book.json                       # Vollständiger semantischer Syntaxbaum (AST)
+└── book.md                         # Konsolidierter UTF-8 Markdown-Volltext
 ```

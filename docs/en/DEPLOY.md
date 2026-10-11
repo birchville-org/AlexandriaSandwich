@@ -39,6 +39,35 @@ pdftotext -layout /data/output/pdf/smoke.sandwich.pdf -
 
 ---
 
+## Headless Typst & Font Deployment (Linux Worker)
+
+To guarantee flawless compilation of typographical vector editions (`*.typeset_edition.pdf`) without tofu question marks (`?`) on headless Linux hosts, enforce the following configuration:
+
+### 1. Hermetic Font Vendoring (`data/fonts`)
+Typst resolves fonts against host operating system directories by default. Because headless Linux servers lack macOS-proprietary fonts (`Devanagari MT`, `Kohinoor Devanagari`, `Baskerville`), the repository vendors open-source master fonts directly in `data/fonts/`:
+* `NotoSerifDevanagari-Regular.ttf` & `NotoSerifDevanagari-Bold.ttf` (Google Noto, OFL)
+* `LinLibertine_R.otf`, `LinLibertine_RB.otf`, `LinLibertine_RI.otf` (Linux Libertine O)
+
+In `scripts/build_typeset_edition.py`, the pipeline automatically appends `--font-path data/fonts`.
+
+### 2. Mandatory Packages in Worker Container (`docker/worker/Dockerfile`)
+* **APT:** `fonts-noto-extra` (in Ubuntu 24.04, Indic Devanagari fonts reside exclusively in `fonts-noto-extra`, not in `fonts-noto-core`).
+* **PIP:** `pymupdf` (required for bounding-box analysis, automated layout audits, and text layer extraction).
+
+### 3. Docker-Compose Volume Mounts (`deploy/docker-compose.alex.yml`)
+To make fonts and canonical databases (`dhatupatha_canonical.json`) accessible to the container:
+```yaml
+volumes:
+  - /data/input:/data/input
+  - /data/processing:/data/processing
+  - /data/output:/data/output
+  - /opt/alexandria/scripts:/opt/alexandria/scripts:ro
+  - /opt/alexandria/templates:/opt/alexandria/templates:ro
+  - /opt/alexandria/data:/opt/alexandria/data:ro
+```
+
+---
+
 ## Web Portal Deploy — synology.local
 
 - **Host:** `synology.local` (synology.local)

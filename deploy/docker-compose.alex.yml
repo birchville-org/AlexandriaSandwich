@@ -16,3 +16,4 @@ services:
       - /data/output:/data/output
       - /opt/alexandria/scripts:/opt/alexandria/scripts:ro
       - /opt/alexandria/templates:/opt/alexandria/templates:ro
+      - /opt/alexandria/data:/opt/alexandria/data:ro

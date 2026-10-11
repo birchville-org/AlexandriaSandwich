@@ -39,6 +39,35 @@ pdftotext -layout /data/output/pdf/smoke.sandwich.pdf -
 
 ---
 
+## Headless Typst- & Font-Deployment (Linux Worker)
+
+Für die fehlerfreie Kompilierung der typografischen Vektor-Neueditionen (`*.typeset_edition.pdf`) ohne Tofu-Zeichen (`?`) auf Headless-Linux-Hosts gilt folgende Konfiguration:
+
+### 1. Hermetisches Font-Vendoring (`data/fonts`)
+Typst sucht Schriften standardmäßig in Betriebssystem-Verzeichnissen. Da Linux-Server die proprietären macOS-Schriften (`Devanagari MT`, `Kohinoor Devanagari`, `Baskerville`) nicht besitzen, führt das Repository kanonische Open-Source-Schriften direkt unter `data/fonts/` mit:
+* `NotoSerifDevanagari-Regular.ttf` & `NotoSerifDevanagari-Bold.ttf` (Google Noto, OFL)
+* `LinLibertine_R.otf`, `LinLibertine_RB.otf`, `LinLibertine_RI.otf` (Linux Libertine O)
+
+In `scripts/build_typeset_edition.py` übergibt die Pipeline automatisch `--font-path data/fonts`.
+
+### 2. Erforderliche Pakete im Worker-Container (`docker/worker/Dockerfile`)
+* **APT:** `fonts-noto-extra` (in Ubuntu 24.04 liegen die indischen Devanāgarī-Schriften nicht im Basispaket `fonts-noto-core`, sondern zwingend in `fonts-noto-extra`).
+* **PIP:** `pymupdf` (wird für Bounding-Box-Messungen, Layout-Audits und Textlayer-Extraktionen benötigt).
+
+### 3. Docker-Compose Volume-Mounts (`deploy/docker-compose.alex.yml`)
+Damit Schriften und kanonische Datenbanken (`dhatupatha_canonical.json`) dem Container zur Verfügung stehen:
+```yaml
+volumes:
+  - /data/input:/data/input
+  - /data/processing:/data/processing
+  - /data/output:/data/output
+  - /opt/alexandria/scripts:/opt/alexandria/scripts:ro
+  - /opt/alexandria/templates:/opt/alexandria/templates:ro
+  - /opt/alexandria/data:/opt/alexandria/data:ro
+```
+
+---
+
 ## Web-Portal Deploy — synology.local
 
 - **Host:** `synology.local` (synology.local)

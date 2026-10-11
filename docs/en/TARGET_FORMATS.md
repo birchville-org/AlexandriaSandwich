@@ -97,24 +97,53 @@ By strictly separating image data, geometric coordinates, and semantic text, Ale
    * Text flows freely. On small smartphone or tablet displays, margins, font sizes, and line spacing adapt dynamically to reader preferences.
 2. **New Print Layouts (e.g. Student Workbook via Typst):**
    * Re-generate the entire work into an entirely different publication format:
-     * Format shift (e.g. from historical Octavo to DIN A4).
+     * Format shift (e.g. from historical Octavo to DIN A4 or ISO-B5).
      * Generous margins for handwritten student notes.
-     * Modern typography (e.g. *EB Garamond* + *Noto Serif Devanagari*).
+     * Modern typography (e.g. *Linux Libertine O* + *Noto Serif Devanagari*).
      * Bilingual parallel columns (Sanskrit on the left, German on the right).
 
 ---
 
-## 4. Standard Directory Layout per Book
+## 4. Semantic Typesetting vs. Reverse-Layout Reconstruction (The Böhtlingk & Dhātupāṭha Model)
+
+Practical case studies (*Böhtlingk 1887* and *Dhātu-Pāṭha*) establish a fundamental principle for the AlexandriaSandwich architecture:
+
+### 4.1 Why Blind "Reverse-Layout" Fails
+Attempting to geometrically reconstruct the exact page layout of a complex historical work from raw, unsegmented OCR text produces severe typographical distortions:
+* **Serialization Loss:** OCR engines read multi-column reference tables (e.g., verbal roots on the left, meanings on the right) sequentially. 2D tabular alignments collapse into flat 1D paragraphs.
+* **Layout Guesswork:** Without a semantic model, Typst has to guess column breaks and line boundaries, leading to asymmetric margins and overflow glitches ("digitized, but without layout").
+
+### 4.2 The Solution: The 3 Pillars of Dual-Path Architecture
+
+1. **Path 1: The Facsimile Guarantee (`*.perfect_sandwich.pdf`)**
+   * High-resolution scans remain 100% intact as pixel-perfect background images.
+   * Searchable OCR text is overlaid via PDF Text Rendering Mode 3 (*neither fill nor stroke text*) on exact bounding box coordinates.
+   * **Guarantee:** 100% original layout, zero typographical risk, complete archival citation fidelity.
+
+2. **Path 2: Canonical Ground-Truth Alignment (`scripts/align_*.py`)**
+   * Instead of guessing scan geometry, raw OCR is fuzzy-matched (`difflib.SequenceMatcher`) against machine-readable ground-truth databases (e.g., 3,997 Sūtras in `sutras.json` or 2,259 roots in `dhatupatha_canonical.json`).
+   * Ligature misrecognitions and colophon noise are automatically healed into a structured master database (`dhatupatha_complete.json`).
+
+3. **Layout Fidelity Through Section-Aware Typography**
+   * Avoid enforcing a rigid global 2-column layout across the entire book:
+     * **Front Matter (Preface, Introduction):** Single-column continuous prose with original paragraphs and scan page margin links (`[S. 6]`).
+     * **Main Body (Dictionary/Tables):** Two-column dictionary layout with vertical column rules (`grid.vline`) and centered colophons.
+     * **Back Matter (Indices/Appendices):** Structure matching historical registers.
+
+---
+
+## 5. Standard Directory Layout per Book
 
 Every work processed by AlexandriaSandwich generates the following standardized file structure:
 
 ```text
 output/books/<book_id>/
-├── <book_id>.sandwich.pdf   # 1:1 Facsimile + Tesseract text layer
-├── <book_id>.aligned.pdf    # Facsimile + Mistral-aligned text layer (0 noise)
-├── <book_id>.digital.pdf    # Vector reset via Typst
-├── <book_id>.epub           # Reflowable eBook with embedded fonts
-├── <book_id>.tei.xml        # TEI-P5 Archival XML
-├── book.json                # Complete semantic syntax tree (AST)
-└── book.md                  # Consolidated UTF-8 Markdown text
+├── <book_id>.sandwich.pdf          # 1:1 Facsimile + Tesseract text layer
+├── <book_id>.perfect_sandwich.pdf  # Restored facsimile + optimized Mistral text layer
+├── <book_id>.typeset_edition.pdf   # Semantic vector edition via Typst (Böhtlingk standard)
+├── <book_id>.digital.pdf           # 1:1 Page-concordance digital PDF
+├── <book_id>.epub                  # Reflowable eBook with embedded fonts
+├── <book_id>.tei.xml               # TEI-P5 Archival XML
+├── book.json                       # Complete semantic syntax tree (AST)
+└── book.md                         # Consolidated UTF-8 Markdown text
 ```
