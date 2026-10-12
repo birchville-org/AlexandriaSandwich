@@ -245,7 +245,7 @@ def build_typst_document(
                 dim_args.append(f'  height: {h_pt}pt,')
     
     if not dim_args:
-        dim_args.append('  paper: "b5",')
+        dim_args.append('  paper: "iso-b5",')
 
     lines = [
         f'#import "{template_path}": book',
@@ -512,8 +512,9 @@ def main():
     if not data_dir.exists() and (repo_root / "data").exists():
         data_dir = repo_root / "data"
 
-    input_file = Path(args.input) if args.input else data_dir / "output" / "books" / args.job / "book.json"
-    output_file = Path(args.output) if args.output else data_dir / "output" / "pdf" / f"{args.job}.digital.pdf"
+    cand_input = data_dir / "output" / args.job / "book.json"
+    input_file = Path(args.input) if args.input else (cand_input if cand_input.exists() else data_dir / "output" / "books" / args.job / "book.json")
+    output_file = Path(args.output) if args.output else data_dir / "output" / args.job / f"{args.job}.digital.pdf"
     ref_pdf = Path(args.reference_pdf) if args.reference_pdf else None
 
     render_pdf(

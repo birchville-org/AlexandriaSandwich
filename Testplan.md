@@ -33,28 +33,36 @@ Klicke darauf → sieh den Durchlauf Schritt‑für‑Schritt:
 Webhook OCR Job → Build docker exec command → Run OCR pipeline → Parse pipeline report → Respond to Webhook.
 Bei jedem Node kannst du die Output‑Daten einsehen (z. B. das gebaute docker exec … Kommando, den stdout des Workers, das geparste Report‑JSON).
 5. Wo finde ich die Zwischenergebnisse?
-Alle Pfade sind relativ zum gemeinsamen Daten‑Volumen (/opt/alexandria/data).
+Alle Pfade sind relativ zum gemeinsamen Daten‑Volumen (/opt/alexandria/data bzw. data/).
 
-Schritt	Unterordner (unter /opt/alexandria/data/)	Dateiname / Beispiel
-Eingabe	input/<JOB_NAME>/	page001.png, page002.png …
+Schritt	Unterordner	Dateiname / Beispiel
+Eingabe	input/<JOB_NAME>/	page001.png, page002.png … (optional: job.config.json)
 Pre‑process (ImgMagick + unpaper)	processing/preprocessed/<JOB_NAME>/	page001.png (deskewed/unpaped)
 Qualitäts‑Check	processing/quality/<JOB_NAME>/	<page>.quality.json (enthält mean_confidence, decision)
-Markdown‑Zwischenschritt	output/markdown/<JOB_NAME>/	<page>.md (OCR‑Text)
-Pipeline‑Report	output/reports/<JOB_NAME>.pipeline.json	Gesamter Lauf‑Report (ähnlich e2e_m1.pipeline.json)
-Endprodukte	output/pdf/<JOB_NAME>/	<JOB_NAME>.sandwich.pdf (Standard-Faksimile Sandwich)
-<JOB_NAME>.aligned.pdf (KI-synchronisiertes Faksimile)
-Side‑Car‑Text	output/pdf/<JOB_NAME>.sidecar.txt	Klartext‑Version des Sandwich PDFs (falls erzeugt)
+Job-Zentrierte Ausgaben	output/<JOB_NAME>/	<JOB_NAME>.sandwich.pdf (Standard-Faksimile Sandwich)
+		<JOB_NAME>.aligned.pdf (KI-synchronisiertes Faksimile)
+		<JOB_NAME>.perfect_sandwich.pdf (Restauriertes Faksimile)
+		<JOB_NAME>.digital.pdf (Moderner Typst-Vektorsatz)
+		<JOB_NAME>.tei.xml (Generisches TEI-P5 XML)
+		<JOB_NAME>.epub (Reflowable EPUB 3 eBook)
+		<JOB_NAME>.pipeline.json (Gesamter Lauf-Report)
+		book.json / book.md (Strukturierter AST & bereinigter Markdown)
+		markdown/<page>.mistral.md (OCR-Textstufen)
+		<JOB_NAME>.sidecar.txt (Klartext-Version des Sandwich PDFs)
+
 6. Erfolgskriterien prüfen
-Der pipeline‑Report muss "status": "PASS" enthalten.
+Der pipeline‑Report (<JOB_NAME>.pipeline.json) muss "status": "PASS" enthalten.
 Alle Seiten müssen "decision": "pass" und mean_confidence ≥ 85 zeigen (sonst wird automatisch das Mistral‑Fall‑back getriggert – das ist ebenfalls OK, solange am Ende ein PDF entsteht).
-Die beiden PDF‑Dateien existieren und sind nicht leer (ls -lh).
+Die PDF‑Dateien existieren und sind nicht leer (ls -lh).
 Optional: öffne das PDF und prüfe, dass der Text layer vorhanden (bei aligned) bzw. das Bild‑Overlay (bei Sandwich).
+
 7. Fehlerdiagnose (falls etwas fehlschlägt)
 Symptom	Wo nachschauen
 Webhook liefert 404	Sicherstellen, dass der Workflow aktiv ist und die URL exakt /webhook/alexandria/ocr lautet (nicht /webhook-test/).
 docker exec …: exec failed	Der Worker‑Container läuft? (docker ps). Fehlt bash im Container → das Deploy‑Skript muss neu ausgeführt werden (es bindet /usr/bin/docker und legt den User auf root).
 Keine Ausgabedateien	Schau dir den Run OCR pipeline Node Output an – dort steht der stdout/stderr des run_pipeline.sh. Typische Ursachen: fehlende Eingabebilder, falscher Job‑Name, Berechtigungen im /data‑Verzeichnis.
 Qualitäts‑Check schlägt fehl (conf < 85)	Im processing/quality/<JOB_NAME>/<page>.quality.json den Wert prüfen; bei Bedarf das Bild nachbessern oder --no-mistral setzen, um trotzdem weiterzumachen (werden dann dennoch mit niedriger Konfidenz verarbeitet).
+
 Kurz‑Checkliste zum Ausprobieren
 # 1. Test‑Daten bereitstellen
 mkdir -p /opt/alexandria/data/input/demo
@@ -72,5 +80,5 @@ curl -sS -X POST http://alex.local:5678/webhook/alexandria/ocr \
 
 # 4. In n8n UI → Executions → zuletzt erfolgreich? → Output‑Pfade notieren
 # 5. Ergebnisse prüfen
-ls -lh /opt/alexandria/data/output/pdf/demo/
-Damit hast du einen kompletten End‑to‑End‑Durchlauf vom Einlegen der Rohbilder über den n8n‑Trigger, den Worker‑Container bis hin zu den finalen PDF‑Ausgaben samt aller Zwischenartefakte. Viel Erfolg beim Testen!
+ls -lh /opt/alexandria/data/output/demo/
+Damit hast du einen kompletten End‑to‑End‑Durchlauf vom Einlegen der Rohbilder über den n8n‑Trigger, den Worker‑Container bis hin zu den finalen Ausgaben samt aller Zwischenartefakte. Viel Erfolg beim Testen!

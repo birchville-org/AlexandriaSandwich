@@ -188,6 +188,21 @@
   <table>
     <thead><tr><th>Artefakt</th><th>Format</th><th>Datei & Größe</th><th>Aktionen</th></tr></thead>
     <tbody>
+      <!-- 0. Abschlussbericht & Qualitätsaudit -->
+      {% if info.report_file %}
+      <tr style="background: rgba(180, 83, 9, 0.08); border-left: 4px solid var(--gold);">
+        <td><strong>📋 Abschlussbericht &amp; Qualitätsaudit</strong><br><small class="text-muted">Kommentierte Einzelschritte, Konfidenz-Statistik, Schwellenwert-Log &amp; Ausreißer</small></td>
+        <td><span class="badge" style="background:#b45309;color:#fff;">Audit-Report</span></td>
+        <td>
+          <code>{{ info.report_file.name }}</code> ({{ info.report_file.size_kb }} KB)
+        </td>
+        <td>
+          <a href="#auditReportSection" class="btn btn-sm btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.8rem;">👁 Bericht lesen</a>
+          <a href="/download/reports/{{ job }}/{{ info.report_file.name }}" class="btn btn-sm" style="padding:0.25rem 0.6rem;font-size:0.8rem;background:#b45309;color:#fff;">⬇ Download .md</a>
+        </td>
+      </tr>
+      {% endif %}
+
       <!-- 1. Reflowable EPUB 3 eBook -->
       <tr style="background: rgba(59, 130, 246, 0.06);">
         <td><strong>1. Reflowable EPUB 3 eBook</strong><br><small class="text-muted">E-Reader & Mobilgeräte (eingebettete Unicode-Schriften: Devanagari & Libertine)</small></td>
@@ -339,6 +354,26 @@
   <p style="margin-top:1rem;"><a href="/browse/pdf/{{ job }}/{{ info.sidecar }}" class="pill" target="_blank">📄 {{ info.sidecar }} (Unformatierter OCR-Textstrom)</a></p>
   {% endif %}
 </div>
+
+<!-- 📋 Abschlussbericht & Qualitätsanalyse (Volltext) -->
+{% if info.report_md %}
+<div class="card" id="auditReportSection" style="margin-top: 2rem; border-left: 4px solid var(--gold);">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <h2 style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
+        <span>📋</span> Abschlussbericht &amp; Qualitätsanalyse
+      </h2>
+      <span class="badge" style="background: #b45309; color: #fff;">{{ info.report_file.name }}</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <a href="/download/reports/{{ job }}/{{ info.report_file.name }}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">
+        <span>⬇</span> Markdown-Bericht herunterladen
+      </a>
+    </div>
+  </div>
+  <div style="background: var(--bg-surface); padding: 1.25rem 1.5rem; border-radius: 6px; border: 1px solid var(--border-color); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.85rem; line-height: 1.65; max-height: 520px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; color: var(--text-color);">{{ info.report_md }}</div>
+</div>
+{% endif %}
 
 <!-- Vorgängige Läufe dieses Jobs separat mit Löschmöglichkeit -->
 <div class="card" id="runsSection" style="margin-top: 2rem;">

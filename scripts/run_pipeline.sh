@@ -16,6 +16,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Activate local virtualenv if available on host
+if [[ -x "${SCRIPT_DIR}/../.venv/bin/python3" && -z "${VIRTUAL_ENV:-}" ]]; then
+  export PATH="${SCRIPT_DIR}/../.venv/bin:$PATH"
+fi
+
 # Fallback: MISTRAL_API_KEY aus .env laden falls im Container-Aufruf nicht übergeben
 if [[ -z "${MISTRAL_API_KEY:-}" ]]; then
   for env_file in "/opt/alexandria/.env" "${SCRIPT_DIR}/../.env" "/data/.env"; do
@@ -44,17 +49,24 @@ OUT_DIR="${AS_OUTPUT_DIR:-/data/output}"
 log() { printf '[%s] %s\n' "$(date -Iseconds)" "$*" >&2; }
 die() { log "ERROR: $*"; exit 2; }
 
+LANG_EXPLICIT=0
+THRESHOLD_EXPLICIT=0
+MISTRAL_EXPLICIT=0
+UNPAPER_EXPLICIT=0
+SKIP_PREPROCESS_EXPLICIT=0
+LIMIT_EXPLICIT=0
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --job|-j) JOB_NAME="$2"; shift 2 ;;
     --pull) DO_PULL=1; shift ;;
     --push) DO_PUSH=1; shift ;;
-    --lang) LANG_OCR="$2"; shift 2 ;;
-    --threshold) THRESHOLD="$2"; shift 2 ;;
-    --no-mistral) USE_MISTRAL=0; shift ;;
-    --no-unpaper) USE_UNPAPER=0; shift ;;
-    --skip-preprocess) SKIP_PREPROCESS=1; shift ;;
-    --limit) LIMIT="$2"; shift 2 ;;
+    --lang) LANG_OCR="$2"; LANG_EXPLICIT=1; shift 2 ;;
+    --threshold) THRESHOLD="$2"; THRESHOLD_EXPLICIT=1; shift 2 ;;
+    --no-mistral) USE_MISTRAL=0; MISTRAL_EXPLICIT=1; shift ;;
+    --no-unpaper) USE_UNPAPER=0; UNPAPER_EXPLICIT=1; shift ;;
+    --skip-preprocess) SKIP_PREPROCESS=1; SKIP_PREPROCESS_EXPLICIT=1; shift ;;
+    --limit) LIMIT="$2"; LIMIT_EXPLICIT=1; shift 2 ;;
     --input) INPUT_DIR="$2"; shift 2 ;;
     --processing) PROC_DIR="$2"; shift 2 ;;
     --output) OUT_DIR="$2"; shift 2 ;;
@@ -64,12 +76,40 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+JOB_INPUT="${INPUT_DIR}/${JOB_NAME}"
+JOB_CONFIG="${JOB_INPUT}/job.config.json"
+if [[ -f "$JOB_CONFIG" ]]; then
+  log "load job profile: $JOB_CONFIG"
+  eval "$(python3 - "$JOB_CONFIG" <<'PY'
+import json, sys
+try:
+    with open(sys.argv[1], encoding='utf-8') as f:
+        cfg = json.load(f)
+    if "lang" in cfg: print(f"CFG_LANG={json.dumps(str(cfg['lang']))}")
+    if "threshold" in cfg: print(f"CFG_THRESHOLD={int(cfg['threshold'])}")
+    if "use_mistral" in cfg: print(f"CFG_MISTRAL={1 if cfg['use_mistral'] else 0}")
+    if "use_unpaper" in cfg: print(f"CFG_UNPAPER={1 if cfg['use_unpaper'] else 0}")
+    if "limit" in cfg: print(f"CFG_LIMIT={int(cfg['limit'])}")
+    if "skip_preprocess" in cfg: print(f"CFG_SKIP_PREPROCESS={1 if cfg['skip_preprocess'] else 0}")
+except Exception:
+    pass
+PY
+)"
+  [[ -n "${CFG_LANG:-}" && "$LANG_EXPLICIT" -eq 0 ]] && LANG_OCR="$CFG_LANG"
+  [[ -n "${CFG_THRESHOLD:-}" && "$THRESHOLD_EXPLICIT" -eq 0 ]] && THRESHOLD="$CFG_THRESHOLD"
+  [[ -n "${CFG_MISTRAL:-}" && "$MISTRAL_EXPLICIT" -eq 0 ]] && USE_MISTRAL="$CFG_MISTRAL"
+  [[ -n "${CFG_UNPAPER:-}" && "$UNPAPER_EXPLICIT" -eq 0 ]] && USE_UNPAPER="$CFG_UNPAPER"
+  [[ -n "${CFG_LIMIT:-}" && "$LIMIT_EXPLICIT" -eq 0 ]] && LIMIT="$CFG_LIMIT"
+  [[ -n "${CFG_SKIP_PREPROCESS:-}" && "$SKIP_PREPROCESS_EXPLICIT" -eq 0 ]] && SKIP_PREPROCESS="$CFG_SKIP_PREPROCESS"
+fi
+
+JOB_OUT="${OUT_DIR}/${JOB_NAME}"
 PRE_DIR="${PROC_DIR}/preprocessed/${JOB_NAME}"
 QC_DIR="${PROC_DIR}/quality/${JOB_NAME}"
-MD_DIR="${OUT_DIR}/markdown/${JOB_NAME}"
-LOG_JSON="${OUT_DIR}/reports/${JOB_NAME}.pipeline.json"
+MD_DIR="${JOB_OUT}/markdown"
+LOG_JSON="${JOB_OUT}/${JOB_NAME}.pipeline.json"
 PAGES_JSONL="${QC_DIR}/pages.jsonl"
-mkdir -p "$PRE_DIR" "$QC_DIR" "$MD_DIR" "$(dirname "$LOG_JSON")" "$OUT_DIR"
+mkdir -p "$PRE_DIR" "$QC_DIR" "$JOB_OUT" "$MD_DIR"
 : > "$PAGES_JSONL"
 
 PREPROCESS="${SCRIPT_DIR}/preprocess.sh"
@@ -196,9 +236,8 @@ PY
 done
 
 # 5) Sandwich PDF assembly from preprocessed pages
-PDF_OUT="${OUT_DIR}/pdf/${JOB_NAME}.sandwich.pdf"
-SIDECAR_OUT="${OUT_DIR}/pdf/${JOB_NAME}.sidecar.txt"
-mkdir -p "$(dirname "$PDF_OUT")"
+PDF_OUT="${JOB_OUT}/${JOB_NAME}.sandwich.pdf"
+SIDECAR_OUT="${JOB_OUT}/${JOB_NAME}.sidecar.txt"
 if [[ -f "$ASSEMBLE" ]]; then
   if [[ -s "$PDF_OUT" ]]; then
     log "sandwich pdf cached: $PDF_OUT"
@@ -227,17 +266,18 @@ RENDER_DIGITAL="${SCRIPT_DIR}/render_digital_pdf.py"
 BUILD_TYPESET="${SCRIPT_DIR}/build_typeset_edition.py"
 EXPORT_EPUB="${SCRIPT_DIR}/export_epub.py"
 
-BOOK_DIR="${OUT_DIR}/books/${JOB_NAME}"
-TEI_OUT="${OUT_DIR}/tei/${JOB_NAME}.tei.xml"
-DIGITAL_PDF_OUT="${OUT_DIR}/pdf/${JOB_NAME}.digital.pdf"
-TYPESET_PDF_OUT="${OUT_DIR}/pdf/${JOB_NAME}.typeset_edition.pdf"
-EPUB_OUT="${BOOK_DIR}/${JOB_NAME}.epub"
-mkdir -p "$BOOK_DIR" "$(dirname "$TEI_OUT")"
+BOOK_DIR="${JOB_OUT}"
+TEI_OUT="${JOB_OUT}/${JOB_NAME}.tei.xml"
+DIGITAL_PDF_OUT="${JOB_OUT}/${JOB_NAME}.digital.pdf"
+TYPESET_PDF_OUT="${JOB_OUT}/${JOB_NAME}.typeset_edition.pdf"
+EPUB_OUT="${JOB_OUT}/${JOB_NAME}.epub"
+PERFECT_SANDWICH_OUT="${JOB_OUT}/${JOB_NAME}.perfect_sandwich.pdf"
+mkdir -p "$BOOK_DIR"
 
 if [[ -f "$CONSOLIDATE" ]]; then
   log "consolidate book -> $BOOK_DIR"
   set +e
-  python3 "$CONSOLIDATE" --job "$JOB_NAME" --input-dir "$QC_DIR" --markdown-dir "$MD_DIR" --output-dir "$BOOK_DIR" --lang "$LANG_OCR"
+  python3 "$CONSOLIDATE" --job "$JOB_NAME" --input-dir "$QC_DIR" --markdown-dir "$MD_DIR" --output-dir "$BOOK_DIR" --lang "$LANG_OCR" ${JOB_CONFIG:+-c "$JOB_CONFIG"}
   con_rc=$?
   set -e
   if [[ "$con_rc" -ne 0 ]]; then
@@ -311,7 +351,7 @@ fi
 
 # Post-Assembly Textlayer-Korrektur: Automatic Mistral Token Alignment into Sandwich PDF (.aligned.pdf)
 ALIGN_SCRIPT="${SCRIPT_DIR}/align_mistral_pdf.py"
-ALIGNED_PDF="${OUT_DIR}/pdf/${JOB_NAME}.aligned.pdf"
+ALIGNED_PDF="${JOB_OUT}/${JOB_NAME}.aligned.pdf"
 if [[ -f "$ALIGN_SCRIPT" && -n "$PDF_OUT" && -f "$PDF_OUT" ]]; then
   log "align mistral text with sandwich pdf -> $ALIGNED_PDF"
   set +e
@@ -336,7 +376,7 @@ fi
 
 # Build Publication-Grade Perfect Sandwich PDF (Leveling, Unsharp, Thumb/Border mask)
 PERFECT_SANDWICH_SCRIPT="${SCRIPT_DIR}/build_perfect_sandwich.py"
-PERFECT_SANDWICH_OUT="${OUT_DIR}/pdf/${JOB_NAME}.perfect_sandwich.pdf"
+PERFECT_SANDWICH_OUT="${JOB_OUT}/${JOB_NAME}.perfect_sandwich.pdf"
 BASE_SANDWICH_SOURCE="${ALIGNED_PDF:-$PDF_OUT}"
 if [[ -f "$PERFECT_SANDWICH_SCRIPT" && -n "$BASE_SANDWICH_SOURCE" && -f "$BASE_SANDWICH_SOURCE" ]]; then
   log "build perfect sandwich pdf -> $PERFECT_SANDWICH_OUT"
@@ -361,9 +401,11 @@ fi
 INJECT_TOC="${SCRIPT_DIR}/inject_toc.py"
 TOC_FILE=""
 for cand in \
-  "${INPUT_DIR}/toc.json" \
+  "${JOB_INPUT}/toc.json" \
+  "${JOB_INPUT}/${JOB_NAME}.toc.json" \
   "${INPUT_DIR}/${JOB_NAME}.toc.json" \
-  "$(dirname "$INPUT_DIR")/${JOB_NAME}.toc.json" \
+  "${INPUT_DIR}/toc.json" \
+  "${JOB_OUT}/toc.json" \
   "${QC_DIR}/toc.json" \
   "${BOOK_DIR}/toc.json"; do
   if [[ -f "$cand" ]]; then
@@ -392,6 +434,7 @@ MISTRAL_N="$MISTRAL_N" TOTAL="${#PAGES[@]}" PAGES_JSONL="$PAGES_JSONL" \
 PDF_OUT="${PDF_OUT:-}" ALIGNED_PDF="${ALIGNED_PDF:-}" SIDECAR_OUT="${SIDECAR_OUT:-}" \
 PERFECT_SANDWICH_OUT="${PERFECT_SANDWICH_OUT:-}" TYPESET_PDF_OUT="${TYPESET_PDF_OUT:-}" \
 TEI_OUT="${TEI_OUT:-}" DIGITAL_PDF_OUT="${DIGITAL_PDF_OUT:-}" EPUB_OUT="${EPUB_OUT:-}" \
+JOB_OUT="$JOB_OUT" \
 python3 - <<'PY'
 import json, os
 pages = []
@@ -404,6 +447,7 @@ aligned_pdf = os.environ.get("ALIGNED_PDF") or None
 report = {
     "job": os.environ["JOB_NAME"],
     "input": os.environ["INPUT_DIR"],
+    "job_output_dir": os.environ.get("JOB_OUT"),
     "preprocessed": os.environ["PRE_DIR"],
     "threshold": float(os.environ["THRESHOLD"]),
     "lang": os.environ["LANG_OCR"],
@@ -428,6 +472,15 @@ PY
 
 printf '%s\n' "$REPORT" | tee "$LOG_JSON" >/dev/null
 printf '%s\n' "$REPORT"
+
+# Build comprehensive closing report (<job>.report.md)
+GENERATE_REPORT="${SCRIPT_DIR}/generate_job_report.py"
+if [[ -f "$GENERATE_REPORT" ]]; then
+  log "generate closing audit report -> ${JOB_OUT}/${JOB_NAME}.report.md"
+  set +e
+  python3 "$GENERATE_REPORT" --job "$JOB_NAME" --data-dir "$(dirname "$OUT_DIR")" --output-dir "$JOB_OUT" ${JOB_CONFIG:+-c "$JOB_CONFIG"}
+  set -e
+fi
 
 if [[ "$DO_PUSH" -eq 1 && -f "$SYNC" ]]; then
   log "push processing+output to NAS"

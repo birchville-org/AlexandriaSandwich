@@ -46,14 +46,33 @@ def build_tei_tree(book_data: Dict[str, Any]) -> ET.Element:
     t.text = title_text
     a = ET.SubElement(title_stmt, f"{{{TEI_NS}}}author")
     a.text = author_text
+    if meta.get("editor"):
+        ed = ET.SubElement(title_stmt, f"{{{TEI_NS}}}editor")
+        ed.text = str(meta["editor"])
 
     pub_stmt = ET.SubElement(file_desc, f"{{{TEI_NS}}}publicationStmt")
     p_pub = ET.SubElement(pub_stmt, f"{{{TEI_NS}}}p")
     p_pub.text = f"Digitized and structured via AlexandriaSandwich pipeline on {gen_date}."
 
     source_desc = ET.SubElement(file_desc, f"{{{TEI_NS}}}sourceDesc")
-    p_src = ET.SubElement(source_desc, f"{{{TEI_NS}}}p")
-    p_src.text = f"Source scan facsimiles for job: {job_name} ({meta.get('page_count', 0)} pages)."
+    if meta.get("publisher") or meta.get("year") or meta.get("editor"):
+        bibl = ET.SubElement(source_desc, f"{{{TEI_NS}}}bibl")
+        b_author = ET.SubElement(bibl, f"{{{TEI_NS}}}author")
+        b_author.text = author_text
+        b_title = ET.SubElement(bibl, f"{{{TEI_NS}}}title")
+        b_title.text = title_text
+        if meta.get("editor"):
+            b_ed = ET.SubElement(bibl, f"{{{TEI_NS}}}editor")
+            b_ed.text = str(meta["editor"])
+        if meta.get("publisher"):
+            b_pub = ET.SubElement(bibl, f"{{{TEI_NS}}}publisher")
+            b_pub.text = str(meta["publisher"])
+        if meta.get("year"):
+            b_date = ET.SubElement(bibl, f"{{{TEI_NS}}}date")
+            b_date.text = str(meta["year"])
+    else:
+        p_src = ET.SubElement(source_desc, f"{{{TEI_NS}}}p")
+        p_src.text = f"Source scan facsimiles for job: {job_name} ({meta.get('page_count', 0)} pages)."
 
     profile_desc = ET.SubElement(header, f"{{{TEI_NS}}}profileDesc")
     lang_usage = ET.SubElement(profile_desc, f"{{{TEI_NS}}}langUsage")
@@ -146,8 +165,9 @@ def main():
     if not data_dir.exists() and Path("data").exists():
         data_dir = Path("data").resolve()
 
-    input_file = Path(args.input) if args.input else data_dir / "output" / "books" / args.job / "book.json"
-    output_file = Path(args.output) if args.output else data_dir / "output" / "tei" / f"{args.job}.tei.xml"
+    cand_input = data_dir / "output" / args.job / "book.json"
+    input_file = Path(args.input) if args.input else (cand_input if cand_input.exists() else data_dir / "output" / "books" / args.job / "book.json")
+    output_file = Path(args.output) if args.output else data_dir / "output" / args.job / f"{args.job}.tei.xml"
 
     export_tei(
         job_name=args.job,

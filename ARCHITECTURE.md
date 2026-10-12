@@ -88,3 +88,49 @@ Für reproduzierbare, fehlerfreie Vektor-Kompilierung auf Headless-Linux-Servern
   * [Pāṇinis Grammatik (Otto von Böhtlingk 1887)](docs/de/case-study.md)
   * [Dhātu-Pāṭha nach dem Böhtlingk-Standard](docs/de/case-study-dhatupatha.md)
   * [Bṛhadāraṇyaka-Upaniṣad I.4](docs/de/case-study-bau.md)
+
+---
+
+## 5. Das Prinzip der Evolutionären Maschinerie (Engine vs. Payload)
+
+AlexandriaSandwich folgt dem Paradigma einer **universellen, lernenden Pipeline-Engine**:
+Skripte werden **niemals pro Job isoliert oder geforkt**. Jedes neue Dokument dient als Härtungstest für die zentrale Maschinerie in `scripts/`.
+
+### 5.1 Strikte Trennung von Maschinerie und Nutzlast
+1. **Zentrale Engine (`scripts/`):** Vollständig zustandslose, modulare Verarbeitungsstufen (Preprocessing, Quality Gate, OCR-Fallback, Sandwich-Assembly, Alignment, Vektor-Neusatz, TEI/EPUB-Export).
+2. **Deklarative I/O-Behälter (`data/`):**
+   * `/data/input/<job>/`: Eingehende Rohscans und optionale Profilkonfiguration (`job.config.json`).
+   * `/data/processing/`: Temporärer Scratch-Cache (Preprocessed PNGs, hOCR, TSV, JSONL).
+   * `/data/output/<job>/`: Alle fertigen Zielartefakte eines Jobs konzentriert an einem Ort.
+
+### 5.2 Merkmalsbasierte Heuristiken (Feature Detection statt Job-Branching)
+Um "Overfitting" und Spaghetti-Code zu verhindern, sind Verzweigungen nach konkreten Job-Namen (`if job == "xyz"`) im Code verboten. Problemlösungen müssen als **Merkmalserkennung** modelliert werden:
+* **Spaltentrennung:** Erkennung über geometrische Projektionsprofile statt hartcodierter Bounding-Boxes.
+* **Schriftsysteme:** Automatische Skript-Erkennung (Devanagari vs. Latein/IAST) via Unicode-Blockverteilung und Tesseract OSD.
+* **Satzspiegel & Apparate:** Erkennung von Fußnotenblöcken und kritischen Apparaten über relative Zeilenabstände und Schriftgradstufen.
+
+### 5.3 Deklarative Job-Profile (`job.config.json`)
+Spezifische Randbedingungen eines Buchs (z. B. Sprachkombination `deu+san`, Konfidenz-Schwellenwert, Bindebreite für den Gutter-Crop) werden deklarativ im Eingangsverzeichnis hinterlegt:
+
+```json
+{
+  "lang": "san+deu",
+  "threshold": 90,
+  "use_mistral": true,
+  "use_unpaper": true,
+  "template": "dictionary_two_column",
+  "toc_offset": 14
+}
+```
+Die Pipeline liest diese Parameter beim Start ein, bleibt im Programmcode jedoch 100 % generisch.
+
+### 5.4 Das Regressions-Gate (Golden-Master-Prinzip)
+Wird die Pipeline zur Bewältigung eines neuen Dokuments verfeinert, muss die bestehende Qualität etablierter Referenzjobs (`alex_smoke`, `stenzler_10p`, `katha_06`) unverändert bestehen bleiben. Automatische Testläufe (`scripts/test_golden_regression.sh`) sichern die Engine gegen funktionale Regressionen ab.
+
+### 5.5 Der Standardisierte Abschlussbericht (`<job>.report.md`)
+Am Ende jedes Pipeline-Durchlaufs generiert die Engine automatisch einen strukturierten, wissenschaftlichen Abschlussbericht (`data/output/<job>/<job>.report.md`). Dieser enthält:
+1. **Executive Summary & Qualitätsurteil:** Gesamtmetriken, Schwellenwert-Quote, philologische Einstufung (Kategorie A/B/C).
+2. **Bibliographische & Technische Stammdaten:** Titel, Autor, Editor, Jahr, Sprache, Layout-Heuristiken.
+3. **Chronologische Kommentierung der Einzelschritte:** Detaillierte Würdigung aller 8 Stufen (Ingress bis EPUB 3/TOC).
+4. **Per-Page Qualitätsanalyse:** Zeichenkonfidenz-Statistik, Schwellenwert-Entscheidungen, Ausreißerseiten mit Handlungsempfehlungen.
+5. **Artefakt-Inventar:** Tabelle aller im Job-Verzeichnis erzeugten Dateien mit Größe, Format und Verwendungszweck.

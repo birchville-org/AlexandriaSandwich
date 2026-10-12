@@ -1,13 +1,18 @@
 status: complete
-milestone: 3
-milestone_name: "Multi-Format Digital Outputs: TEI-P5 & Clean Text PDF (M3)"
-completed_phases: 5
-completed_plans: 17
-total_plans: 17
+milestone: 4
+milestone_name: "Evolutionäre Engine-Härtung & Job-Zentriertes Layout (M4)"
+completed_phases: 6
+completed_plans: 20
+total_plans: 20
 percent: 100.0
-current_focus: "Milestone 3 Complete — All 3 Target Artifacts operational"
-last_updated: "2026-09-26"
+current_focus: "Milestone 4 abgeschlossen; Bereit für Backlog / nächste Buchkorpora"
+last_updated: "2026-10-12"
 recent_activity:
+  - "2026-10-12 | COMPLETE | Plan 06-03: Automatisierte Golden-Master-Regressionssuite (scripts/test_golden_regression.sh)"
+  - "2026-10-12 | COMPLETE | Plan 06-02: Deklarative Dokument-Profile (job.config.json & schemas/job.config.schema.json)"
+  - "2026-10-12 | COMPLETE | Plan 06-01: Pipeline, Tools & UI auf job-zentriertes Layout (data/output/<job>/) umgestellt"
+  - "2026-10-12 | COMPLETE | Bestandsdatenbereinigung in data/input/<job>/ und data/output/<job>/"
+  - "2026-10-12 | ARCHITECTURE | Architekturprinzip der Evolutionären Maschinerie in ARCHITECTURE.md verankert"
   - "2026-09-26 | COMPLETE | Plan 05-04 Web UI & Pipeline Automation Integration tested & verified"
   - "2026-09-26 | COMPLETE | Plan 05-03 Typst Typesetting Engine (scripts/render_digital_pdf.py & templates/book.typ) tested & verified"
   - "2026-09-26 | COMPLETE | Plan 05-02 Generic TEI-P5 XML Exporter (scripts/export_tei.py) tested & verified"
@@ -38,6 +43,10 @@ recent_activity:
   - Plan 05-02: Generischer TEI-P5 XML Exporter (`scripts/export_tei.py`) — DONE
   - Plan 05-03: Typst Typesetting Engine & CLI-Renderer (`scripts/render_digital_pdf.py`) — DONE
   - Plan 05-04: Web UI Integration & End-to-End Pipeline — DONE
+- **M4 (Evolutionary Engine & Job-Centric Layout):** 3/3 plans — DONE
+  - Plan 06-01: Pipeline & UI auf job-zentriertes Layout (`data/output/<job>/`) umstellen — DONE
+  - Plan 06-02: Deklarative Dokument-Profile (`job.config.json`) — DONE
+  - Plan 06-03: Golden-Master Regressions-Gate (`test_golden_regression.sh`) — DONE
 
 ## Next (Backlog)
 - 999.1: Graphify integration

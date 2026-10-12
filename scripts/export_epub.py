@@ -468,15 +468,18 @@ def build_epub_package(
         manifest_str = "\n".join(manifest_entries)
         spine_str = "\n".join([f'    <itemref idref="{sid}"/>' for sid in spine_items])
 
+        publisher_str = html.escape(str(meta.get("publisher", "AlexandriaSandwich")))
+        editor_meta = f"\n    <dc:contributor>{html.escape(str(meta['editor']))}</dc:contributor>" if meta.get("editor") else ""
+
         opf_code = f"""<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="pub-id" xml:lang="{primary_lang}">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:identifier id="pub-id">{book_id}</dc:identifier>
     <dc:title>{html.escape(title)}</dc:title>
-    <dc:creator>{html.escape(author)}</dc:creator>
+    <dc:creator>{html.escape(author)}</dc:creator>{editor_meta}
     <dc:language>{primary_lang}</dc:language>
     <dc:date>{date_str}</dc:date>
-    <dc:publisher>AlexandriaSandwich</dc:publisher>
+    <dc:publisher>{publisher_str}</dc:publisher>
     <meta property="dcterms:modified">{datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}</meta>
   </metadata>
   <manifest>
@@ -529,8 +532,9 @@ def main():
     if not data_dir.exists() and Path("data").exists():
         data_dir = Path("data").resolve()
 
-    input_file = Path(args.input) if args.input else data_dir / "output" / "books" / args.job / "book.json"
-    output_file = Path(args.output) if args.output else data_dir / "output" / "books" / args.job / f"{args.job}.epub"
+    cand_input = data_dir / "output" / args.job / "book.json"
+    input_file = Path(args.input) if args.input else (cand_input if cand_input.exists() else data_dir / "output" / "books" / args.job / "book.json")
+    output_file = Path(args.output) if args.output else data_dir / "output" / args.job / f"{args.job}.epub"
 
     if not input_file.exists():
         log(f"Input file not found: {input_file}")

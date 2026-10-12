@@ -14,8 +14,9 @@ def get_job_progress(job):
     in_dir = INPUT_DIR / job
     pre_dir = PROC_DIR / 'preprocessed' / job
     qc_dir = PROC_DIR / 'quality' / job
-    md_dir = OUT_DIR / 'markdown' / job
-    rep_file = REPORTS_DIR / f"{job}.pipeline.json"
+    job_out = OUT_DIR / job
+    rep_file = (job_out / f"{job}.pipeline.json") if (job_out / f"{job}.pipeline.json").exists() else (REPORTS_DIR / f"{job}.pipeline.json")
+    md_dir = (job_out / "markdown") if (job_out / "markdown").is_dir() else (OUT_DIR / "markdown" / job)
     
     rep_data = {}
     if rep_file.exists():
@@ -28,13 +29,18 @@ def get_job_progress(job):
     pre_files = list(pre_dir.glob('*.png')) if pre_dir.is_dir() else []
     qc_files = list(qc_dir.glob('*.quality.json')) if qc_dir.is_dir() else []
     md_files = list(md_dir.glob('*.md')) if md_dir.is_dir() else []
-    sandwich_pdf = PDF_DIR / f"{job}.sandwich.pdf"
-    digital_pdf = PDF_DIR / f"{job}.digital.pdf"
-    aligned_pdf = PDF_DIR / f"{job}.aligned.pdf"
-    if not aligned_pdf.exists():
-        aligned_pdf = PDF_DIR / f"{job}.pathb.pdf"
-    tei_file = TEI_DIR / f"{job}.tei.xml"
-    epub_file = BOOKS_DIR / job / f"{job}.epub"
+    
+    sandwich_pdf = (job_out / f"{job}.sandwich.pdf") if (job_out / f"{job}.sandwich.pdf").exists() else (PDF_DIR / f"{job}.sandwich.pdf")
+    digital_pdf = (job_out / f"{job}.digital.pdf") if (job_out / f"{job}.digital.pdf").exists() else (PDF_DIR / f"{job}.digital.pdf")
+    aligned_pdf = (job_out / f"{job}.aligned.pdf") if (job_out / f"{job}.aligned.pdf").exists() else (
+        (job_out / f"{job}.pathb.pdf") if (job_out / f"{job}.pathb.pdf").exists() else (
+            (PDF_DIR / f"{job}.aligned.pdf") if (PDF_DIR / f"{job}.aligned.pdf").exists() else (PDF_DIR / f"{job}.pathb.pdf")
+        )
+    )
+    tei_file = (job_out / f"{job}.tei.xml") if (job_out / f"{job}.tei.xml").exists() else (TEI_DIR / f"{job}.tei.xml")
+    epub_file = (job_out / f"{job}.epub") if (job_out / f"{job}.epub").exists() else (
+        (BOOKS_DIR / job / f"{job}.epub") if (BOOKS_DIR / job / f"{job}.epub").exists() else (OUT_DIR / "books" / f"{job}.epub")
+    )
     
     pages_total = rep_data.get('pages_total') or len(in_files) or len(pre_files) or 1
     mistral_ok = rep_data.get('mistral_ok', len(md_files))
@@ -179,8 +185,45 @@ def get_job_progress(job):
     }
 
 if __name__ == '__main__':
-    for j in ['Test2026-10-07', 'katha_06', 'stenzler_10p']:
-        res = get_job_progress(j)
-        print(f"=== {j}: {res['overall_progress']}% | {res['current_stage']} | Total: {res['estimated_total_str']} ===")
-        for s in res['stages']:
-            print(f"  [{s['id']}] {s['name']}: {s['status']} ({s['duration_str']}) -> {s['info']}")
+    import argparse, sys
+    parser = argparse.ArgumentParser(description="Query AlexandriaSandwich job progress and pipeline stage metrics")
+    parser.add_argument("--job", "-j", help="Specific job name to inspect")
+    parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+    parser.add_argument("--data-dir", "-d", help="Custom data directory")
+
+    args = parser.parse_args()
+
+    if args.data_dir:
+        DATA_DIR = Path(args.data_dir)
+        INPUT_DIR = DATA_DIR / 'input'
+        PROC_DIR = DATA_DIR / 'processing'
+        OUT_DIR = DATA_DIR / 'output'
+
+    if args.job:
+        target_jobs = [args.job]
+    else:
+        # Discover existing jobs in output or input
+        found = set()
+        if OUT_DIR.is_dir():
+            for p in OUT_DIR.iterdir():
+                if p.is_dir() and not p.name.startswith('.'):
+                    found.add(p.name)
+        if INPUT_DIR.is_dir():
+            for p in INPUT_DIR.iterdir():
+                if p.is_dir() and not p.name.startswith('.'):
+                    found.add(p.name)
+        target_jobs = sorted(found) if found else ['Test2026-10-07', 'katha_06', 'stenzler_10p']
+
+    if args.json:
+        if args.job:
+            res = get_job_progress(args.job)
+            print(json.dumps(res, indent=2, ensure_ascii=False))
+        else:
+            all_res = {j: get_job_progress(j) for j in target_jobs}
+            print(json.dumps(all_res, indent=2, ensure_ascii=False))
+    else:
+        for j in target_jobs:
+            res = get_job_progress(j)
+            print(f"=== {j}: {res['overall_progress']}% | {res['current_stage']} | Total: {res['estimated_total_str']} ===")
+            for s in res['stages']:
+                print(f"  [{s['id']}] {s['name']}: {s['status']} ({s['duration_str']}) -> {s['info']}")

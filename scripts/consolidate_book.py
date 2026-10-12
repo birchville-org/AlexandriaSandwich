@@ -172,6 +172,34 @@ def clean_page_artifacts(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return pages
 
 
+def load_job_config(
+    job_name: str,
+    config_path: Optional[Path] = None,
+    data_dir: Optional[Path] = None,
+    input_dir: Optional[Path] = None
+) -> Dict[str, Any]:
+    """Search for and load job.config.json if available."""
+    candidates = []
+    if config_path:
+        candidates.append(config_path)
+    if input_dir:
+        candidates.append(input_dir / "job.config.json")
+    if data_dir:
+        candidates.append(data_dir / "input" / job_name / "job.config.json")
+        candidates.append(data_dir / "output" / job_name / "job.config.json")
+
+    for cand in candidates:
+        if cand and cand.is_file():
+            try:
+                with open(cand, "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+                log(f"Loaded job profile from: {cand}")
+                return cfg
+            except Exception as e:
+                log(f"Warning: could not parse job profile {cand}: {e}")
+    return {}
+
+
 def consolidate_job(
     job_name: str,
     input_dir: Path,
@@ -179,12 +207,21 @@ def consolidate_job(
     markdown_dir: Optional[Path] = None,
     title: Optional[str] = None,
     author: Optional[str] = None,
-    language: str = "deu+eng"
+    language: str = "deu+eng",
+    config_path: Optional[Path] = None,
+    data_dir: Optional[Path] = None
 ) -> Dict[str, Any]:
     """Consolidate OCR files into book.json and book.md."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    doc_title = title or job_name.replace("_", " ").title()
-    doc_author = author or "Alexandria Archive"
+
+    job_cfg = load_job_config(job_name, config_path=config_path, data_dir=data_dir, input_dir=input_dir)
+
+    doc_title = title or job_cfg.get("title") or job_name.replace("_", " ").title()
+    doc_author = author or job_cfg.get("author") or "Alexandria Archive"
+    if language == "deu+eng" and "lang" in job_cfg:
+        language = job_cfg["lang"]
+
+    heuristics = job_cfg.get("heuristics", {})
 
     # 1. Discover all page stems
     stems = set()
@@ -258,17 +295,24 @@ def consolidate_job(
     # 2. Filter artifacts (running headers/footers)
     pages_data = clean_page_artifacts(pages_data)
 
-    # 3. Build book structure
+    # 3. Build book structure with declarative profile metadata
+    meta_dict: Dict[str, Any] = {
+        "job": job_name,
+        "title": doc_title,
+        "author": doc_author,
+        "language": language,
+        "page_count": len(pages_data),
+        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "pipeline": "AlexandriaSandwich"
+    }
+    for field in ("editor", "year", "publisher"):
+        if field in job_cfg:
+            meta_dict[field] = job_cfg[field]
+    if heuristics:
+        meta_dict["heuristics"] = heuristics
+
     book_data = {
-        "metadata": {
-            "job": job_name,
-            "title": doc_title,
-            "author": doc_author,
-            "language": language,
-            "page_count": len(pages_data),
-            "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "pipeline": "AlexandriaSandwich"
-        },
+        "metadata": meta_dict,
         "pages": pages_data
     }
 
@@ -284,6 +328,10 @@ def consolidate_job(
         f.write("---\n")
         f.write(f"title: \"{doc_title}\"\n")
         f.write(f"author: \"{doc_author}\"\n")
+        if "editor" in meta_dict:
+            f.write(f"editor: \"{meta_dict['editor']}\"\n")
+        if "year" in meta_dict:
+            f.write(f"year: {meta_dict['year']}\n")
         f.write(f"job: \"{job_name}\"\n")
         f.write(f"language: \"{language}\"\n")
         f.write(f"pages: {len(pages_data)}\n")
@@ -316,7 +364,8 @@ def main():
     parser.add_argument("--job", "-j", required=True, help="Job name (e.g. e2e_m1)")
     parser.add_argument("--input-dir", "-i", help="Directory containing OCR page files (default: /data/processing/quality/<job>)")
     parser.add_argument("--markdown-dir", "-m", help="Directory containing Mistral markdown files (default: /data/output/markdown/<job>)")
-    parser.add_argument("--output-dir", "-o", help="Output directory (default: /data/output/books/<job>)")
+    parser.add_argument("--output-dir", "-o", help="Output directory (default: /data/output/<job>)")
+    parser.add_argument("--config", "-c", help="Path to job.config.json declarative profile")
     parser.add_argument("--title", help="Book title")
     parser.add_argument("--author", help="Book author")
     parser.add_argument("--lang", default="deu+eng", help="Document language")
@@ -335,13 +384,17 @@ def main():
     if args.markdown_dir:
         markdown_dir = Path(args.markdown_dir)
     else:
-        cand_md = data_dir / "output" / "markdown" / args.job
+        cand_md = data_dir / "output" / args.job / "markdown"
+        if not cand_md.is_dir():
+            cand_md = data_dir / "output" / "markdown" / args.job
         markdown_dir = cand_md if cand_md.is_dir() else None
 
     if args.output_dir:
         output_dir = Path(args.output_dir)
     else:
-        output_dir = data_dir / "output" / "books" / args.job
+        output_dir = data_dir / "output" / args.job
+
+    config_path = Path(args.config) if args.config else None
 
     consolidate_job(
         job_name=args.job,
@@ -350,7 +403,9 @@ def main():
         markdown_dir=markdown_dir,
         title=args.title,
         author=args.author,
-        language=args.lang
+        language=args.lang,
+        config_path=config_path,
+        data_dir=data_dir
     )
 
 

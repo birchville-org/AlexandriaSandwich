@@ -33,7 +33,6 @@ PDF_DIR = OUT_DIR / "pdf"
 TEI_DIR = OUT_DIR / "tei"
 BOOKS_DIR = OUT_DIR / "books"
 RUNS_DIR = OUT_DIR / "runs"
-RUNS_DIR.mkdir(parents=True, exist_ok=True)
 TOC_STUDIO_DIR = PROC_DIR / "toc_studio"
 TOC_STUDIO_DIR.mkdir(parents=True, exist_ok=True)
 VALID_IMG_EXTS = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".pnm", ".ppm"}
@@ -72,10 +71,10 @@ CHUNK_SIZE = 1024 * 1024  # 1 MB
 
 def _validate_job(job: str) -> str:
     """Validiert den Job-Namen gegen Path-Traversal und illegale Zeichen."""
-    if not job or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", job):
+    if not job or not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", job) or ".." in job:
         raise HTTPException(
             status_code=400,
-            detail="Ungültiger Job-Name (erlaubt: A-Z, a-z, 0-9, _, -; 1-64 Zeichen)",
+            detail="Ungültiger Job-Name (erlaubt: A-Z, a-z, 0-9, _, -, .; 1-64 Zeichen)",
         )
     return job
 
@@ -139,7 +138,7 @@ def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
         run_id = _validate_run_id(run_id)
     items = []
     if run_id:
-        target_dir = RUNS_DIR / job / run_id
+        target_dir = (OUT_DIR / job / "runs" / run_id) if (OUT_DIR / job / "runs" / run_id).is_dir() else (RUNS_DIR / job / run_id)
         if target_dir.is_dir():
             for p in sorted(target_dir.iterdir()):
                 if p.is_file() and p.name != "meta.json":
@@ -189,8 +188,23 @@ def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
                         "browse_url": f"/jobs/{job}/runs/{run_id}/browse/{p.name}",
                     })
     else:
-        # Aktueller Lauf
+        # Aktueller Lauf: Suche zuerst im job-zentrierten Verzeichnis (data/output/<job>/)
+        job_dir = OUT_DIR / job
         candidates = [
+            # Job-zentriertes Layout (Standard)
+            (job_dir / f"{job}.report.md", "reports", "Abschlussbericht & Qualitätsaudit", "Detaillierte Analyse aller Stufen und Qualitätsmetriken"),
+            (job_dir / f"{job}.perfect_sandwich.pdf", "pdf", "Restauriertes Perfect-Sandwich-PDF", "Binarisiertes Faksimile (98% #FFFFFF) mit unsichtbarer Vektor-Textebene"),
+            (job_dir / f"{job}.typeset_edition.pdf", "pdf", "Typografische Vektor-Neuedition", "Freilaufender zweispaltiger Typst-Neusatz (Boethlingk-Architektur)"),
+            (job_dir / f"{job}.sandwich.pdf", "pdf", "1:1 Sandwich-PDF", "Originalscan + native OCR-Textebene"),
+            (job_dir / f"{job}.aligned.pdf" if (job_dir / f"{job}.aligned.pdf").exists() else job_dir / f"{job}.pathb.pdf", "pdf", "KI-synchronisiertes Faksimile", "Post-Assembly KI-Textlayer-Synchronisation (.aligned.pdf)"),
+            (job_dir / f"{job}.digital.pdf", "pdf", "Digitales Scan-Klon-PDF", "Moderner Typst Vektorsatz"),
+            (job_dir / f"{job}.tei.xml", "tei", "Generisches TEI-P5 XML", "Bibliotheksstandard zur Langzeitarchivierung"),
+            (job_dir / f"{job}.epub", "books", "Reflowable EPUB 3 E-Book", "Mobilgeräte & E-Reader mit eingebetteten Schriften"),
+            (job_dir / "book.json", "books", "Hierarchischer AST (book.json)", "Single Source of Truth mit Bounding Boxes"),
+            (job_dir / "book.md", "books", "Konsolidiertes Markdown (book.md)", "Bereinigter UTF-8 Fließtext"),
+            (job_dir / f"{job}.sidecar.txt", "pdf", "OCR-Textstrom (Sidecar)", "Unformatierter Volltext"),
+            (job_dir / f"{job}.pipeline.json", "reports", "Pipeline-Auditbericht", "Qualitätsmetriken & Kostenaufstellung"),
+            # Legacy-Pfade als Fallback
             (PDF_DIR / f"{job}.perfect_sandwich.pdf", "pdf", "Restauriertes Perfect-Sandwich-PDF", "Binarisiertes Faksimile (98% #FFFFFF) mit unsichtbarer Vektor-Textebene"),
             (PDF_DIR / f"{job}.typeset_edition.pdf", "pdf", "Typografische Vektor-Neuedition", "Freilaufender zweispaltiger Typst-Neusatz (Boethlingk-Architektur)"),
             (PDF_DIR / f"{job}.sandwich.pdf", "pdf", "1:1 Sandwich-PDF", "Originalscan + native OCR-Textebene"),
@@ -204,8 +218,8 @@ def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
             (REPORTS_DIR / f"{job}.pipeline.json", "reports", "Pipeline-Auditbericht", "Qualitätsmetriken & Kostenaufstellung"),
         ]
         # Fallback EPUB Check
-        if not (BOOKS_DIR / job / f"{job}.epub").exists() and (OUT_DIR / "books" / f"{job}.epub").exists():
-            candidates[4] = (OUT_DIR / "books" / f"{job}.epub", "books", "Reflowable EPUB 3 E-Book", "Mobilgeräte & E-Reader mit eingebetteten Schriften")
+        if not (job_dir / f"{job}.epub").exists() and not (BOOKS_DIR / job / f"{job}.epub").exists() and (OUT_DIR / "books" / f"{job}.epub").exists():
+            candidates.append(((OUT_DIR / "books" / f"{job}.epub"), "books", "Reflowable EPUB 3 E-Book", "Mobilgeräte & E-Reader mit eingebetteten Schriften"))
 
         for path, kind, title, desc in candidates:
             if path.exists() and path.stat().st_size > 0:
@@ -222,6 +236,27 @@ def _get_job_artifacts(job: str, run_id: str | None = None) -> dict[str, Any]:
                     "download_url": f"/download/{kind}/{job}/{path.name}",
                     "browse_url": f"/browse/{kind}/{job}/{path.name}",
                 })
+
+        # Erfasse weitere Dateien direkt im Job-Verzeichnis (z. B. HTML, Typst, zusätzliche PDFs)
+        seen_paths = set(Path(it["path"]).resolve() for it in items)
+        if job_dir.is_dir():
+            for p in sorted(job_dir.iterdir()):
+                if p.is_file() and not p.name.startswith(".") and p.resolve() not in seen_paths and p.stat().st_size > 0:
+                    ext = p.suffix.lower()
+                    kind = "pdf" if ext == ".pdf" else ("tei" if ".tei" in p.name else ("books" if ext in {".epub", ".json", ".md", ".html", ".typ"} else "reports"))
+                    size_kb = round(p.stat().st_size / 1024, 1)
+                    items.append({
+                        "name": p.name,
+                        "title": p.name,
+                        "desc": "Zusätzliches Job-Artefakt",
+                        "path": str(p),
+                        "size_kb": size_kb,
+                        "size_mb": round(size_kb / 1024, 2),
+                        "ext": ext,
+                        "kind": kind,
+                        "download_url": f"/download/{kind}/{job}/{p.name}",
+                        "browse_url": f"/browse/{kind}/{job}/{p.name}",
+                    })
 
     total_kb = sum(it["size_kb"] for it in items)
     total_mb = round(total_kb / 1024, 2)
@@ -249,7 +284,7 @@ def _archive_current_run(job: str, note: str = "") -> str | None:
 
     now = datetime.now()
     run_id = f"run_{now.strftime('%Y%m%d_%H%M%S')}"
-    run_dir = RUNS_DIR / job / run_id
+    run_dir = (OUT_DIR / job / "runs" / run_id) if (OUT_DIR / job).is_dir() else (RUNS_DIR / job / run_id)
     run_dir.mkdir(parents=True, exist_ok=True)
 
     copied = []
@@ -268,7 +303,7 @@ def _archive_current_run(job: str, note: str = "") -> str | None:
         except Exception as e:
             logging.warning(f"Could not copy {src} to {dst}: {e}")
 
-    rep_file = REPORTS_DIR / f"{job}.pipeline.json"
+    rep_file = (OUT_DIR / job / f"{job}.pipeline.json") if (OUT_DIR / job / f"{job}.pipeline.json").exists() else (REPORTS_DIR / f"{job}.pipeline.json")
     rep_data = {}
     if rep_file.exists():
         try:
@@ -304,42 +339,46 @@ def _list_job_runs(job: str) -> list[dict[str, Any]]:
     """Listet alle archivierten Vorläufe eines Jobs chronologisch sortiert auf (neueste zuerst)."""
     job = _validate_job(job)
     runs = []
-    job_runs_dir = RUNS_DIR / job
-    if not job_runs_dir.is_dir():
-        return []
+    seen = set()
+    search_dirs = [OUT_DIR / job / "runs", RUNS_DIR / job]
 
-    for d in sorted(job_runs_dir.iterdir(), reverse=True):
-        if d.is_dir() and d.name.startswith("run_"):
-            meta_file = d / "meta.json"
-            meta = {}
-            if meta_file.exists():
-                try:
-                    meta = json.loads(meta_file.read_text())
-                except Exception:
-                    pass
+    for jrd in search_dirs:
+        if not jrd.is_dir():
+            continue
+        for d in sorted(jrd.iterdir(), reverse=True):
+            if d.is_dir() and d.name.startswith("run_") and d.name not in seen:
+                seen.add(d.name)
+                meta_file = d / "meta.json"
+                meta = {}
+                if meta_file.exists():
+                    try:
+                        meta = json.loads(meta_file.read_text())
+                    except Exception:
+                        pass
 
-            artifacts_info = _get_job_artifacts(job, run_id=d.name)
-            run_entry = {
-                "run_id": d.name,
-                "job": job,
-                "archived_at": meta.get("archived_at", datetime.fromtimestamp(d.stat().st_mtime).isoformat()),
-                "archived_str": meta.get("archived_str", datetime.fromtimestamp(d.stat().st_mtime).strftime("%d.%m.%Y, %H:%M:%S")),
-                "note": meta.get("note", "Archivierter Vorlauf"),
-                "status": meta.get("status", "PASS"),
-                "threshold": meta.get("threshold", 100),
-                "lang": meta.get("lang", "deu+eng"),
-                "pages_total": meta.get("pages_total", artifacts_info["count"]),
-                "pass": meta.get("pass", 0),
-                "fail": meta.get("fail", 0),
-                "mistral_ok": meta.get("mistral_ok", 0),
-                "mistral_cost_usd": meta.get("mistral_cost_usd", 0.0),
-                "artifacts": artifacts_info["items"],
-                "artifacts_count": artifacts_info["count"],
-                "total_size_mb": artifacts_info["total_size_mb"],
-                "zip_download_url": artifacts_info["zip_download_url"],
-            }
-            runs.append(run_entry)
+                artifacts_info = _get_job_artifacts(job, run_id=d.name)
+                run_entry = {
+                    "run_id": d.name,
+                    "job": job,
+                    "archived_at": meta.get("archived_at", datetime.fromtimestamp(d.stat().st_mtime).isoformat()),
+                    "archived_str": meta.get("archived_str", datetime.fromtimestamp(d.stat().st_mtime).strftime("%d.%m.%Y, %H:%M:%S")),
+                    "note": meta.get("note", "Archivierter Vorlauf"),
+                    "status": meta.get("status", "PASS"),
+                    "threshold": meta.get("threshold", 100),
+                    "lang": meta.get("lang", "deu+eng"),
+                    "pages_total": meta.get("pages_total", artifacts_info["count"]),
+                    "pass": meta.get("pass", 0),
+                    "fail": meta.get("fail", 0),
+                    "mistral_ok": meta.get("mistral_ok", 0),
+                    "mistral_cost_usd": meta.get("mistral_cost_usd", 0.0),
+                    "artifacts": artifacts_info["items"],
+                    "artifacts_count": artifacts_info["count"],
+                    "total_size_mb": artifacts_info["total_size_mb"],
+                    "zip_download_url": artifacts_info["zip_download_url"],
+                }
+                runs.append(run_entry)
 
+    runs.sort(key=lambda r: r.get("archived_at", ""), reverse=True)
     return runs
 
 
@@ -347,17 +386,18 @@ def _delete_job_run(job: str, run_id: str) -> bool:
     """Löscht einen spezifischen Vorlauf sicher."""
     job = _validate_job(job)
     run_id = _validate_run_id(run_id)
-    job_runs_dir = RUNS_DIR / job
-    run_dir = job_runs_dir / run_id
-    try:
-        resolved = run_dir.resolve()
-        if not resolved.is_relative_to(job_runs_dir.resolve()):
-            raise ValueError("Path traversal blocked")
-        if run_dir.is_dir():
-            shutil.rmtree(run_dir)
-            return True
-    except Exception as e:
-        logging.error(f"Error deleting run {run_id} for job {job}: {e}")
+    candidate_dirs = [OUT_DIR / job / "runs" / run_id, RUNS_DIR / job / run_id]
+    for run_dir in candidate_dirs:
+        try:
+            if run_dir.is_dir():
+                resolved = run_dir.resolve()
+                parent_resolved = run_dir.parent.resolve()
+                if not resolved.is_relative_to(parent_resolved):
+                    raise ValueError("Path traversal blocked")
+                shutil.rmtree(run_dir)
+                return True
+        except Exception as e:
+            logging.error(f"Error deleting run {run_id} for job {job}: {e}")
     return False
 
 
@@ -401,9 +441,9 @@ def _delete_entire_job(job: str) -> bool:
         p.unlink(missing_ok=True)
     for p in REPORTS_DIR.glob(f"{job}.*"):
         p.unlink(missing_ok=True)
-    runs_dir = RUNS_DIR / job
-    if runs_dir.is_dir() and runs_dir.resolve().is_relative_to(RUNS_DIR.resolve()):
-        shutil.rmtree(runs_dir, ignore_errors=True)
+    job_out = OUT_DIR / job
+    if job_out.is_dir() and job_out.resolve().is_relative_to(OUT_DIR.resolve()):
+        shutil.rmtree(job_out, ignore_errors=True)
     return True
 
 
@@ -445,7 +485,7 @@ def _list_jobs():
     jobs = {}
     if INPUT_DIR.is_dir():
         for d in sorted(INPUT_DIR.iterdir()):
-            if d.is_dir():
+            if d.is_dir() and not d.name.startswith("."):
                 jobs.setdefault(d.name, {
                     "name": d.name,
                     "input_pages": len([p for p in d.iterdir() if p.suffix.lower() in VALID_IMG_EXTS]),
@@ -455,12 +495,61 @@ def _list_jobs():
                     "runs_count": 0,
                     "has_artifacts": False
                 })
+
+    # 1. Job-zentrierte Verzeichnisse in data/output/<job>/
+    if OUT_DIR.is_dir():
+        for d in sorted(OUT_DIR.iterdir()):
+            if d.is_dir() and not d.name.startswith(".") and d.name not in {"pdf", "reports", "tei", "books", "markdown", "runs", "images"}:
+                name = d.name
+                entry = jobs.setdefault(name, {
+                    "name": name,
+                    "input_pages": 0,
+                    "status": "-",
+                    "has_report": False,
+                    "has_pdf": False,
+                    "runs_count": 0,
+                    "has_artifacts": False
+                })
+                # Suche nach Pipeline Report im Job-Ordner
+                rep_path = d / f"{name}.pipeline.json"
+                if not rep_path.exists():
+                    reports = list(d.glob("*.pipeline.json"))
+                    if reports:
+                        rep_path = reports[0]
+                if rep_path.exists():
+                    try:
+                        report = json.loads(rep_path.read_text())
+                    except Exception:
+                        report = {}
+                    entry["status"] = "PASS" if report.get("fail", 1) == 0 or report.get("pass", 0) > 0 else "FAIL"
+                    entry["has_report"] = True
+                    entry["pass"] = report.get("pass", 0)
+                    entry["fail"] = report.get("fail", 0)
+                    mistral_pages = report.get("mistral_ok", 0)
+                    entry["mistral_ok"] = mistral_pages
+                    entry["mistral_cost_usd"] = round(mistral_pages * 0.004, 4)
+                    entry["pages_total"] = report.get("pages_total", 0)
+                    entry["threshold"] = report.get("threshold", 0)
+                    entry["lang"] = report.get("lang", "")
+                    entry["modified"] = datetime.fromtimestamp(rep_path.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+
+                # Prüfe auf PDFs im Job-Ordner
+                if any(p.suffix.lower() == ".pdf" for p in d.iterdir() if p.is_file()):
+                    entry["has_pdf"] = True
+                # Prüfe auf TEI-XML im Job-Ordner
+                if (d / f"{name}.tei.xml").exists() or any(".tei" in p.name for p in d.iterdir() if p.is_file()):
+                    entry["has_tei"] = True
+                # Falls modified noch nicht gesetzt ist, nimm MTime des Verzeichnisses
+                if "modified" not in entry:
+                    entry["modified"] = datetime.fromtimestamp(d.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+
+    # 2. Legacy-Reports und PDFs als Fallback
     if REPORTS_DIR.is_dir():
         for f in sorted(REPORTS_DIR.glob("*.pipeline.json"), key=lambda p: p.stat().st_mtime, reverse=True):
             name = f.stem.replace(".pipeline", "")
             try: report = json.loads(f.read_text())
             except: report = {}
-            entry = jobs.get(name, {
+            entry = jobs.setdefault(name, {
                 "name": name,
                 "input_pages": 0,
                 "status": "-",
@@ -469,18 +558,18 @@ def _list_jobs():
                 "runs_count": 0,
                 "has_artifacts": False
             })
-            entry["status"] = "PASS" if report.get("fail", 1) == 0 or report.get("pass", 0) > 0 else "FAIL"
-            entry["has_report"] = True
-            entry["pass"] = report.get("pass", 0)
-            entry["fail"] = report.get("fail", 0)
-            mistral_pages = report.get("mistral_ok", 0)
-            entry["mistral_ok"] = mistral_pages
-            entry["mistral_cost_usd"] = round(mistral_pages * 0.004, 4)
-            entry["pages_total"] = report.get("pages_total", 0)
-            entry["threshold"] = report.get("threshold", 0)
-            entry["lang"] = report.get("lang", "")
-            entry["modified"] = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
-            jobs[name] = entry
+            if not entry.get("has_report"):
+                entry["status"] = "PASS" if report.get("fail", 1) == 0 or report.get("pass", 0) > 0 else "FAIL"
+                entry["has_report"] = True
+                entry["pass"] = report.get("pass", 0)
+                entry["fail"] = report.get("fail", 0)
+                mistral_pages = report.get("mistral_ok", 0)
+                entry["mistral_ok"] = mistral_pages
+                entry["mistral_cost_usd"] = round(mistral_pages * 0.004, 4)
+                entry["pages_total"] = report.get("pages_total", 0)
+                entry["threshold"] = report.get("threshold", 0)
+                entry["lang"] = report.get("lang", "")
+                entry["modified"] = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
     if PDF_DIR.is_dir():
         for f in PDF_DIR.glob("*.pdf"):
             name = f.stem.replace(".sandwich", "").replace(".aligned", "").replace(".pathb", "").replace(".digital", "")
@@ -1446,7 +1535,7 @@ async def upload_submit(
         result["n8n_response"] = n8n_resp
 
         # Check ob Report unmittelbar vorliegt (z. B. synchrone Pipeline)
-        report_path = REPORTS_DIR / f"{job}.pipeline.json"
+        report_path = (OUT_DIR / job / f"{job}.pipeline.json") if (OUT_DIR / job / f"{job}.pipeline.json").exists() else (REPORTS_DIR / f"{job}.pipeline.json")
         if report_path.exists():
             try:
                 rep = json.loads(report_path.read_text())
@@ -1472,7 +1561,7 @@ async def upload_submit(
 @app.get("/api/jobs/{job}/status")
 async def job_status_api(job: str):
     job = _validate_job(job)
-    report_path = REPORTS_DIR / f"{job}.pipeline.json"
+    report_path = (OUT_DIR / job / f"{job}.pipeline.json") if (OUT_DIR / job / f"{job}.pipeline.json").exists() else (REPORTS_DIR / f"{job}.pipeline.json")
     in_dir = INPUT_DIR / job
     input_pages = len([p for p in in_dir.iterdir() if p.suffix.lower() in VALID_IMG_EXTS]) if in_dir.is_dir() else 0
     if not report_path.exists():
@@ -1659,8 +1748,15 @@ async def job_detail(job: str, request: Request):
 
     sidecar = PDF_DIR / f"{job}.sidecar.txt"
     info["sidecar"] = sidecar.name if sidecar.exists() else None
-    e2e_path = REPORTS_DIR / f"{job}.e2e.json"
-    info["e2e_report"] = json.loads(e2e_path.read_text()) if e2e_path.exists() else None
+    rep_md_path = (OUT_DIR / job / f"{job}.report.md") if (OUT_DIR / job / f"{job}.report.md").is_file() else (REPORTS_DIR / f"{job}.report.md")
+    info["report_md"] = None
+    info["report_file"] = None
+    if rep_md_path.is_file():
+        info["report_file"] = {"name": rep_md_path.name, "size_kb": round(rep_md_path.stat().st_size / 1024, 1)}
+        try:
+            info["report_md"] = rep_md_path.read_text(encoding="utf-8")
+        except Exception:
+            pass
 
     # Artefakte und vorangegangene Läufe
     info["artifacts"] = _get_job_artifacts(job)
@@ -1851,7 +1947,12 @@ async def browse_file(kind: str, job: str, filename: str):
     if base is None:
         raise HTTPException(status_code=400, detail="Ungültige Kategorie")
     try:
-        if (base / clean_filename).is_file():
+        job_dir = OUT_DIR / job
+        if (job_dir / clean_filename).is_file():
+            path = _safe_path(job_dir, clean_filename)
+        elif (job_dir / kind / clean_filename).is_file():
+            path = _safe_path(job_dir / kind, clean_filename)
+        elif (base / clean_filename).is_file():
             path = _safe_path(base, clean_filename)
         elif (base / job / clean_filename).is_file():
             path = _safe_path(base / job, clean_filename)
@@ -1902,7 +2003,12 @@ async def download_file(kind: str, job: str, filename: str):
     if base is None:
         raise HTTPException(status_code=400, detail="Ungültige Kategorie")
     try:
-        if (base / clean_filename).is_file():
+        job_dir = OUT_DIR / job
+        if (job_dir / clean_filename).is_file():
+            path = _safe_path(job_dir, clean_filename)
+        elif (job_dir / kind / clean_filename).is_file():
+            path = _safe_path(job_dir / kind, clean_filename)
+        elif (base / clean_filename).is_file():
             path = _safe_path(base, clean_filename)
         elif (base / job / clean_filename).is_file():
             path = _safe_path(base / job, clean_filename)
@@ -1940,9 +2046,12 @@ def _get_sandwich_pdf(job: str) -> Path | None:
         f"{job}.aligned.pdf",
         f"{job}.pathb.pdf",
     ]:
-        p = PDF_DIR / name
+        p = OUT_DIR / job / name
         if p.is_file():
             return p
+        p_legacy = PDF_DIR / name
+        if p_legacy.is_file():
+            return p_legacy
     return None
 
 

@@ -51,11 +51,13 @@ plugins:
             Fallstudie (Dhātu-Pāṭha): Case Study (Dhātu-Pāṭha)
             Fallstudie (Bṛhadāraṇyaka I.4): Case Study (Bṛhadāraṇyaka I.4)
             Zielformate & Dualität: Target Formats & Dual Layout
+            Evolutionäre Pipeline: Evolutionary Engine
 
 nav:
   - Startseite: index.md
   - Installation: INSTALLATION.md
   - Verfahren: WIKI_VERFAHREN.md
+  - Evolutionäre Pipeline: EVOLUTION_WORKFLOW.md
   - Zielformate & Dualität: TARGET_FORMATS.md
   - Korrekturpfade: CORRECTION_PATHS.md
   - Deployment: DEPLOY.md

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AlexandriaSandwich Job Profile Schema",
+  "description": "Deklaratives Profil zur Konfiguration von Parametern und Metadaten für einzelne Dokument-Jobs.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "description": "Vollständiger bibliographischer Titel des Werkes."
+    },
+    "author": {
+      "type": "string",
+      "description": "Autor(en) des Originalwerkes."
+    },
+    "editor": {
+      "type": "string",
+      "description": "Herausgeber oder Bearbeiter der zugrundeliegenden Edition."
+    },
+    "year": {
+      "type": ["integer", "string"],
+      "description": "Erscheinungsjahr der Edition."
+    },
+    "publisher": {
+      "type": "string",
+      "description": "Verlag oder Institution der Publikation."
+    },
+    "lang": {
+      "type": "string",
+      "description": "Tesseract-Sprachkürzelkombination (z.B. 'san+deu', 'deu+eng')."
+    },
+    "threshold": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "OCR-Mindestkonfidenz (0-100), unterhalb derer das Mistral-Fallback anspringt."
+    },
+    "use_mistral": {
+      "type": "boolean",
+      "description": "Aktiviert oder deaktiviert den Mistral OCR Fallback/Alignment-Pfad."
+    },
+    "use_unpaper": {
+      "type": "boolean",
+      "description": "Aktiviert Vorverarbeitung durch unpaper (Entzerrung, Randentfernung)."
+    },
+    "skip_preprocess": {
+      "type": "boolean",
+      "description": "Überspringt die Bildvorverarbeitung komplett (für bereits aufbereitete Scans)."
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximale Anzahl zu verarbeitender Seiten (0 = alle Seiten)."
+    },
+    "heuristics": {
+      "type": "object",
+      "description": "Dokumentspezifische typographische und philologische Heuristiken für Downstream-Renderer.",
+      "properties": {
+        "script": {
+          "type": "string",
+          "enum": ["Latin", "Devanagari", "Greek", "Cyrillic", "Arabic", "Mixed"],
+          "description": "Dominantes Schriftsystem des Dokuments."
+        },
+        "two_column": {
+          "type": "boolean",
+          "description": "Kennzeichnet zweispaltiges Layout (Lexika, Wörterbücher)."
+        },
+        "has_transliteration": {
+          "type": "boolean",
+          "description": "Kennzeichnet gemischte Devanagari/IAST-Texte."
+        },
+        "strip_running_headers": {
+          "type": "boolean",
+          "description": "Automatisches Entfernen von Kolumnentiteln an Seitenrändern."
+        },
+        "strip_page_numbers": {
+          "type": "boolean",
+          "description": "Automatisches Entfernen isolierter Seitenzahlen."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

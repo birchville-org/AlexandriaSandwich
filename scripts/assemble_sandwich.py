@@ -49,16 +49,43 @@ def run(cmd: Sequence[str], *, quiet: bool = False) -> None:
 
 
 def build_base_pdf(images: Sequence[Path], base_pdf: Path, dpi: int) -> None:
-    """Lossless image→PDF via img2pdf (1:1 pixel layout)."""
+    """Lossless image→PDF via img2pdf (1:1 pixel layout) with PyMuPDF/PIL fallback."""
     try:
         import img2pdf
-    except ImportError as exc:
-        die(f"img2pdf not installed: {exc}")
+        layout = img2pdf.get_fixed_dpi_layout_fun((dpi, dpi))
+        with open(base_pdf, "wb") as fh:
+            fh.write(img2pdf.convert([str(p) for p in images], layout_fun=layout))
+        return
+    except ImportError:
+        pass
 
-    layout = img2pdf.get_fixed_dpi_layout_fun((dpi, dpi))
-    # img2pdf accepts path strings / bytes
-    with open(base_pdf, "wb") as fh:
-        fh.write(img2pdf.convert([str(p) for p in images], layout_fun=layout))
+    try:
+        try:
+            import pymupdf as fitz
+        except ImportError:
+            import fitz
+        doc = fitz.open()
+        for img_path in images:
+            img_doc = fitz.open(str(img_path))
+            pdf_bytes = img_doc.convert_to_pdf()
+            img_doc.close()
+            sub_pdf = fitz.open("pdf", pdf_bytes)
+            doc.insert_pdf(sub_pdf)
+            sub_pdf.close()
+        doc.save(str(base_pdf))
+        doc.close()
+        return
+    except Exception:
+        pass
+
+    try:
+        from PIL import Image
+        pil_imgs = [Image.open(p).convert("RGB") for p in images]
+        if pil_imgs:
+            pil_imgs[0].save(str(base_pdf), save_all=True, append_images=pil_imgs[1:], resolution=dpi)
+            return
+    except Exception as exc:
+        die(f"Could not convert images to PDF (img2pdf, PyMuPDF, and PIL all failed): {exc}")
 
 
 def run_ocrmypdf(
