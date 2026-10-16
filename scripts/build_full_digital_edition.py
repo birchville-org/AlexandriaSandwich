@@ -12,11 +12,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-
-try:
-    import pymupdf
-except ImportError:
-    import fitz as pymupdf
+import pymupdf
 
 
 def escape_typst(text: str) -> str:

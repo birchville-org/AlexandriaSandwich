@@ -15,11 +15,8 @@ from typing import Any, Dict, List, Optional
 try:
     import pymupdf
 except ImportError:
-    try:
-        import fitz as pymupdf
-    except ImportError:
-        print("Error: PyMuPDF is required. Please install via: pip install pymupdf", file=sys.stderr)
-        sys.exit(2)
+    print("Error: PyMuPDF is required. Please install via: pip install pymupdf", file=sys.stderr)
+    sys.exit(2)
 
 
 def audit_pdf_layout(

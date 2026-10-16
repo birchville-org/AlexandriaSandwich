@@ -15,10 +15,10 @@ Covers:
 - Volume 6: Adhyayas 7 & 8 (Padas 7.1-7.4, 8.1-8.4, Appendix, Indices)
 """
 
-import sys
 import re
+import sys
 from pathlib import Path
-import fitz  # PyMuPDF
+import pymupdf
 
 
 def find_sutra_page(doc, start_page, end_page, sutra_id, header_hint=""):
@@ -382,7 +382,7 @@ def main():
         return 1
 
     print(f"Opening PDF: {pdf_path} ({pdf_path.stat().st_size / 1e6:.1f} MB)...")
-    doc = fitz.open(pdf_path)
+    doc = pymupdf.open(pdf_path)
     print(f"Total pages: {len(doc)}")
 
     print("Generating comprehensive TOC...")

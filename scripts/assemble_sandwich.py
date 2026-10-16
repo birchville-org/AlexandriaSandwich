@@ -60,16 +60,13 @@ def build_base_pdf(images: Sequence[Path], base_pdf: Path, dpi: int) -> None:
         pass
 
     try:
-        try:
-            import pymupdf as fitz
-        except ImportError:
-            import fitz
-        doc = fitz.open()
+        import pymupdf
+        doc = pymupdf.open()
         for img_path in images:
-            img_doc = fitz.open(str(img_path))
+            img_doc = pymupdf.open(str(img_path))
             pdf_bytes = img_doc.convert_to_pdf()
             img_doc.close()
-            sub_pdf = fitz.open("pdf", pdf_bytes)
+            sub_pdf = pymupdf.open("pdf", pdf_bytes)
             doc.insert_pdf(sub_pdf)
             sub_pdf.close()
         doc.save(str(base_pdf))

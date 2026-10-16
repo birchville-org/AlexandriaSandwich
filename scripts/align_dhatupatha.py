@@ -76,10 +76,7 @@ def build_gana_indices(canonical_items: List[Dict[str, Any]]) -> Dict[int, List[
 
 
 def extract_pages_from_pdf(pdf_path: Path) -> List[Dict[str, Any]]:
-    try:
-        import pymupdf
-    except ImportError:
-        import fitz as pymupdf
+    import pymupdf
 
     pages = []
     doc = pymupdf.open(pdf_path)

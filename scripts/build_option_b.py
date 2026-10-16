@@ -17,10 +17,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
-try:
-    import pymupdf
-except ImportError:
-    import fitz as pymupdf
+import pymupdf
 
 
 DEFAULT_FONT = "/Library/Fonts/Arial Unicode.ttf"

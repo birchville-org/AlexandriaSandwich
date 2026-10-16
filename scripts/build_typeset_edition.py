@@ -234,10 +234,7 @@ def build_typeset_edition(
     # Ingest source text per page for Front Matter
     pdf_text_by_page: Dict[int, str] = {}
     if source_pdf_path.exists():
-        try:
-            import pymupdf
-        except ImportError:
-            import fitz as pymupdf
+        import pymupdf
         doc = pymupdf.open(source_pdf_path)
         for pno in range(len(doc)):
             pdf_text_by_page[pno + 1] = doc[pno].get_text()

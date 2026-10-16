@@ -11,9 +11,9 @@
       Verwandelt Rohscans historischer Bücher in 1:1 Sandwich-PDFs mit OCR-Textebene, KI-synchronisierte Faksimiles (Mistral VLM für Devanagari &amp; IAST), digitale Typst-Neusätze und TEI-P5 XML.
     </p>
   </div>
-  <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid var(--border-subtle); padding: 0.85rem 1.15rem; border-radius: var(--radius-md); font-size: 0.85rem; max-width: 330px;">
+  <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 0.85rem 1.15rem; border-radius: var(--radius-md); font-size: 0.85rem; max-width: 330px;">
     <strong>💡 Nur Lesezeichen / TOC einbetten?</strong><br>
-    Für fertige PDFs ohne OCR-Bedarf nutzen Sie unser kostenfreies <a href="/toc" style="color:var(--gold-light);font-weight:700;">PDF TOC &amp; Outline Studio ↗</a> (100% lokal, 0,00 € Fremdkosten).
+    Für fertige PDFs ohne OCR-Bedarf nutzen Sie unser kostenfreies <a href="/toc" style="color:var(--brand-1);font-weight:700;">PDF TOC &amp; Outline Studio ↗</a> (100% lokal, 0,00 € Fremdkosten).
   </div>
 </div>
 
@@ -54,29 +54,29 @@
   {% endif %}
 
   <!-- 💰 Fremdkosten-Ausweis für den aktuellen Job -->
-  <div id="costReportCard" class="card" style="background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #2563eb;margin-top:1rem;margin-bottom:1.5rem;display:{% if result.has_report %}block{% else %}none{% endif %};">
+  <div id="costReportCard" class="card" style="border-left:4px solid var(--brand-1);margin-top:1rem;margin-bottom:1.5rem;display:{% if result.has_report %}block{% else %}none{% endif %};">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
-      <h3 style="margin:0;color:#1e40af;font-size:1.15rem;">💰 Entstandene Fremdkosten (Mistral OCR) für '{{ result.job }}'</h3>
-      <span class="badge" style="background:{% if result.has_report %}#059669{% else %}#1d4ed8{% endif %};color:#fff;font-size:0.85rem;" id="costStatusBadge">
+      <h3 style="margin:0;font-size:1.15rem;">💰 Entstandene Fremdkosten (Mistral OCR) für '{{ result.job }}'</h3>
+      <span class="badge" style="background:{% if result.has_report %}#059669{% else %}var(--brand-1){% endif %};color:#fff;font-size:0.85rem;" id="costStatusBadge">
         {% if result.has_report %}✅ Job abgeschlossen{% else %}Wird ermittelt...{% endif %}
       </span>
     </div>
     <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; margin-top: 0.8rem;">
-      <div style="background:#fff;padding:0.75rem 1rem;border-radius:6px;border:1px solid #dbeafe;">
+      <div style="background:var(--bg);padding:0.75rem 1rem;border-radius:6px;border:1px solid var(--border);">
         <div class="text-muted" style="font-size:0.8rem;text-transform:uppercase;font-weight:600;">Mistral Fremdkosten</div>
-        <div id="costVal" style="font-size:1.6rem;font-weight:bold;color:#1e40af;margin-top:0.2rem;">
+        <div id="costVal" style="font-size:1.6rem;font-weight:bold;color:var(--brand-1);margin-top:0.2rem;">
           ${{ "%.4f"|format(result.mistral_cost_usd|default(0.0)) }}
         </div>
         <small class="text-muted" id="costRate">Tarif: 0,004 $ / Seite</small>
       </div>
-      <div style="background:#fff;padding:0.75rem 1rem;border-radius:6px;border:1px solid #dbeafe;">
+      <div style="background:var(--bg);padding:0.75rem 1rem;border-radius:6px;border:1px solid var(--border);">
         <div class="text-muted" style="font-size:0.8rem;text-transform:uppercase;font-weight:600;">Mistral AI Seiten</div>
-        <div id="mistralPagesVal" style="font-size:1.6rem;font-weight:bold;color:#0f172a;margin-top:0.2rem;">
-          {{ result.mistral_pages|default(0) }} <span style="font-size:0.9rem;font-weight:normal;color:#64748b;">/ <span id="pagesTotalVal">{{ result.pages_total|default(result.saved|length) }}</span></span>
+        <div id="mistralPagesVal" style="font-size:1.6rem;font-weight:bold;color:var(--text-1);margin-top:0.2rem;">
+          {{ result.mistral_pages|default(0) }} <span style="font-size:0.9rem;font-weight:normal;color:var(--text-muted);">/ <span id="pagesTotalVal">{{ result.pages_total|default(result.saved|length) }}</span></span>
         </div>
         <small class="text-muted">Cloud Fallback</small>
       </div>
-      <div style="background:#fff;padding:0.75rem 1rem;border-radius:6px;border:1px solid #dbeafe;">
+      <div style="background:var(--bg);padding:0.75rem 1rem;border-radius:6px;border:1px solid var(--border);">
         <div class="text-muted" style="font-size:0.8rem;text-transform:uppercase;font-weight:600;">Tesseract (Kostenlos)</div>
         <div id="tesseractPagesVal" style="font-size:1.6rem;font-weight:bold;color:#059669;margin-top:0.2rem;">
           {{ result.tesseract_pass|default(0) }}
@@ -84,13 +84,13 @@
         <small class="text-muted" style="color:#059669;">0,00 $ (Lokaler Server)</small>
       </div>
     </div>
-    <p style="margin:0.8rem 0 0 0;font-size:0.85rem;color:#475569;">
+    <p class="text-muted" style="margin:0.8rem 0 0 0;font-size:0.85rem;">
       ℹ️ <strong>Transparenzhinweis:</strong> Fremdkosten fallen ausschließlich bei Inanspruchnahme der multimodalen Mistral Document AI OCR (<code>mistral-ocr-latest</code> à 0,004 $ pro Seite) an. Lokales Tesseract, Typst-Neusatz und EPUB 3-Generierung verursachen keinerlei externe API-Kosten.
     </p>
   </div>
 
   {% if result.triggered and not result.has_report %}
-  <div id="pollingStatusCard" class="card" style="background:#fefce8;border:1px solid #fef08a;border-left:4px solid #ca8a04;margin-top:1rem;margin-bottom:1.5rem;">
+  <div id="pollingStatusCard" class="card" style="border-left:4px solid var(--brand-1);margin-top:1rem;margin-bottom:1.5rem;">
     <div style="display:flex;align-items:center;gap:0.8rem;">
       <span style="font-size:1.4rem;">⏳</span>
       <div>
@@ -115,7 +115,7 @@
             if (costCard) {
               costCard.style.display = "block";
               document.getElementById("costVal").textContent = "$" + Number(data.mistral_cost_usd).toFixed(4);
-              document.getElementById("mistralPagesVal").innerHTML = `${data.mistral_pages} <span style="font-size:0.9rem;font-weight:normal;color:#64748b;">/ ${data.pages_total}</span>`;
+              document.getElementById("mistralPagesVal").innerHTML = `${data.mistral_pages} <span style="font-size:0.9rem;font-weight:normal;color:var(--text-muted);">/ ${data.pages_total}</span>`;
               document.getElementById("tesseractPagesVal").textContent = data.tesseract_pass;
               document.getElementById("costStatusBadge").textContent = "✅ Job abgeschlossen";
               document.getElementById("costStatusBadge").style.background = "#059669";
@@ -130,36 +130,36 @@
   {% endif %}
 {% endif %}
 
-<div class="card" style="background:#f8fafc;border-left:4px solid #3b82f6;margin-bottom:1.5rem;">
+<div class="card" style="border-left:4px solid var(--brand-1);margin-bottom:1.5rem;">
   <h3 style="margin-top:0;">🏛️ Automatisch erzeugte Zielformate</h3>
   <p class="text-muted" style="margin-bottom:0.8rem;">Jeder Upload durchläuft die AlexandriaSandwich-Pipeline und generiert die vollständige Formatmatrix:</p>
   <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.8rem; font-size: 0.9rem;">
-    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+    <div style="background:var(--bg);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
       <span class="badge" style="background:#2563eb;color:#fff;">EPUB 3</span><br>
       <strong>Reflowable eBook</strong><br>
       <small class="text-muted">Mit eingebetteten Vektor-Schriften (*Devanagari* &amp; *Libertine*)</small>
     </div>
-    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+    <div style="background:var(--bg);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
       <span class="badge" style="background:#059669;color:#fff;">Sandwich (KI-Textlayer)</span><br>
       <strong>KI-synchronisiertes Sandwich</strong><br>
       <small class="text-muted">Faksimile + Mistral-Token-Alignment (0 Rauschzeilen)</small>
     </div>
-    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+    <div style="background:var(--bg);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
       <span class="badge" style="background:#9333ea;color:#fff;">Typst PDF</span><br>
       <strong>Digitaler Neusatz</strong><br>
       <small class="text-muted">Moderner wissenschaftlicher Buchsatz (A5 Vektor)</small>
     </div>
-    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+    <div style="background:var(--bg);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
       <span class="badge" style="background:#16a34a;color:#fff;">Sandwich-PDF</span><br>
       <strong>1:1 Faksimile</strong><br>
       <small class="text-muted">Originalscan + Tesseract OCR-Layer</small>
     </div>
-    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+    <div style="background:var(--bg);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
       <span class="badge" style="background:#0284c7;color:#fff;">TEI-P5</span><br>
       <strong>Archivstandard XML</strong><br>
       <small class="text-muted">Langzeitarchivierung (50+ Jahre) &amp; Akademienorm</small>
     </div>
-    <div style="background:#fff;padding:0.6rem 0.8rem;border-radius:4px;border:1px solid #e2e8f0;">
+    <div style="background:var(--bg);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--border);">
       <span class="badge" style="background:#d97706;color:#fff;">AST &amp; MD</span><br>
       <strong>book.json &amp; book.md</strong><br>
       <small class="text-muted">Hierarchische Tokens mit BBoxes &amp; UTF-8 Text</small>
@@ -216,13 +216,13 @@
     </div>
 
     <!-- Sprachauswahl-Leitfaden & Verhältnis zu Mistral AI -->
-    <div style="background:rgba(15,23,42,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.8rem 1rem; margin-top:1rem; font-size:0.82rem; color:#94a3b8; line-height:1.45;">
-      <div style="display:flex; align-items:center; gap:6px; font-weight:600; color:#e2e8f0; margin-bottom:0.35rem;">
+    <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:0.8rem 1rem; margin-top:1rem; font-size:0.85rem; color:var(--text-muted); line-height:1.45;">
+      <div style="display:flex; align-items:center; gap:6px; font-weight:600; color:var(--text-1); margin-bottom:0.35rem;">
         <span>ℹ️ Leitfaden zur Sprachwahl (Warum auch bei 100% Qualität relevant?):</span>
       </div>
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:0.75rem; margin-top:0.4rem;">
         <div>
-          <strong style="color:#fbbf24;">Welche Option wählen?</strong>
+          <strong style="color:var(--brand-1);">Welche Option wählen?</strong>
           <ul style="margin:0.25rem 0 0 1.2rem; padding:0;">
             <li><strong>Englisch mit Sanskrit/Devanagari:</strong> <code>eng+san</code> (z.B. Cardona 1976, Indologie)</li>
             <li><strong>Deutsch mit Sanskrit/Devanagari:</strong> <code>deu+san</code> (z.B. Böhtlingk 1887)</li>
@@ -231,7 +231,7 @@
           </ul>
         </div>
         <div>
-          <strong style="color:#60a5fa;">Rolle bei 100 % Konfidenz (Mistral AI):</strong>
+          <strong style="color:#2563eb;">Rolle bei 100 % Konfidenz (Mistral AI):</strong>
           <p style="margin:0.25rem 0 0 0;">
             Mistral AI ist für den Volltext (Typst-PDF, EPUB 3, TEI XML) <strong>sprachagnostisch</strong> und erkennt Englisch und Devanagari nativ.
             Die Tesseract-Sprachwahl ist dennoch essenziell: Sie generiert die <strong>pixelgenauen Wort-Bounding-Boxes</strong> für das <strong>1:1 Sandwich-PDF &amp; KI-synchronisierte Faksimile</strong>. Ohne <code>san</code> fehlen die Koordinaten für Devanagari im PDF.
@@ -248,54 +248,54 @@
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
         
         <!-- Preset 100% -->
-        <div class="strategy-card" id="strat-100" onclick="setStrategy(100, false)" style="cursor:pointer; background:rgba(217,119,6,0.18); border:2px solid #d97706; border-radius:8px; padding:0.9rem; transition:all 0.2s ease;">
+        <div class="strategy-card active-100" id="strat-100" onclick="setStrategy(100, false)">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
-            <span style="font-weight:700; color:#fbbf24; font-size:1.02rem;">🏆 100 % Maximum Quality</span>
-            <span class="badge" style="background:#b45309; color:#fff; font-size:0.72rem;">Empfohlen</span>
+            <span style="font-weight:700; color:var(--brand-1); font-size:1.02rem;">🏆 100 % Maximum Quality</span>
+            <span class="badge badge-amber" style="font-size:0.72rem;">Empfohlen</span>
           </div>
-          <p style="font-size:0.84rem; margin:0.3rem 0; color:#e2e8f0; line-height:1.4;">
+          <p style="font-size:0.84rem; margin:0.3rem 0; color:var(--text-1); line-height:1.4;">
             <strong>100% Mistral AI OCR.</strong> Höchste editorische Texttreue für Typst &amp; EPUB 3. Keine Tesseract-OCR-Artefakte.
           </p>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.4rem; margin-top:0.4rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:var(--text-muted); border-top:1px solid var(--border); padding-top:0.4rem; margin-top:0.4rem;">
             <span>Historisch, Fraktur, Sanskrit</span>
-            <strong style="color:#60a5fa;">0,004 $ / Seite</strong>
+            <strong style="color:var(--brand-1);">0,004 $ / Seite</strong>
           </div>
         </div>
 
         <!-- Preset 85% -->
-        <div class="strategy-card" id="strat-85" onclick="setStrategy(85, false)" style="cursor:pointer; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:0.9rem; transition:all 0.2s ease;">
+        <div class="strategy-card" id="strat-85" onclick="setStrategy(85, false)">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
-            <span style="font-weight:700; color:#34d399; font-size:1.02rem;">⚡ 85 % Hybrid &amp; Budget</span>
-            <span class="badge" style="background:rgba(16,185,129,0.2); color:#34d399; font-size:0.72rem;">Standard</span>
+            <span style="font-weight:700; color:#059669; font-size:1.02rem;">⚡ 85 % Hybrid &amp; Budget</span>
+            <span class="badge" style="background:rgba(16,185,129,0.15); color:#059669; font-size:0.72rem;">Standard</span>
           </div>
-          <p style="font-size:0.84rem; margin:0.3rem 0; color:#e2e8f0; line-height:1.4;">
+          <p style="font-size:0.84rem; margin:0.3rem 0; color:var(--text-1); line-height:1.4;">
             <strong>Tesseract (kostenlos) + Fallback.</strong> Saubere Seiten kosten 0,00 $. Mistral übernimmt nur Problemseiten.
           </p>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.4rem; margin-top:0.4rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:var(--text-muted); border-top:1px solid var(--border); padding-top:0.4rem; margin-top:0.4rem;">
             <span>Moderne Drucke (ab 1950)</span>
-            <strong style="color:#34d399;">Spart bis zu 90 %</strong>
+            <strong style="color:#059669;">Spart bis zu 90 %</strong>
           </div>
         </div>
 
         <!-- Preset 0% / Offline -->
-        <div class="strategy-card" id="strat-local" onclick="setStrategy(0, true)" style="cursor:pointer; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:0.9rem; transition:all 0.2s ease;">
+        <div class="strategy-card" id="strat-local" onclick="setStrategy(0, true)">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
-            <span style="font-weight:700; color:#93c5fd; font-size:1.02rem;">🔒 100 % Lokal &amp; Air-Gap</span>
-            <span class="badge" style="background:rgba(37,99,235,0.2); color:#93c5fd; font-size:0.72rem;">0,00 $ Cloud</span>
+            <span style="font-weight:700; color:#2563eb; font-size:1.02rem;">🔒 100 % Lokal &amp; Air-Gap</span>
+            <span class="badge" style="background:rgba(37,99,235,0.15); color:#2563eb; font-size:0.72rem;">0,00 $ Cloud</span>
           </div>
-          <p style="font-size:0.84rem; margin:0.3rem 0; color:#e2e8f0; line-height:1.4;">
+          <p style="font-size:0.84rem; margin:0.3rem 0; color:var(--text-1); line-height:1.4;">
             <strong>Nur Tesseract (Offline).</strong> Keine Cloud-Calls. Vollständige DSGVO-Datenhoheit auf dem Server.
           </p>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.4rem; margin-top:0.4rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:var(--text-muted); border-top:1px solid var(--border); padding-top:0.4rem; margin-top:0.4rem;">
             <span>Sensible Akten, Nachlässe</span>
-            <strong style="color:#93c5fd;">0,00 $ Fremdkosten</strong>
+            <strong style="color:#2563eb;">0,00 $ Fremdkosten</strong>
           </div>
         </div>
 
       </div>
 
       <!-- Feinabstimmung & Statusanzeige -->
-      <div style="display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:0.7rem 1rem;">
+      <div style="display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:0.7rem 1rem;">
         <div style="display:flex; align-items:center; gap:0.6rem;">
           <label for="threshold" style="font-size:0.9rem; font-weight:600; margin:0;">Confidence-Schwelle (%):</label>
           <input type="number" id="threshold" name="threshold" value="100" min="0" max="100" style="width:75px; padding:0.3rem 0.5rem; text-align:center; font-weight:bold;">
@@ -304,18 +304,18 @@
           <input type="checkbox" id="no_mistral" name="no_mistral" value="true" style="margin:0;">
           <label for="no_mistral" style="font-size:0.88rem; margin:0; cursor:pointer;">Mistral-Fallback deaktivieren (nur Tesseract)</label>
         </div>
-        <div id="modeStatusBadge" style="font-size:0.85rem; color:#fbbf24; margin-left:auto; font-weight:600;">
+        <div id="modeStatusBadge" style="font-size:0.85rem; color:var(--brand-1); margin-left:auto; font-weight:600;">
           Modus: 100 % Mistral AI (Maximale Textqualität)
         </div>
       </div>
     </div>
 
     <!-- Aufklappbare Entscheidungshilfe & Kostenlogik -->
-    <details class="decision-guide" style="background:rgba(15,23,42,0.7); border:1px solid rgba(217,119,6,0.35); border-radius:8px; padding:0.8rem 1.2rem; margin-top:1rem; margin-bottom:1.5rem;">
-      <summary style="cursor:pointer; font-weight:600; color:#fbbf24; display:flex; align-items:center; gap:0.5rem; user-select:none; font-size:0.95rem;">
+    <details class="decision-guide" style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:0.8rem 1.2rem; margin-top:1rem; margin-bottom:1.5rem;">
+      <summary style="cursor:pointer; font-weight:600; color:var(--brand-1); display:flex; align-items:center; gap:0.5rem; user-select:none; font-size:0.95rem;">
         <span>💡 <strong>Entscheidungshilfe &amp; Kostenlogik:</strong> Wann soll ein Nutzer unter 100 % gehen? (Klicken zum Aufklappen)</span>
       </summary>
-      <div style="margin-top:1rem; font-size:0.9rem; line-height:1.6; color:#cbd5e1;">
+      <div style="margin-top:1rem; font-size:0.9rem; line-height:1.6; color:var(--text-1);">
         <p style="margin-bottom:0.8rem;">
           Für anspruchsvolle wissenschaftliche Editionen will man typischerweise eine maximal genaue Wiedergabe. Bei Büchern mit historischem Satz, Fraktur, Tabellen oder Fremdsprachen (wie Sanskrit) ist <strong>100 % Confidence</strong> die fachlich empfohlene Wahl, da die Mistral-Gebühren mit <strong>0,004 $ pro Seite</strong> (ca. 1,00 $ für ein 250-Seiten-Buch) extrem gering sind.
         </p>
@@ -326,7 +326,7 @@
         <div style="overflow-x:auto;">
           <table style="width:100%; border-collapse:collapse; margin-bottom:1rem; font-size:0.85rem;">
             <thead>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.15); text-align:left;">
+              <tr style="border-bottom:1px solid var(--border); text-align:left;">
                 <th style="padding:0.5rem 0.6rem;">Szenario / Projektart</th>
                 <th style="padding:0.5rem 0.6rem;">Empfohlene Schwelle</th>
                 <th style="padding:0.5rem 0.6rem;">Technischer &amp; ökonomischer Grund</th>
@@ -334,37 +334,37 @@
               </tr>
             </thead>
             <tbody>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+              <tr style="border-bottom:1px solid var(--border);">
                 <td style="padding:0.5rem 0.6rem;"><strong>1. Historische Editionen, Wörterbücher, Fraktur, Polyglossie</strong><br><small class="text-muted">z.B. Böhtlingk 1887, Devanāgarī, mehrspaltig</small></td>
-                <td style="padding:0.5rem 0.6rem;"><span class="badge" style="background:#b45309; color:#fff;">100 %</span></td>
+                <td style="padding:0.5rem 0.6rem;"><span class="badge" style="background:var(--brand-1); color:#fff;">100 %</span></td>
                 <td style="padding:0.5rem 0.6rem;">Vollständige semantische Erkennung via Mistral. Verhindert OCR-Rauschen und Fragmentfehler in Typst-PDF, EPUB 3 und TEI-P5.</td>
-                <td style="padding:0.5rem 0.6rem; color:#60a5fa;">0,004 $ / Seite<br>(~1,00 $ für 250 S.)</td>
+                <td style="padding:0.5rem 0.6rem; color:var(--brand-1);">0,004 $ / Seite<br>(~1,00 $ für 250 S.)</td>
               </tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+              <tr style="border-bottom:1px solid var(--border);">
                 <td style="padding:0.5rem 0.6rem;"><strong>2. Moderne Drucke (ab ca. 1950)</strong><br><small class="text-muted">Saubere Antiqua-Schrift, 1-spaltig, guter Kontrast</small></td>
                 <td style="padding:0.5rem 0.6rem;"><span class="badge" style="background:#059669; color:#fff;">85 %</span></td>
                 <td style="padding:0.5rem 0.6rem;">Tesseract erzielt lokal kostenlos &gt; 99 % Zeichengenauigkeit. Mistral springt nur bei Problemseiten, Tabellen oder Bildlegenden ein.</td>
-                <td style="padding:0.5rem 0.6rem; color:#34d399;">0,00 $ für &gt; 90 % der Seiten</td>
+                <td style="padding:0.5rem 0.6rem; color:#059669;">0,00 $ für &gt; 90 % der Seiten</td>
               </tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+              <tr style="border-bottom:1px solid var(--border);">
                 <td style="padding:0.5rem 0.6rem;"><strong>3. Massendigitalisierung &amp; Retrokonversion</strong><br><small class="text-muted">Bibliotheksbestände mit 100.000 bis 1.000.000 Seiten</small></td>
                 <td style="padding:0.5rem 0.6rem;"><span class="badge" style="background:#059669; color:#fff;">85 % oder tiefer</span></td>
                 <td style="padding:0.5rem 0.6rem;">Kostenhebel im Großen (400 $ statt 4.000 $ pro 100k Seiten). Verhindert Cloud-API-Rate-Limits und den Upload von Terabytes an Bilddaten.</td>
-                <td style="padding:0.5rem 0.6rem; color:#34d399;">Ersparnis von tausenden Euro</td>
+                <td style="padding:0.5rem 0.6rem; color:#059669;">Ersparnis von tausenden Euro</td>
               </tr>
               <tr>
                 <td style="padding:0.5rem 0.6rem;"><strong>4. Sensible Akten, Nachlässe &amp; Air-Gap-Betrieb</strong><br><small class="text-muted">Datenschutz (DSGVO), vertrauliche Dokumente</small></td>
                 <td style="padding:0.5rem 0.6rem;"><span class="badge" style="background:#2563eb; color:#fff;">Nur Tesseract</span></td>
                 <td style="padding:0.5rem 0.6rem;">Vollständige Datenhoheit auf dem lokalen Server. Es werden keine Scans oder Daten an externe Cloud-APIs übertragen.</td>
-                <td style="padding:0.5rem 0.6rem; color:#93c5fd;">0,00 $ (100 % lokal)</td>
+                <td style="padding:0.5rem 0.6rem; color:#2563eb;">0,00 $ (100 % lokal)</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div style="background:rgba(2,6,23,0.7); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:0.75rem 1rem; margin-top:0.8rem;">
-          <h4 style="margin:0 0 0.4rem 0; color:#fbbf24; font-size:0.92rem;">ℹ️ Warum läuft Tesseract bei 100 % Schwellwert im Hintergrund trotzdem mit?</h4>
-          <p style="margin:0; font-size:0.85rem; color:#cbd5e1;">
+        <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; margin-top:0.8rem;">
+          <h4 style="margin:0 0 0.4rem 0; color:var(--brand-1); font-size:0.92rem;">ℹ️ Warum läuft Tesseract bei 100 % Schwellwert im Hintergrund trotzdem mit?</h4>
+          <p style="margin:0; font-size:0.85rem; color:var(--text-2);">
             Mistral Document AI liefert strukturierte Semantik und Markdown, erzeugt jedoch <strong>keine Pixel-Wortkoordinaten (Bounding Boxes)</strong> auf dem Original-Scan. 
             In Schritt 4 erzeugt <code>OCRmyPDF</code> (Tesseract) daher das unsichtbare geometrische Vektor-Gitter für das <strong>KI-synchronisierte Sandwich-PDF</strong>. 
             In Schritt 5 (<code>align_mistral_pdf.py</code>) ersetzt die Pipeline den Tesseract-Text direkt im PDF durch die exakten Mistral-Worttokens an genau diesen Bildpositionen. 
@@ -378,7 +378,7 @@
       <label for="trigger">Pipeline nach Upload automatisch starten</label>
     </div>
     <button type="submit" class="btn" id="submitBtn">📤 Buch hochladen &amp; OCR starten</button>
-    <div id="uploadProgress" style="display:none; margin-top:1rem; padding:0.75rem; border-radius:4px; background:#f0f9ff; border:1px solid #bae6fd; color:#0369a1;">
+    <div id="uploadProgress" class="alert alert-info" style="display:none; margin-top:1rem;">
       ⏳ Dateien werden hochgeladen und verarbeitet (bei PDFs werden Seiten extrahiert)... Bitte warten.
     </div>
   </form>
@@ -388,7 +388,7 @@
 <div class="card" style="margin-top:2rem;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem;">
     <h3 style="margin:0;">📊 Bisherige Fremdkosten (Mistral OCR) nach Jobs</h3>
-    <span class="badge" style="background:#0f172a;color:#fff;font-size:0.9rem;padding:0.35rem 0.75rem;">
+    <span class="badge" style="background:var(--brand-1);color:#fff;font-size:0.9rem;padding:0.35rem 0.75rem;">
       Gesamt aufgelaufen: <strong>${{ "%.3f"|format(total_mistral_cost|default(0.0)) }}</strong>
     </span>
   </div>
@@ -509,42 +509,32 @@ function updateStrategyHighlights() {
 
   [c100, c85, cLocal].forEach(c => {
     if (c) {
-      c.style.borderColor = 'rgba(255,255,255,0.12)';
-      c.style.background = 'rgba(15,23,42,0.6)';
+      c.classList.remove('active-100', 'active-85', 'active-local');
     }
   });
 
   if (noM) {
-    if (cLocal) {
-      cLocal.style.borderColor = '#3b82f6';
-      cLocal.style.background = 'rgba(37,99,235,0.2)';
-    }
+    if (cLocal) cLocal.classList.add('active-local');
     if (badge) {
       badge.textContent = 'Modus: 100 % Lokal (Nur Tesseract, 0,00 $ Cloud)';
-      badge.style.color = '#93c5fd';
+      badge.style.color = '#2563eb';
     }
   } else if (t >= 95) {
-    if (c100) {
-      c100.style.borderColor = '#d97706';
-      c100.style.background = 'rgba(217,119,6,0.2)';
-    }
+    if (c100) c100.classList.add('active-100');
     if (badge) {
       badge.textContent = 'Modus: 100 % Mistral AI (Maximale Qualität, 0,004 $/Seite)';
-      badge.style.color = '#fbbf24';
+      badge.style.color = 'var(--brand-1)';
     }
   } else if (t >= 70 && t <= 94) {
-    if (c85) {
-      c85.style.borderColor = '#10b981';
-      c85.style.background = 'rgba(16,185,129,0.2)';
-    }
+    if (c85) c85.classList.add('active-85');
     if (badge) {
       badge.textContent = 'Modus: Hybrid (Pass >= ' + t + ' % kostenlos, Fallback Mistral)';
-      badge.style.color = '#34d399';
+      badge.style.color = '#059669';
     }
   } else {
     if (badge) {
       badge.textContent = 'Modus: Individuell (' + t + ' %, Mistral aktiv)';
-      badge.style.color = '#cbd5e1';
+      badge.style.color = 'var(--text-muted)';
     }
   }
 }

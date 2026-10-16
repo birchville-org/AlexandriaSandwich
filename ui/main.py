@@ -17,10 +17,7 @@ from fastapi.templating import Jinja2Templates
 try:
     import pymupdf
 except ImportError:
-    try:
-        import fitz as pymupdf
-    except ImportError:
-        pymupdf = None
+    pymupdf = None
 
 BASE_DIR = Path(__file__).resolve().parent
 _default_data = "/data" if Path("/data").exists() else str(BASE_DIR.parent / "data")

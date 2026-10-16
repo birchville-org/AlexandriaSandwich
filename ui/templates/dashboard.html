@@ -20,20 +20,20 @@
 {% set total_cost = jobs|map(attribute='mistral_cost_usd')|select('defined')|sum %}
 <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
   <div class="card" style="margin-bottom: 0; padding: 1.25rem;">
-    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">Registrierte Jobs</div>
-    <div style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-top: 0.2rem;">{{ jobs|length }}</div>
+    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Registrierte Jobs</div>
+    <div style="font-size: 2rem; font-weight: 800; color: var(--text-1); margin-top: 0.2rem;">{{ jobs|length }}</div>
   </div>
   <div class="card" style="margin-bottom: 0; padding: 1.25rem;">
-    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">Seiten Gesamt</div>
-    <div style="font-size: 2rem; font-weight: 800; color: var(--gold-light); margin-top: 0.2rem;">{{ total_pages }}</div>
+    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Seiten Gesamt</div>
+    <div style="font-size: 2rem; font-weight: 800; color: var(--brand-1); margin-top: 0.2rem;">{{ total_pages }}</div>
   </div>
   <div class="card" style="margin-bottom: 0; padding: 1.25rem;">
-    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">Mistral AI Fallbacks</div>
-    <div style="font-size: 2rem; font-weight: 800; color: var(--blue-light); margin-top: 0.2rem;">{{ total_mistral }}</div>
+    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Mistral AI Fallbacks</div>
+    <div style="font-size: 2rem; font-weight: 800; color: #2563eb; margin-top: 0.2rem;">{{ total_mistral }}</div>
   </div>
   <div class="card" style="margin-bottom: 0; padding: 1.25rem;">
-    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">Mistral Fremdkosten</div>
-    <div style="font-size: 2rem; font-weight: 800; color: #34d399; margin-top: 0.2rem;">${{ "%.3f"|format(total_cost) }}</div>
+    <div style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">Mistral Fremdkosten</div>
+    <div style="font-size: 2rem; font-weight: 800; color: #059669; margin-top: 0.2rem;">${{ "%.3f"|format(total_cost) }}</div>
   </div>
 </div>
 

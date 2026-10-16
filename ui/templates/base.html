@@ -3,8 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    (function() {
+      var stored = null;
+      try { stored = localStorage.getItem('bv-theme'); } catch (e) {}
+      var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (dark) document.documentElement.classList.add('dark');
+    })();
+  </script>
   <title>{% block title %}{{ site_name }} — Dual-Layer Digital Preservation{% endblock %}</title>
-  <link rel="stylesheet" href="/static/style.css?v=20261007_th100">
+  <link rel="stylesheet" href="/static/style.css?v=20261012_bv_portal">
   <link rel="icon" type="image/png" href="{{ brand_logo }}">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%200%20100%20100%22><text y=%22.9em%22 font-size=%2290%22>🥪</text></svg>">
   {% block head %}{% endblock %}
@@ -46,6 +55,10 @@
         <span>🔐</span> Login
       </a>
       {% endif %}
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Zwischen heller und dunkler Ansicht wechseln" title="Zwischen heller und dunkler Ansicht wechseln">
+        <span class="icon-light" aria-hidden="true">☾</span>
+        <span class="icon-dark" aria-hidden="true">☀</span>
+      </button>
     </div>
   </header>
 
@@ -71,5 +84,11 @@
   </footer>
 
   {% block scripts %}{% endblock %}
+  <script>
+    document.getElementById('theme-toggle')?.addEventListener('click', function() {
+      var dark = document.documentElement.classList.toggle('dark');
+      try { localStorage.setItem('bv-theme', dark ? 'dark' : 'light'); } catch (e) {}
+    });
+  </script>
 </body>
 </html>

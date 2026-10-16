@@ -9,6 +9,7 @@ Thumbs.db
 !/data/processing/.gitkeep
 /data/output/*
 !/data/output/.gitkeep
+/data/cache_ocr/
 
 # n8n Daten, Keys & Secrets
 docker/n8n/data/
@@ -31,3 +32,16 @@ site/
 
 # Benchmark-Ergebnisse & temporäre Test-Outputs
 /benchmark_results*/
+
+# Work-specific & book-specific scratch scripts
+/scripts/*macdonell*
+/scripts/run_mistral_*
+/scripts/*panini*
+/scripts/batch_clean_*
+/scripts/compare_layout.py
+/scripts/enhance_volume1_pdf.py
+/scripts/generate_aligned_vol1.py
+/data/toc_kiparsky_*
+
+# Agent review status & transient runbook signatures
+.agents/review-status.json

@@ -19,20 +19,16 @@
     font-weight: 800;
     line-height: 1.1;
     margin-bottom: 1.25rem;
-    background: linear-gradient(180deg, #ffffff 30%, #cbd5e1 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -0.03em;
+    color: var(--text-1);
+    letter-spacing: -0.02em;
   }
   .hero-title span {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--brand-1);
   }
   
   .hero-subhead {
     font-size: 1.25rem;
-    color: var(--text-muted);
+    color: var(--text-2);
     max-width: 820px;
     margin: 0 auto 2.5rem;
     line-height: 1.6;
@@ -56,23 +52,23 @@
     margin: 0 auto;
   }
   .stat-card {
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid var(--border-subtle);
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 1.25rem 1rem;
     text-align: center;
-    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm);
   }
   .stat-num {
     font-family: var(--font-heading);
     font-size: 1.85rem;
-    font-weight: 800;
-    color: var(--gold-light);
+    font-weight: 700;
+    color: var(--brand-1);
     margin-bottom: 0.2rem;
   }
   .stat-desc {
     font-size: 0.8rem;
-    color: var(--text-dim);
+    color: var(--text-3);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-weight: 600;
@@ -81,11 +77,11 @@
   /* Interactive Sandwich Demo Widget */
   .sandwich-showcase {
     margin: 4rem 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border-accent);
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
     border-radius: var(--radius-xl);
     padding: 2.5rem;
-    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
   }
@@ -94,7 +90,7 @@
     justify-content: space-between;
     align-items: flex-end;
     margin-bottom: 2rem;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border);
     padding-bottom: 1.25rem;
     flex-wrap: wrap;
     gap: 1rem;
@@ -103,14 +99,14 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border-subtle);
+    background: var(--bg);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 1.75rem;
   }
   .demo-panel {
-    background: #0f172a;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 1.5rem;
     position: relative;
@@ -129,33 +125,32 @@
     font-family: var(--font-serif);
     font-size: 1.5rem;
     line-height: 1.8;
-    color: #f1f5f9;
+    color: var(--text-1);
     letter-spacing: 0.02em;
     user-select: none;
-    border-left: 3px solid var(--gold);
+    border-left: 3px solid var(--brand-1);
     padding-left: 1rem;
-    background: rgba(217, 119, 6, 0.03);
+    background: rgba(180, 83, 9, 0.04);
   }
   .demo-layer-text {
     font-family: var(--font-serif);
     font-size: 1.25rem;
     line-height: 1.8;
-    color: #93c5fd;
+    color: var(--text-1);
     padding-left: 1rem;
-    border-left: 3px solid var(--blue-light);
+    border-left: 3px solid var(--blue);
   }
   .demo-bbox {
     display: inline-block;
     padding: 1px 4px;
     margin: 1px 2px;
-    background: rgba(37, 99, 235, 0.15);
-    border: 1px dashed rgba(96, 165, 250, 0.4);
+    background: rgba(29, 78, 216, 0.1);
+    border: 1px dashed var(--blue);
     border-radius: 3px;
     cursor: text;
   }
   .demo-bbox:hover {
-    background: rgba(37, 99, 235, 0.35);
-    border-color: #60a5fa;
+    background: rgba(29, 78, 216, 0.2);
   }
 
   /* Feature Grid */
@@ -166,8 +161,8 @@
     margin: 4rem 0;
   }
   .feature-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 2rem;
     transition: var(--transition);
@@ -175,29 +170,30 @@
   }
   .feature-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(217, 119, 6, 0.4);
+    border-color: var(--brand-1);
     box-shadow: var(--shadow-md);
   }
   .feature-icon {
     width: 48px;
     height: 48px;
     border-radius: var(--radius-md);
-    background: rgba(217, 119, 6, 0.12);
-    border: 1px solid rgba(217, 119, 6, 0.25);
+    background: rgba(180, 83, 9, 0.1);
+    border: 1px solid var(--border-accent);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
     margin-bottom: 1.25rem;
-    color: var(--gold-light);
+    color: var(--brand-1);
   }
   .feature-title {
     font-size: 1.2rem;
     margin-bottom: 0.75rem;
+    color: var(--text-1);
   }
   .feature-desc {
     font-size: 0.92rem;
-    color: var(--text-muted);
+    color: var(--text-2);
     line-height: 1.6;
   }
 
@@ -205,8 +201,8 @@
   .workflow-section {
     margin: 4.5rem 0;
     padding: 3rem 2rem;
-    background: rgba(15, 23, 42, 0.4);
-    border: 1px solid var(--border-subtle);
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
     border-radius: var(--radius-xl);
   }
   .workflow-steps {
@@ -217,8 +213,8 @@
     position: relative;
   }
   .workflow-step {
-    background: rgba(11, 15, 23, 0.8);
-    border: 1px solid var(--border-subtle);
+    background: var(--bg);
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 1.5rem 1rem;
     text-align: center;
@@ -228,8 +224,8 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--gold);
-    color: #fff;
+    background: var(--brand-1);
+    color: var(--on-brand);
     font-weight: 700;
     font-size: 0.85rem;
     display: flex;
@@ -241,10 +237,11 @@
     font-size: 0.95rem;
     font-weight: 700;
     margin-bottom: 0.35rem;
+    color: var(--text-1);
   }
   .step-desc {
     font-size: 0.78rem;
-    color: var(--text-dim);
+    color: var(--text-3);
   }
 
   /* Case Studies */
@@ -258,8 +255,8 @@
     margin-top: 2rem;
   }
   .case-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 2rem;
     display: flex;
@@ -274,8 +271,8 @@
   /* Auth / SSO Card */
   .auth-banner {
     margin: 5rem 0 3rem;
-    background: linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(139, 30, 34, 0.12) 100%);
-    border: 1px solid var(--border-accent);
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
     border-radius: var(--radius-xl);
     padding: 3.5rem 2.5rem;
     text-align: center;

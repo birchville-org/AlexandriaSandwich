@@ -55,6 +55,8 @@ MISTRAL_EXPLICIT=0
 UNPAPER_EXPLICIT=0
 SKIP_PREPROCESS_EXPLICIT=0
 LIMIT_EXPLICIT=0
+TYPESET_MODE=""
+TYPESET_MODE_EXPLICIT=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -66,6 +68,7 @@ while [[ $# -gt 0 ]]; do
     --no-mistral) USE_MISTRAL=0; MISTRAL_EXPLICIT=1; shift ;;
     --no-unpaper) USE_UNPAPER=0; UNPAPER_EXPLICIT=1; shift ;;
     --skip-preprocess) SKIP_PREPROCESS=1; SKIP_PREPROCESS_EXPLICIT=1; shift ;;
+    --typeset-mode) TYPESET_MODE="$2"; TYPESET_MODE_EXPLICIT=1; shift 2 ;;
     --limit) LIMIT="$2"; LIMIT_EXPLICIT=1; shift 2 ;;
     --input) INPUT_DIR="$2"; shift 2 ;;
     --processing) PROC_DIR="$2"; shift 2 ;;
@@ -81,16 +84,27 @@ JOB_CONFIG="${JOB_INPUT}/job.config.json"
 if [[ -f "$JOB_CONFIG" ]]; then
   log "load job profile: $JOB_CONFIG"
   eval "$(python3 - "$JOB_CONFIG" <<'PY'
-import json, sys
+import json, sys, shlex, re
 try:
     with open(sys.argv[1], encoding='utf-8') as f:
         cfg = json.load(f)
-    if "lang" in cfg: print(f"CFG_LANG={json.dumps(str(cfg['lang']))}")
-    if "threshold" in cfg: print(f"CFG_THRESHOLD={int(cfg['threshold'])}")
-    if "use_mistral" in cfg: print(f"CFG_MISTRAL={1 if cfg['use_mistral'] else 0}")
-    if "use_unpaper" in cfg: print(f"CFG_UNPAPER={1 if cfg['use_unpaper'] else 0}")
-    if "limit" in cfg: print(f"CFG_LIMIT={int(cfg['limit'])}")
-    if "skip_preprocess" in cfg: print(f"CFG_SKIP_PREPROCESS={1 if cfg['skip_preprocess'] else 0}")
+    if "lang" in cfg:
+        val = re.sub(r"[^a-zA-Z0-9_+.-]", "", str(cfg['lang']))
+        print(f"CFG_LANG={shlex.quote(val)}")
+    if "threshold" in cfg:
+        print(f"CFG_THRESHOLD={int(cfg['threshold'])}")
+    if "use_mistral" in cfg:
+        print(f"CFG_MISTRAL={1 if cfg['use_mistral'] else 0}")
+    if "use_unpaper" in cfg:
+        print(f"CFG_UNPAPER={1 if cfg['use_unpaper'] else 0}")
+    if "limit" in cfg:
+        print(f"CFG_LIMIT={int(cfg['limit'])}")
+    if "skip_preprocess" in cfg:
+        print(f"CFG_SKIP_PREPROCESS={1 if cfg['skip_preprocess'] else 0}")
+    t_mode = cfg.get("heuristics", {}).get("typeset_mode") or cfg.get("typeset_mode")
+    if t_mode:
+        val = re.sub(r"[^a-zA-Z0-9_.-]", "", str(t_mode))
+        print(f"CFG_TYPESET_MODE={shlex.quote(val)}")
 except Exception:
     pass
 PY
@@ -101,6 +115,7 @@ PY
   [[ -n "${CFG_UNPAPER:-}" && "$UNPAPER_EXPLICIT" -eq 0 ]] && USE_UNPAPER="$CFG_UNPAPER"
   [[ -n "${CFG_LIMIT:-}" && "$LIMIT_EXPLICIT" -eq 0 ]] && LIMIT="$CFG_LIMIT"
   [[ -n "${CFG_SKIP_PREPROCESS:-}" && "$SKIP_PREPROCESS_EXPLICIT" -eq 0 ]] && SKIP_PREPROCESS="$CFG_SKIP_PREPROCESS"
+  [[ -n "${CFG_TYPESET_MODE:-}" && "$TYPESET_MODE_EXPLICIT" -eq 0 ]] && TYPESET_MODE="$CFG_TYPESET_MODE"
 fi
 
 JOB_OUT="${OUT_DIR}/${JOB_NAME}"
@@ -302,7 +317,11 @@ fi
 if [[ -f "$RENDER_DIGITAL" && -f "${BOOK_DIR}/book.json" ]]; then
   log "render digital book pdf -> $DIGITAL_PDF_OUT"
   set +e
-  python3 "$RENDER_DIGITAL" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$DIGITAL_PDF_OUT"
+  PRESERVE_ARG=""
+  if [[ "${TYPESET_MODE:-}" == "1to1" || "${TYPESET_MODE:-}" == "paginated" ]]; then
+    PRESERVE_ARG="--preserve-pages"
+  fi
+  python3 "$RENDER_DIGITAL" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$DIGITAL_PDF_OUT" $PRESERVE_ARG
   render_rc=$?
   set -e
   if [[ "$render_rc" -ne 0 ]]; then
@@ -314,21 +333,27 @@ else
 fi
 
 if [[ -f "$BUILD_TYPESET" ]]; then
-  log "build semantic typeset edition (Boethlingk model) -> $TYPESET_PDF_OUT"
-  set +e
-  COMPLETE_JSON="${OUT_DIR}/../dhatupatha_complete.json"
-  if [[ ! -f "$COMPLETE_JSON" ]]; then
+  COMPLETE_JSON=""
+  if [[ -f "${JOB_INPUT}/${JOB_NAME}_complete.json" ]]; then
+    COMPLETE_JSON="${JOB_INPUT}/${JOB_NAME}_complete.json"
+  elif [[ -f "${JOB_INPUT}/dhatupatha_complete.json" && "$JOB_NAME" == *"dhatu"* ]]; then
+    COMPLETE_JSON="${JOB_INPUT}/dhatupatha_complete.json"
+  elif [[ "$JOB_NAME" == *"dhatu"* && -f "${SCRIPT_DIR}/../data/dhatupatha_complete.json" ]]; then
     COMPLETE_JSON="${SCRIPT_DIR}/../data/dhatupatha_complete.json"
   fi
-  if [[ -f "$COMPLETE_JSON" ]]; then
+
+  if [[ -n "$COMPLETE_JSON" && -f "$COMPLETE_JSON" ]]; then
+    log "build semantic typeset edition (Boethlingk model) -> $TYPESET_PDF_OUT"
+    set +e
     python3 "$BUILD_TYPESET" --job "$JOB_NAME" --complete-json "$COMPLETE_JSON" --output "$TYPESET_PDF_OUT" --source-pdf "$PERFECT_SANDWICH_OUT"
-  elif [[ -f "${BOOK_DIR}/book.json" ]]; then
-    python3 "$BUILD_TYPESET" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$TYPESET_PDF_OUT"
-  fi
-  typeset_rc=$?
-  set -e
-  if [[ "$typeset_rc" -ne 0 ]]; then
-    log "warn: build_typeset_edition failed (rc=$typeset_rc)"
+    typeset_rc=$?
+    set -e
+    if [[ "$typeset_rc" -ne 0 ]]; then
+      log "warn: build_typeset_edition failed (rc=$typeset_rc)"
+      TYPESET_PDF_OUT=""
+    fi
+  else
+    log "skip typeset_edition: no job-specific canonical ground truth for $JOB_NAME"
     TYPESET_PDF_OUT=""
   fi
 else
@@ -401,10 +426,16 @@ fi
 INJECT_TOC="${SCRIPT_DIR}/inject_toc.py"
 TOC_FILE=""
 for cand in \
+  "${JOB_INPUT}/toc.txt" \
+  "${JOB_INPUT}/${JOB_NAME}.toc.txt" \
   "${JOB_INPUT}/toc.json" \
   "${JOB_INPUT}/${JOB_NAME}.toc.json" \
+  "${INPUT_DIR}/${JOB_NAME}.toc.txt" \
   "${INPUT_DIR}/${JOB_NAME}.toc.json" \
+  "${INPUT_DIR}/toc.txt" \
   "${INPUT_DIR}/toc.json" \
+  "${JOB_OUT}/toc.txt" \
+  "${JOB_OUT}/${JOB_NAME}.toc.txt" \
   "${JOB_OUT}/toc.json" \
   "${QC_DIR}/toc.json" \
   "${BOOK_DIR}/toc.json"; do

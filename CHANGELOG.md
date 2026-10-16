@@ -2,6 +2,26 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.4.0] - 2026-10-16
+
+### Added
+- **Generischer 1:1 Vektor-Neusatz & Page-Preservation (`scripts/render_digital_pdf.py`):**
+  - Universeller digitaler Neusatz mit strenger 1:1 Seitenkongruenz zum historischen Original (`--preserve-pages`).
+  - Responsiver `#page_content`-Layoutmechanismus in `templates/book.typ` mit dynamischer Breitenbindung und Skalierung zur sicheren Vermeidung von Seitenüberläufen.
+  - Sichere Wiederherstellung von Code-Spans und typografischen Satzzeichen ohne Backslash-Drift.
+- **Hierarchisches TOC-Outline-Quality-Gate (`scripts/inject_toc.py`):**
+  - Automatisierte Injektion hierarchischer PDF-Lesezeichen (Outlines/Bookmarks), Metadaten und nativer Page-Labels (römisch/arabisch) über alle PDF-Artefakte.
+  - Automatische Ebenen-Normalisierung (Ebene 1-Initialisierung, Sprungkorrektur), um `ValueError`-Abbrüche bei manuell editierten TOCs zu verhindern.
+  - Fallback-Extraktion von Kapitelüberschriften (`h1`/`h2`) aus `book.json` sowie Bereitstellung editierbarer `<job>.toc.txt`-Dateien zur verlustfreien Re-Injektion.
+  - Transparente Warnmeldungen bei leerer Outline und `--require-toc`-Prüfmodus.
+- **Sicherheits- & Pipeline-Härtung (`scripts/run_pipeline.sh`):**
+  - Beseitigung von Command-Injection-Risiken beim Einlesen von `job.config.json` via `shlex.quote` und Regex-Whitelisting.
+- **Zentrale Artefakt- & Qualitätsmatrix (`docs/de/PIPELINE_ARTIFACTS.md`, `docs/en/PIPELINE_ARTIFACTS.md`):**
+  - Umfassender Katalog aller 7 Artefaktkategorien der AlexandriaSandwich-Pipeline (Preprocessed, OCR-Layer, Buchmodell, Faksimile-Sandwich, Vektor-Neusatz, TEI-P5/EPUB, Audit-Berichte).
+  - Formales Reifegrad-Dashboard zur transparenten Dokumentation des kontinuierlichen Verbesserungsprozesses (CIP).
+- **Birchville Design-System Layout-Integration:**
+  - Aktivierung des integrierten linken Inhaltsverzeichnisses (`toc.integrate`) in `mkdocs.yml` gemäß Birchville „Scholarly Synthesis“ Standard.
+
 ## [1.3.0] - 2026-10-12
 
 ### Added
@@ -35,7 +55,7 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 
 ### Fixed & Hardened
 - **PyMuPDF / PIL Vektor-Einbettung (`scripts/assemble_sandwich.py`):**
-  - Robuster Fallback via `fitz.Pixmap` und `PIL.Image`, falls `page.insert_image(stream=...)` an defekten JPEG2000-Codecs scheitert.
+  - Robuster Fallback via `pymupdf.Pixmap` und `PIL.Image`, falls `page.insert_image(stream=...)` an defekten JPEG2000-Codecs scheitert.
 - **Typst-Kompatibilität (`scripts/render_digital_pdf.py`):**
   - Anpassung der Metadaten-Übergabe an Typst 0.15.1 (`--input key=val` anstelle von veralteten Konstrukten).
 - **Security Scanner & Pre-Push Gate:**

@@ -90,7 +90,7 @@ fi
 PYTHON_DEPS_OK=1
 python3 -c "
 import json, sys
-mods = ['PIL', 'fitz']
+mods = ['PIL', 'pymupdf']
 missing = []
 for m in mods:
     try:

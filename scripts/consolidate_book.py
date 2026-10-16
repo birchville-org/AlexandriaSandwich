@@ -135,11 +135,12 @@ def parse_markdown_page(md_path: Path) -> Dict[str, Any]:
     }
 
 
-def clean_page_artifacts(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def clean_page_artifacts(pages: List[Dict[str, Any]], language: str = "") -> List[Dict[str, Any]]:
     """
     Remove repetitive running headers, footers, standalone page numbers,
     and prompt evaluation hallucinations from page boundaries.
     """
+    is_cjk_expected = any(l in (language or "").lower() for l in ["chi", "zho", "zh", "kor", "jpn"])
     for page in pages:
         cleaned_blocks = []
         num_blocks = len(page["blocks"])
@@ -154,6 +155,12 @@ def clean_page_artifacts(pages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             t_lower = text.lower()
             if "ground truth image displays" in t_lower or "underscore & line rules" in t_lower:
                 continue
+
+            # Filter CJK hallucinations when language is non-CJK (e.g. eng+san, deu)
+            if not is_cjk_expected:
+                cjk_count = sum(1 for c in text if '\u4e00' <= c <= '\u9fff')
+                if cjk_count > 0 and cjk_count / len(text) > 0.15:
+                    continue
             
             # Filter repetition loops (identical block repeated > 3 times on one page)
             seen_texts[text] = seen_texts.get(text, 0) + 1
@@ -292,8 +299,8 @@ def consolidate_job(
             else:
                 log(f"Warning: No OCR artifacts found for page {base}")
 
-    # 2. Filter artifacts (running headers/footers)
-    pages_data = clean_page_artifacts(pages_data)
+    # 2. Filter artifacts (running headers/footers and non-matching script hallucinations)
+    pages_data = clean_page_artifacts(pages_data, language=language)
 
     # 3. Build book structure with declarative profile metadata
     meta_dict: Dict[str, Any] = {

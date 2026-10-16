@@ -10,7 +10,7 @@ import os
 import sys
 import re
 from pathlib import Path
-import fitz  # PyMuPDF
+import pymupdf
 
 
 def find_sutra_page(doc, start_page, end_page, sutra_id):
@@ -39,39 +39,106 @@ def find_heading_page(doc, start_page, end_page, heading_pattern, max_lines=15):
 
 
 def get_volume_1_toc(doc):
-    toc = [
-        [1, "The Aṣṭādhyāyī of Pāṇini (Volume I: Introduction to the Aṣṭādhyāyī as a Grammatical Device)", 1],
-        [2, "Title & Front Matter", 1],
-    ]
-    p = find_heading_page(doc, 5, 10, r"Contents")
-    if p: toc.append([2, "Contents", p])
-    p = find_heading_page(doc, 7, 10, r"Preface to the Second Edition")
-    if p: toc.append([2, "Preface to the Second Edition", p])
-    p = find_heading_page(doc, 8, 11, r"Preface to the First Edition")
-    if p: toc.append([2, "Preface to the First Edition", p])
-    p = find_heading_page(doc, 10, 13, r"Abbreviations") or 11
-    toc.append([2, "Abbreviations", p])
+    return [
+        [1, "The Aṣṭādhyāyī of Pāṇini (Volume I: Introduction as a Grammatical Device)", 1],
+        [2, "Front Matter & Preliminaries", 1],
+        [3, "Half Title & Jacket Flaps", 1],
+        [3, "Title Page", 5],
+        [3, "Imprint & Publication Details", 6],
+        [3, "Contents", 7],
+        [3, "Preface to the Second Edition", 8],
+        [3, "Preface to the First Edition", 9],
+        [3, "Abbreviations", 11],
 
-    v1_chapters = [
-        ("Chapter 1: Pāṇini and the Pāṇinīyas", 11, 15, r"Panini and the Paniniyas", 12),
-        ("Chapter 2: The Aṣṭādhyāyī and its Related Texts", 35, 50, r"The Astadhyayi and its Related Texts", 43),
-        ("Chapter 3: Grammar and Rule", 45, 60, r"Grammar and Rule", 53),
-        ("Chapter 4: Domain, Recurrence and Reference", 65, 80, r"Domain, Recurrence and Reference", 71),
-        ("Chapter 5: The Structure of the Aṣṭādhyāyī", 80, 95, r"The Structure of the Astadhyay", 85),
-        ("Chapter 6: Types of Rules", 95, 110, r"Types of Rules", 100),
-        ("Chapter 7: Saṃjñās and Paribhāṣās", 125, 140, r"Samjnas and Paribhasas", 132),
-        ("Chapter 8: Some Additional Paribhāṣās", 135, 145, r"Some Additional Paribh", 138),
-        ("Chapter 9: Kāraka and Vibhakti", 145, 160, r"K[aā]raka and Vibhakti", 152),
-        ("Chapter 10: Derivational System", 165, 185, r"Derivational System", 176),
-        ("Chapter 11: Derivation of Compounds", 185, 205, r"Derivation of Compounds", 198),
-        ("Bibliography", 215, 230, r"Bibliography", 224),
-        ("Index of Sūtras", 225, 240, r"Index of S[uū]tras", 232),
-        ("Index of Terms", 250, 262, r"Index of Terms", 259),
+        [2, "Chapter 1: Pāṇini and the Pāṇinīyas", 12],
+        [3, "Introduction & History of the School", 12],
+        [3, "The Commentarial Tradition (Pratīka, Vṛtti, Bhāṣya)", 14],
+        [3, "Kātyāyana and the Vārttikas", 18],
+        [3, "The Kāśikāvṛtti Tradition", 28],
+        [3, "The Prakriyā Tradition (Rūpāvatāra & Prakriyākaumudī)", 34],
+        [3, "The Siddhānta Tradition (Bhaṭṭoji Dīkṣita & Nāgeśa)", 38],
+
+        [2, "Chapter 2: The Aṣṭādhyāyī and its Related Texts", 43],
+        [3, "(a) The Śivasūtras (Ss)", 43],
+        [3, "(b) The Dhātupāṭha (DP)", 47],
+        [3, "(c) The Gaṇapāṭha (GP)", 49],
+        [3, "(d) The Uṇādisūtras (Us)", 50],
+        [3, "(e) The Phitsūtra (Phs)", 51],
+        [3, "(f) The Liṅgānuśāsana (La)", 52],
+
+        [2, "Chapter 3: Grammar and Rule", 53],
+        [3, "The Concept of Grammar (Lakṣya & Lakṣaṇa)", 53],
+        [3, "Constituents of a Rule & Operational Types", 56],
+        [3, "Generalization and Scope of Operation", 62],
+
+        [2, "Chapter 4: Domain, Recurrence and Reference", 71],
+        [3, "Controlling Domain (Adhikāra)", 71],
+        [3, "Recurrence (Anuvṛtti) & Maṇḍūkapluti", 76],
+        [3, "Reference and Cross-Referencing Mechanisms", 80],
+
+        [2, "Chapter 5: The Structure of the Aṣṭādhyāyī", 85],
+        [3, "Architecture of Eight Chapters (Aṣṭaka)", 85],
+        [3, "Internal Ordering: Asiddha & Asiddhavat", 90],
+        [3, "Rule Interaction and Blocking (Vipratiṣedha)", 94],
+
+        [2, "Chapter 6: Types of Rules", 100],
+        [3, "(1) Operational Rules (Vidhisūtra)", 100],
+        [4, "(1.1) Placement (Pratyaya)", 102],
+        [4, "(1.2) Addition (Āgama)", 106],
+        [4, "(1.3) Replacement (Ādeśa)", 108],
+        [4, "(1.4) Deletion (Lopa)", 110],
+        [3, "(2) Interpretational Rules", 113],
+        [4, "(2.1) Definitions (Saṃjñā)", 114],
+        [4, "(2.2) Interpretive Principles (Paribhāṣā)", 117],
+        [4, "(2.3) Negation (Pratiṣedha)", 122],
+        [4, "(2.4) Extension (Atideśa)", 123],
+        [4, "(2.5) Heading / Domain (Adhikāra)", 126],
+        [4, "(2.6) Ad Hoc Formations (Nipātana)", 129],
+
+        [2, "Chapter 7: Saṃjñās and Paribhāṣās", 132],
+        [3, "Inventory of Explicit Saṃjñā Rules", 132],
+        [3, "Inventory of Explicit Paribhāṣā Rules", 135],
+
+        [2, "Chapter 8: Some Additional Paribhāṣās", 138],
+        [3, "Implicit Paribhāṣās of the Tradition", 138],
+        [3, "Formulations from the Paribhāṣenduśekhara", 143],
+
+        [2, "Chapter 9: Kāraka and Vibhakti", 152],
+        [3, "Inventory of Kāraka Domain (1.4.23–1.4.55)", 152],
+        [3, "Action Participants (Kāraka) vs. Meaning Conditions", 153],
+        [3, "Classification: Apādāna, Sampradāna, Karaṇa, Adhikaraṇa, Karman, Kartṛ", 160],
+        [3, "Case Inflections (Vibhakti: 2.3.1–2.3.73)", 171],
+
+        [2, "Chapter 10: Derivational System", 176],
+        [3, "The Derivational Cycle & Operating Domains", 176],
+        [3, "Nominal Derivation (Subanta & Prātipadika)", 180],
+        [3, "Verbal Derivation (Tiṅanta)", 188],
+        [3, "Secondary Formations & Upapada Relations", 190],
+
+        [2, "Chapter 11: Derivation of Compounds", 198],
+        [3, "General Conditions for Compounding (Samāsa)", 198],
+        [3, "(30) Avyayībhāva (Adverbial Compounds)", 206],
+        [3, "(36) Tatpuruṣa & Karmadhāraya Compounds", 210],
+        [3, "(38) Bahuvrīhi (Exocentric Compounds)", 218],
+        [3, "Dvandva (Copulative Compounds)", 221],
+
+        [2, "Bibliography", 224],
+        [2, "Index of Sūtras", 232],
+        [3, "Sūtras: A – Ā", 232],
+        [3, "Sūtras: I – U – Ṛ – E – O", 236],
+        [3, "Sūtras: K – Kh – G – Gh", 239],
+        [3, "Sūtras: C – Ch – J", 241],
+        [3, "Sūtras: T – Th – D – Dh", 243],
+        [3, "Sūtras: N – P – Ph – B – Bh – M", 246],
+        [3, "Sūtras: Y – R – L – V", 251],
+        [3, "Sūtras: Ś – Ṣ – S – H", 254],
+
+        [2, "Index of Terms", 259],
+        [3, "Terms: A – K", 259],
+        [3, "Terms: K – N", 260],
+        [3, "Terms: N – S", 261],
+        [3, "Terms: S – H", 262],
     ]
-    for title, s, e, pat, default_p in v1_chapters:
-        pg = find_heading_page(doc, s, e, pat) or default_p
-        toc.append([2, title, pg])
-    return toc
 
 
 def get_volume_2_toc(doc):
@@ -295,7 +362,7 @@ def process_pdf(pdf_path: Path):
         return 1
 
     print(f"Processing: {pdf_path}")
-    doc = fitz.open(pdf_path)
+    doc = pymupdf.open(pdf_path)
     total_pages = len(doc)
     print(f"Page count: {total_pages}")
 
@@ -340,13 +407,20 @@ def process_pdf(pdf_path: Path):
         indent = "  " * (lvl - 1)
         print(f"{indent}[L{lvl}] {t} -> Page {p}")
 
+    if "vol1" in name or "volume1" in name or total_pages == 262:
+        doc.set_page_labels([
+            {"startpage": 0, "prefix": "", "style": "r", "firstpagenum": 1},
+            {"startpage": 7, "prefix": "", "style": "r", "firstpagenum": 9},
+            {"startpage": 11, "prefix": "", "style": "D", "firstpagenum": 1},
+        ])
+
     meta = doc.metadata or {}
     meta["title"] = title
     meta["author"] = "Rama Nath Sharma"
     meta["subject"] = subject
     meta["keywords"] = "Panini; Astadhyayi; Sanskrit Grammar; Rama Nath Sharma; Linguistics"
     meta["creator"] = "AlexandriaSandwich / PyMuPDF TOC Injection"
-    meta["producer"] = "PyMuPDF"
+    meta["producer"] = "PyMuPDF / qpdf (Linearized)"
     doc.set_metadata(meta)
     doc.set_toc(toc)
 
@@ -355,11 +429,17 @@ def process_pdf(pdf_path: Path):
     doc.save(str(temp_path), deflate=True, garbage=3)
     doc.close()
 
+    temp_lin = pdf_path.parent / f"_lin_{pdf_path.name}"
+    res = os.system(f'qpdf --linearize "{temp_path}" "{temp_lin}" 2>/dev/null')
+    if res == 0 and temp_lin.exists():
+        temp_path.unlink()
+        temp_path = temp_lin
+
     print(f"Replacing {pdf_path}...")
     temp_path.replace(pdf_path)
 
     os.system(f'chflags nohidden "{pdf_path}" 2>/dev/null || true')
-    print(f"Successfully injected TOC into {pdf_path} ({pdf_path.stat().st_size / 1e6:.1f} MB)!")
+    print(f"Successfully injected TOC and PageLabels into {pdf_path} ({pdf_path.stat().st_size / 1e6:.1f} MB)!")
     return 0
 
 

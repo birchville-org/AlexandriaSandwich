@@ -19,6 +19,7 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - toc.integrate
     - search.suggest
     - search.highlight
     - content.code.copy
@@ -43,6 +44,7 @@ plugins:
             Startseite: Home
             Installation: Installation
             Verfahren: Pipeline Architecture
+            Pipeline-Artefakte & Qualitätsstand: Pipeline Artifacts & Quality Status
             Korrekturpfade: Correction Paths
             Deployment: Deployment
             Speicherstruktur: Storage Layout
@@ -57,6 +59,7 @@ nav:
   - Startseite: index.md
   - Installation: INSTALLATION.md
   - Verfahren: WIKI_VERFAHREN.md
+  - Pipeline-Artefakte & Qualitätsstand: PIPELINE_ARTIFACTS.md
   - Evolutionäre Pipeline: EVOLUTION_WORKFLOW.md
   - Zielformate & Dualität: TARGET_FORMATS.md
   - Korrekturpfade: CORRECTION_PATHS.md
