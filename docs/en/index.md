@@ -1,14 +1,90 @@
+<div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem 1.25rem; background: var(--md-default-bg-color--light); border: 1px solid var(--md-default-fg-color--lightest); border-radius: 8px;">
+  <img src="assets/birchville_logo.png" alt="Birchville Coat of Arms" style="height: 2.4rem; border-radius: 4px; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.18));">
+  <div>
+    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-accent-fg-color); font-weight: 700;">Birchville Scholarly Synthesis</div>
+    <div style="font-size: 0.95rem; font-weight: 600; color: var(--md-default-fg-color);">Automated Digitization & Scholarly Editions Pipeline</div>
+  </div>
+</div>
+
 # 📚 AlexandriaSandwich
 
-> **Automated book digitization with hybrid OCR (Tesseract + Mistral AI), GSD pipeline & 1:1 sandwich PDF output.**
-> 
-> 🌐 **Online Documentation:** [birchville-org.github.io/AlexandriaSandwich](https://birchville-org.github.io/AlexandriaSandwich/)
+**Automated book digitization with hybrid OCR (Tesseract + Mistral AI), GSD pipeline & 1:1 sandwich PDF output.**
 
-[![GitHub Pages](https://img.shields.io/badge/docs-gh--pages-blue?logo=github)](https://birchville-org.github.io/AlexandriaSandwich/)
-![Build Status](https://img.shields.io/badge/docker-multi--arch-blue)
-![Release](https://img.shields.io/badge/release-v1.3.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Python](https://img.shields.io/badge/python-3.12-yellow)
+---
+
+## ⚡ Quick Access & Navigation
+
+<div class="quick-access-grid">
+  <div class="quick-card">
+    <div>
+      <div class="quick-card-header">
+        <span class="quick-card-icon">⚙️</span>
+        <span class="quick-card-title">Pipeline Architecture</span>
+      </div>
+      <div class="quick-card-body">
+        Detailed architecture spanning image preprocessing, Tesseract/Mistral hybrid OCR to TEI and PDF assembly.
+      </div>
+    </div>
+    <div class="quick-card-action">
+      <a href="architecture.md" class="quick-btn quick-btn-primary">
+        <span>➔</span> View Architecture
+      </a>
+    </div>
+  </div>
+
+  <div class="quick-card">
+    <div>
+      <div class="quick-card-header">
+        <span class="quick-card-icon">📖</span>
+        <span class="quick-card-title">Case Study Böhtlingk 1887</span>
+      </div>
+      <div class="quick-card-body">
+        Reference implementation: 478-page Pāṇini grammar with 3,997 Sūtras and 100% canonical alignment.
+      </div>
+    </div>
+    <div class="quick-card-action">
+      <a href="case_studies/boehtlingk_1887.md" class="quick-btn quick-btn-outline">
+        <span>➔</span> Read Case Study
+      </a>
+    </div>
+  </div>
+
+  <div class="quick-card">
+    <div>
+      <div class="quick-card-header">
+        <span class="quick-card-icon">📄</span>
+        <span class="quick-card-title">Target Formats & Duality</span>
+      </div>
+      <div class="quick-card-body">
+        Dual paradigm pairing a 1:1 sandwich facsimile with modern Typst vector typesetting and native Devanāgarī.
+      </div>
+    </div>
+    <div class="quick-card-action">
+      <a href="target_formats.md" class="quick-btn quick-btn-outline">
+        <span>➔</span> Target Formats
+      </a>
+    </div>
+  </div>
+
+  <div class="quick-card">
+    <div>
+      <div class="quick-card-header">
+        <span class="quick-card-icon">💻</span>
+        <span class="quick-card-title">Source Code & Containers</span>
+      </div>
+      <div class="quick-card-body">
+        Complete Docker Compose orchestration, CLI tools, and automation worker scripts on GitHub.
+      </div>
+    </div>
+    <div class="quick-card-action">
+      <a href="https://github.com/birchville-org/AlexandriaSandwich" class="quick-btn quick-btn-outline" target="_blank" rel="noopener">
+        <span>➔</span> GitHub Repository
+      </a>
+    </div>
+  </div>
+</div>
+
+---
 
 **AlexandriaSandwich** is a containerized pipeline designed for archiving and digitizing historical and modern books. It converts raw scans into precise **1:1 sandwich PDFs** (visual scan preserved with an exact invisible searchable text layer underneath), generic **TEI-P5 XML** for long-term preservation, and newly typeset **digital vector PDFs** via Typst.
 
