@@ -300,10 +300,14 @@ if [[ -f "$CONSOLIDATE" ]]; then
   fi
 fi
 
+IIIF_PAGES_CAND="${JOB_INPUT}/iiif_pages.json"
+
 if [[ -f "$EXPORT_TEI" && -f "${BOOK_DIR}/book.json" ]]; then
   log "export tei-p5 -> $TEI_OUT"
   set +e
-  python3 "$EXPORT_TEI" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$TEI_OUT"
+  python3 "$EXPORT_TEI" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$TEI_OUT" \
+    ${JOB_CONFIG:+-c "$JOB_CONFIG"} \
+    ${IIIF_PAGES_CAND:+--iiif-pages "$IIIF_PAGES_CAND"}
   tei_rc=$?
   set -e
   if [[ "$tei_rc" -ne 0 ]]; then
@@ -321,7 +325,9 @@ if [[ -f "$RENDER_DIGITAL" && -f "${BOOK_DIR}/book.json" ]]; then
   if [[ "${TYPESET_MODE:-}" == "1to1" || "${TYPESET_MODE:-}" == "paginated" ]]; then
     PRESERVE_ARG="--preserve-pages"
   fi
-  python3 "$RENDER_DIGITAL" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$DIGITAL_PDF_OUT" $PRESERVE_ARG
+  python3 "$RENDER_DIGITAL" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$DIGITAL_PDF_OUT" \
+    $PRESERVE_ARG \
+    ${TYPESET_MODE:+--typeset-mode "$TYPESET_MODE"}
   render_rc=$?
   set -e
   if [[ "$render_rc" -ne 0 ]]; then

@@ -2,6 +2,26 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.5.0] - 2026-10-16
+
+### Added
+- **Universal IIIF Presentation & Image Ingestion (`scripts/import_iiif.py`):**
+  - Vollständige IIIF Presentation API v2 und v3 Unterstützung für digitale Bibliotheksbestände (UB Heidelberg, British Library, BnF Gallica, BSB München).
+  - Paralleler Download von Hochauflösungs-Scans mit exponentiellem Backoff und `/full/max/` auf `/full/full/` Fallback.
+  - Automatische Metadaten-Extraktion (Titel, Autor, Editor, Jahr, Manifest-URI) sowie Generierung von `job.config.json` und `iiif_pages.json`.
+- **Kanonisches Sequence-Matching & Alignment (`scripts/align_canonical.py`):**
+  - Universalisiertes Verfahren zur präzisen Synchronisation von OCR-Extrakten mit kanonischen Referenzdatenbanken (Sūtrapāṭha, Dhātupāṭha, Wörterbuch-Indices).
+  - Sequentieller Tracker mit Erkennung von Abschnittsgrenzen, Multi-Script-Ziffern (Devanāgarī, Telugu, Gujarati, Arabisch) und Konfidenz-Audit.
+- **TEI-P5 IIIF-Faksimile-Integration (`scripts/export_tei.py`):**
+  - Vollständige dynamische Auflösung von `<pb n="..." facs="..."/>` über `iiif_pages.json` oder `iiif_template`.
+  - Semantische Einbettung von IIIF-Manifest-Referenzen in `<sourceDesc>`.
+- **Heuristische Text- & Scanbereinigung (`scripts/consolidate_book.py`):**
+  - Automatische Filterung von Bibliotheks-Wasserzeichen, Scanbalken und Förderer-Logos (`strip_library_boilerplates`).
+  - Bereinigung von typografischem Schrift-Drift (Hebräisch/Telugu-Rauschen auf beschädigten Diakritika, `strip_rogue_scripts`).
+- **Typografisches Mehrspalten-Layout & Hermetisches Font-Vendoring (`scripts/render_digital_pdf.py`, `templates/book.typ`):**
+  - Abschnittsspezifischer Vektor-Neusatz: 1-spaltige Prosa für Vorspann/Einleitung, 2-spaltiges Wörterbuch-Grid mit Trennlinie (`grid.vline`) für Lexika und Wortlisten (`dictionary_grid`).
+  - Unterstützung für hermetisches Font-Vendoring via `--font-path` (Priorisierung von Noto Serif Devanagari und Linux Libertine O).
+
 ## [1.4.0] - 2026-10-16
 
 ### Added

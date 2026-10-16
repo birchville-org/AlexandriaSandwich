@@ -122,15 +122,22 @@ Versucht eine Pipeline, aus rohem, unstrukturiertem OCR-Fließtext das visuelle 
    * Der OCR-Text wird unsichtbar an exakten Bounding-Box-Koordinaten als Suchlayer projiziert (PDF Text Rendering Mode 3).
    * **Garantie:** 100 % Original-Layout, 0 % Layout-Risiko, absolute historische Zitierfähigkeit.
 
-2. **Pfad 2: Kanonisches Ground-Truth-Alignment (`scripts/align_*.py`)**
-   * Anstatt den Scan blind geometrisch nachzuahmen, wird der OCR-Text per Fuzzy Matching (`difflib.SequenceMatcher`) gegen eine maschinenlesbare Referenzdatenbank (z. B. 3.997 Sūtras in `sutras.json` oder 2.259 Wurzeln in `dhatupatha_canonical.json`) abgeglichen.
-   * OCR-Fehler bei komplexen Ligaturen werden automatisch repariert und der Text in eine strukturierte Master-JSON (`dhatupatha_complete.json`) überführt.
+2. **Pfad 2: Universelles Kanonisches Ground-Truth-Alignment (`scripts/align_canonical.py`)**
+   * Anstatt den Scan blind rein geometrisch nachzuahmen, wird der extrahierte OCR-Text per Sequence-Matching und Fuzzy-Vergleich gegen eine maschinenlesbare Referenzdatenbank (z. B. 3.997 Sūtras in `sutras.json` oder 2.259 Wurzeln in `dhatupatha_canonical.json`) abgeglichen.
+   * OCR-Erkennungsfehler auf beschädigten historischen Bleisatzlettern werden automatisch repariert, Auslassungen protokolliert und das Werk in eine strukturierte Master-JSON überführt.
+   * Bibliotheks-Wasserzeichen, Scanbalken und Störzeichen fremder Alphabete (Hebräisch/Telugu-Drift auf feinen Diakritika) werden über deklarative Heuristiken (`strip_library_boilerplates`, `strip_rogue_scripts`) bereinigt.
 
-3. **Layout-Treue zum Original durch sektionsspezifische Typografie**
+3. **Pfad 3: Direkte IIIF-Integration & Faksimile-Verknüpfung (`scripts/import_iiif.py`)**
+   * Vollständiger Import digitaler Sammlungen über IIIF Presentation API v2 und v3 (UB Heidelberg, British Library, BnF Gallica, BSB München).
+   * Direkte Verknüpfung aller Seiten im TEI-P5-Dokument (`<pb n="..." facs="..."/>`) mit kanonischen IIIF-Bild-URIs.
+   * Deklarative Profilkonfiguration via `job.config.json` (`iiif_manifest`, `iiif_template`).
+
+4. **Layout-Treue zum Original durch sektionsspezifische Typografie**
    * Kein starres globales 2-Spalten-Zwangskorsett über das gesamte Buch:
      * **Front Matter (Vorwort, Einleitung):** Einspaltiger, eleganter Fließtext mit Originalabsätzen und Randverweisen auf die Originalscans (`[S. 6]`).
-     * **Hauptteil (Wörterbuch/Tabellen):** Zweispaltiger Satz mit vertikalem Trennstrich (`grid.vline`) und zentrierten Kolophonen.
+     * **Hauptteil (Wörterbuch/Tabellen):** Zweispaltiger Satz mit vertikalem Trennstrich (`grid.vline`) und zentrierten Kolophonen (`typeset_mode: dictionary_grid`).
      * **Back Matter (Register/Anhänge):** Strukturgetreue Darstellung der historischen Verzeichnisse.
+     * **Hermetisches Font-Vendoring:** Unterstützung lokaler OpenType-Schriften via `--font-path` (Priorisierung von `Noto Serif Devanagari` und `Linux Libertine O`).
 
 ---
 

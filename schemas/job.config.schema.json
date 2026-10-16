@@ -54,6 +54,18 @@
       "minimum": 0,
       "description": "Maximale Anzahl zu verarbeitender Seiten (0 = alle Seiten)."
     },
+    "iiif_manifest": {
+      "type": "string",
+      "description": "URL zum kanonischen IIIF Presentation API Manifest (v2 oder v3)."
+    },
+    "iiif_template": {
+      "type": "string",
+      "description": "URL-Template zur direkten Auflösung von IIIF-Bildern (z.B. mit {page} oder {canvas_id})."
+    },
+    "canonical_reference": {
+      "type": "string",
+      "description": "Pfad zu einer kanonischen Referenzdatenbank (JSON) für Sequence-Matching und Korrekturen."
+    },
     "heuristics": {
       "type": "object",
       "description": "Dokumentspezifische typographische und philologische Heuristiken für Downstream-Renderer.",
@@ -78,6 +90,18 @@
         "strip_page_numbers": {
           "type": "boolean",
           "description": "Automatisches Entfernen isolierter Seitenzahlen."
+        },
+        "strip_library_boilerplates": {
+          "type": "boolean",
+          "description": "Automatisches Entfernen von Bibliotheks-Wasserzeichen, Scan-Balken und Förderlogos."
+        },
+        "strip_rogue_scripts": {
+          "type": "boolean",
+          "description": "Filtern von fremdsprachigen Störzeichen (z.B. hebräische oder telugu-Halluzinationen auf Diakritika)."
+        },
+        "typeset_mode": {
+          "type": "string",
+          "description": "Neusatzmodus für Typst ('reconstructed_1to1', 'scholarly_reflow', 'dictionary_grid')."
         }
       },
       "additionalProperties": true

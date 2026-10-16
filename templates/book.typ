@@ -1,7 +1,7 @@
 // AlexandriaSandwich - Universal Book Typesetting Template
 // Pure Typst - No LaTeX dependency
 
-#let book_fonts = ("Libertinus Serif", "Baskerville", "Charter", "PT Serif", "Times New Roman", "Devanagari MT", "Kohinoor Devanagari", "Noto Sans Devanagari")
+#let book_fonts = ("Noto Serif Devanagari", "Linux Libertine O", "Libertinus Serif", "Baskerville", "Charter", "PT Serif", "Times New Roman", "Devanagari MT", "Kohinoor Devanagari", "Noto Sans Devanagari")
 
 #let orig-page(p) = context {
   let is_even = calc.even(here().page())

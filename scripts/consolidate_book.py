@@ -135,11 +135,34 @@ def parse_markdown_page(md_path: Path) -> Dict[str, Any]:
     }
 
 
-def clean_page_artifacts(pages: List[Dict[str, Any]], language: str = "") -> List[Dict[str, Any]]:
+BOILERPLATE_PATTERNS = [
+    re.compile(r"universit[äa]ts[-\s]*bibliothek\s+heidelberg", re.IGNORECASE),
+    re.compile(r"badische\s+landesbibliothek", re.IGNORECASE),
+    re.compile(r"bayerische\s+staatsbibliothek", re.IGNORECASE),
+    re.compile(r"staatsbibliothek\s+zu\s+berlin", re.IGNORECASE),
+    re.compile(r"digi\.ub\.uni-heidelberg\.de", re.IGNORECASE),
+    re.compile(r"gef[öo]rdert\s+durch", re.IGNORECASE),
+    re.compile(r"baden-w[üu]rttemberg", re.IGNORECASE),
+    re.compile(r"^\[LOGO\]", re.IGNORECASE),
+    re.compile(r"©\s*universit[äa]tsbibliothek", re.IGNORECASE),
+]
+
+ROGUE_SCRIPTS_PATTERN = re.compile(r"[\u0590-\u05FF\u0C00-\u0C7F]+")
+
+
+def clean_page_artifacts(
+    pages: List[Dict[str, Any]],
+    language: str = "",
+    heuristics: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
     """
     Remove repetitive running headers, footers, standalone page numbers,
-    and prompt evaluation hallucinations from page boundaries.
+    prompt evaluation hallucinations, library boilerplates, and rogue script drift.
     """
+    heur = heuristics or {}
+    strip_boilerplates = heur.get("strip_library_boilerplates", False)
+    strip_rogue = heur.get("strip_rogue_scripts", False)
+
     is_cjk_expected = any(l in (language or "").lower() for l in ["chi", "zho", "zh", "kor", "jpn"])
     for page in pages:
         cleaned_blocks = []
@@ -155,6 +178,18 @@ def clean_page_artifacts(pages: List[Dict[str, Any]], language: str = "") -> Lis
             t_lower = text.lower()
             if "ground truth image displays" in t_lower or "underscore & line rules" in t_lower:
                 continue
+
+            # Strip library scan banners and stamps if requested by heuristic
+            if strip_boilerplates:
+                if any(p.search(text) for p in BOILERPLATE_PATTERNS):
+                    continue
+
+            # Strip rogue non-Sanskrit script tokens (Hebrew/Telugu noise on diacritics)
+            if strip_rogue:
+                text = ROGUE_SCRIPTS_PATTERN.sub("", text).strip()
+                if not text:
+                    continue
+                block["text"] = text
 
             # Filter CJK hallucinations when language is non-CJK (e.g. eng+san, deu)
             if not is_cjk_expected:
@@ -177,6 +212,7 @@ def clean_page_artifacts(pages: List[Dict[str, Any]], language: str = "") -> Lis
             cleaned_blocks.append(block)
         page["blocks"] = cleaned_blocks
     return pages
+
 
 
 def load_job_config(
@@ -299,10 +335,53 @@ def consolidate_job(
             else:
                 log(f"Warning: No OCR artifacts found for page {base}")
 
-    # 2. Filter artifacts (running headers/footers and non-matching script hallucinations)
-    pages_data = clean_page_artifacts(pages_data, language=language)
+    # 2. Discover IIIF page mappings if present
+    iiif_pages_map: Dict[str, str] = {}
+    for cand_iiif in (
+        input_dir / "iiif_pages.json",
+        (data_dir / "input" / job_name / "iiif_pages.json") if data_dir else None,
+        (data_dir / "processing" / job_name / "iiif_pages.json") if data_dir else None,
+    ):
+        if cand_iiif and cand_iiif.is_file():
+            try:
+                with open(cand_iiif, "r", encoding="utf-8") as f:
+                    raw_iiif = json.load(f)
+                if isinstance(raw_iiif, list):
+                    for i, item in enumerate(raw_iiif, start=1):
+                        url = item.get("image_url") or item.get("url") or ""
+                        p_num = str(item.get("page_num", i))
+                        if url:
+                            iiif_pages_map[p_num] = url
+                elif isinstance(raw_iiif, dict):
+                    for k, v in raw_iiif.items():
+                        if isinstance(v, str):
+                            iiif_pages_map[str(k)] = v
+                        elif isinstance(v, dict):
+                            url = v.get("image_url") or v.get("url") or ""
+                            if url:
+                                iiif_pages_map[str(k)] = url
+                log(f"Loaded {len(iiif_pages_map)} IIIF page mapping(s) from {cand_iiif.name}")
+                break
+            except Exception as e:
+                log(f"Warning: could not parse {cand_iiif}: {e}")
 
-    # 3. Build book structure with declarative profile metadata
+    iiif_template = job_cfg.get("iiif_template", "")
+    for idx, page in enumerate(pages_data, start=1):
+        p_num_str = str(page.get("page_num", idx))
+        if p_num_str in iiif_pages_map:
+            page["facs"] = iiif_pages_map[p_num_str]
+            page["iiif_url"] = iiif_pages_map[p_num_str]
+        elif iiif_template:
+            tpl = iiif_template.replace("{page}", p_num_str).replace("{p}", p_num_str)
+            tpl = re.sub(r"\{p:0?(\d+)d\}", lambda m: f"{int(p_num_str):0{int(m.group(1))}d}", tpl)
+            tpl = re.sub(r"\{page:0?(\d+)d\}", lambda m: f"{int(p_num_str):0{int(m.group(1))}d}", tpl)
+            page["facs"] = tpl
+            page["iiif_url"] = tpl
+
+    # 3. Filter artifacts (running headers/footers, non-matching scripts, boilerplates)
+    pages_data = clean_page_artifacts(pages_data, language=language, heuristics=heuristics)
+
+    # 4. Build book structure with declarative profile metadata
     meta_dict: Dict[str, Any] = {
         "job": job_name,
         "title": doc_title,
@@ -312,7 +391,7 @@ def consolidate_job(
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "pipeline": "AlexandriaSandwich"
     }
-    for field in ("editor", "year", "publisher"):
+    for field in ("editor", "year", "publisher", "iiif_manifest", "iiif_template", "canonical_reference"):
         if field in job_cfg:
             meta_dict[field] = job_cfg[field]
     if heuristics:

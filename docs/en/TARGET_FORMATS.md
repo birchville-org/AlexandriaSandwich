@@ -120,15 +120,22 @@ Attempting to geometrically reconstruct the exact page layout of a complex histo
    * Searchable OCR text is overlaid via PDF Text Rendering Mode 3 (*neither fill nor stroke text*) on exact bounding box coordinates.
    * **Guarantee:** 100% original layout, zero typographical risk, complete archival citation fidelity.
 
-2. **Path 2: Canonical Ground-Truth Alignment (`scripts/align_*.py`)**
-   * Instead of guessing scan geometry, raw OCR is fuzzy-matched (`difflib.SequenceMatcher`) against machine-readable ground-truth databases (e.g., 3,997 Sūtras in `sutras.json` or 2,259 roots in `dhatupatha_canonical.json`).
-   * Ligature misrecognitions and colophon noise are automatically healed into a structured master database (`dhatupatha_complete.json`).
+2. **Path 2: Universal Canonical Ground-Truth Alignment (`scripts/align_canonical.py`)**
+   * Instead of blindly guessing scan geometry, raw OCR text is synchronized via sequence tracking and fuzzy matching against canonical reference databases (e.g. 3,997 Sūtras in `sutras.json` or 2,259 roots in `dhatupatha_canonical.json`).
+   * OCR errors on damaged 19th-century lead types are automatically repaired, gaps audited, and the work consolidated into an archival master JSON.
+   * Library stamps, scan bars, and rogue script drift (Hebrew/Telugu noise on fine Sanskrit diacritics) are cleanly eliminated via declarative heuristics (`strip_library_boilerplates`, `strip_rogue_scripts`).
 
-3. **Layout Fidelity Through Section-Aware Typography**
+3. **Path 3: Direct IIIF Ingestion & Facsimile Linking (`scripts/import_iiif.py`)**
+   * Native ingestion of digital collections across IIIF Presentation API v2 and v3 endpoints (UB Heidelberg, British Library, BnF Gallica, BSB München).
+   * Direct linking of all edition page breaks in TEI-P5 XML (`<pb n="..." facs="..."/>`) with canonical IIIF image URIs.
+   * Declarative configuration via `job.config.json` (`iiif_manifest`, `iiif_template`).
+
+4. **Layout Fidelity Through Section-Aware Typography**
    * Avoid enforcing a rigid global 2-column layout across the entire book:
      * **Front Matter (Preface, Introduction):** Single-column continuous prose with original paragraphs and scan page margin links (`[S. 6]`).
-     * **Main Body (Dictionary/Tables):** Two-column dictionary layout with vertical column rules (`grid.vline`) and centered colophons.
+     * **Main Body (Dictionary/Tables):** Two-column dictionary layout with vertical column rules (`grid.vline`) and centered colophons (`typeset_mode: dictionary_grid`).
      * **Back Matter (Indices/Appendices):** Structure matching historical registers.
+     * **Hermetic Font Vendoring:** Local OpenType font bundling via `--font-path` (prioritizing `Noto Serif Devanagari` and `Linux Libertine O`).
 
 ---
 

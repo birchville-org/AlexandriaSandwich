@@ -522,9 +522,14 @@ def build_typst_document(
     paper: Optional[str] = None,
     preserve_pages: bool = True,
     layout_calibration: Optional[Dict[str, float]] = None,
+    typeset_mode: Optional[str] = None,
 ) -> str:
     """Generate complete Typst source code from book dictionary."""
     meta = book_data.get("metadata", {})
+    heuristics = meta.get("heuristics", {})
+    mode = typeset_mode or heuristics.get("typeset_mode", "")
+    is_two_col_profile = heuristics.get("two_column", False) or mode == "dictionary_grid"
+
     title = meta.get("title", "Untitled Book")
     author = meta.get("author", "Alexandria Archive")
     date_val = meta.get("generated_at", "")[:10]
@@ -687,12 +692,19 @@ def build_typst_document(
 
         # Multi-column heuristic: detect dictionary, list, or vocabulary pages without table syntax
         is_narrow_list = False
-        if not has_table and len(p_blocks) >= 12:
-            lens = [len(t) for t in p_blocks]
-            avg_l = sum(lens) / len(lens) if lens else 0
-            max_l = max(lens) if lens else 0
-            if avg_l <= 55 and max_l < 140:
+        is_front_matter_page = idx <= 4 or any(
+            fm in str(page_elements).lower()
+            for fm in ("preface", "introduction", "vorwort", "inhalt", "table of contents", "title")
+        )
+        if not has_table:
+            if is_two_col_profile and not is_front_matter_page and len(page_elements) >= 3:
                 is_narrow_list = True
+            elif len(p_blocks) >= 12:
+                lens = [len(t) for t in p_blocks]
+                avg_l = sum(lens) / len(lens) if lens else 0
+                max_l = max(lens) if lens else 0
+                if avg_l <= 55 and max_l < 140:
+                    is_narrow_list = True
 
         if is_narrow_list:
             lead_headings = []
@@ -755,6 +767,8 @@ def render_pdf(
     paper: Optional[str] = None,
     preserve_pages: bool = True,
     reference_pdf: Optional[Path] = None,
+    font_path: Optional[Path] = None,
+    typeset_mode: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Compile Typst document into high-quality digital PDF."""
     start_time = time.time()
@@ -811,6 +825,7 @@ def render_pdf(
         paper=paper,
         preserve_pages=preserve_pages,
         layout_calibration=layout_cal,
+        typeset_mode=typeset_mode,
     )
 
     # 4. Write temp .typ file in job directory
@@ -827,9 +842,24 @@ def render_pdf(
         else:
             raise RuntimeError("Typst CLI not found. Please ensure typst is installed in PATH.")
 
-    log(f"Compiling with Typst: {typst_cmd} compile --root / {temp_typ} {output_file}")
+    # 5a. Assemble compile arguments with font-path vendoring support
+    compile_args = [typst_cmd, "compile", "--root", "/"]
+    resolved_fonts: Optional[Path] = None
+    if font_path and font_path.is_dir():
+        resolved_fonts = font_path
+    else:
+        for cand_f in (project_root / "data" / "fonts", project_root / "fonts", Path("data/fonts")):
+            if cand_f.is_dir():
+                resolved_fonts = cand_f.resolve()
+                break
+
+    if resolved_fonts:
+        compile_args.extend(["--font-path", str(resolved_fonts)])
+
+    compile_args.extend([str(temp_typ), str(output_file)])
+    log(f"Compiling with Typst: {' '.join(compile_args)}")
     proc = subprocess.run(
-        [typst_cmd, "compile", "--root", "/", str(temp_typ), str(output_file)],
+        compile_args,
         capture_output=True,
         text=True
     )
@@ -907,6 +937,8 @@ def main():
     parser.add_argument("--preserve-pages", action="store_true", help="Alias for --mode paginated")
     parser.add_argument("--no-preserve-pages", action="store_true", help="Alias for --mode boehtlingk")
     parser.add_argument("--root", help="Project root for Typst imports (default: repo root)")
+    parser.add_argument("--font-path", help="Path to vendored font directory (default: autodetect data/fonts)")
+    parser.add_argument("--typeset-mode", help="Typeset mode: reconstructed_1to1, scholarly_reflow, dictionary_grid")
 
     args = parser.parse_args()
 
@@ -926,6 +958,7 @@ def main():
     input_file = Path(args.input) if args.input else resolved_input
     output_file = Path(args.output) if args.output else data_dir / "output" / args.job / f"{args.job}.digital.pdf"
     ref_pdf = Path(args.reference_pdf) if args.reference_pdf else None
+    font_path = Path(args.font_path).resolve() if args.font_path else None
 
     mode = args.mode
     if args.preserve_pages:
@@ -943,6 +976,8 @@ def main():
         paper=args.paper,
         preserve_pages=preserve_pages,
         reference_pdf=ref_pdf,
+        font_path=font_path,
+        typeset_mode=args.typeset_mode,
     )
 
 
