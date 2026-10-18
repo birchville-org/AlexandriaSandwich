@@ -92,46 +92,96 @@ def parse_hocr_page(hocr_path: Path) -> Dict[str, Any]:
     }
 
 
-def parse_markdown_page(md_path: Path) -> Dict[str, Any]:
-    """Parse a single page markdown file (e.g. from Mistral OCR)."""
+def clean_tok(s: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9]", "", s).lower()
+
+
+def parse_markdown_page(md_path: Path, sideheads: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    """Parse a single page markdown file (e.g. from Mistral OCR) with layout sidehead awareness."""
     text = md_path.read_text(encoding="utf-8")
     lines = text.splitlines()
     blocks = []
-    current_p: List[str] = []
+    
+    sh_targets: Dict[str, Dict[str, Any]] = {}
+    if sideheads:
+        for sh in sideheads:
+            raw_t = sh.get("text") or sh.get("raw_text") or ""
+            tok = clean_tok(raw_t)
+            if tok:
+                sh_targets[tok] = sh
 
-    def flush_p():
-        if current_p:
-            p_text = " ".join(current_p).strip()
-            if p_text:
-                blocks.append({"type": "p", "text": p_text, "bbox": [0, 0, 0, 0]})
-            current_p.clear()
-
-    for line in lines:
-        stripped = line.strip()
-        if not stripped:
-            flush_p()
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line:
+            i += 1
             continue
-        
-        # Check headings
-        if stripped.startswith("#"):
-            flush_p()
-            m = re.match(r'^(#+)\s+(.+)$', stripped)
+
+        # Lookahead for sidehead match (up to 4 lines)
+        matched_sh = None
+        matched_k = 0
+        chunk_text = ""
+        if sh_targets:
+            for k in range(1, 5):
+                if i + k > len(lines):
+                    break
+                chunk = " ".join(re.sub(r"^#+\s*", "", lines[i + j].strip()) for j in range(k))
+                tok = clean_tok(chunk)
+                if tok in sh_targets:
+                    matched_sh = sh_targets[tok]
+                    matched_k = k
+                    chunk_text = chunk
+                    break
+
+        if matched_sh:
+            blocks.append({
+                "type": "sidehead",
+                "text": matched_sh.get("text") or chunk_text,
+                "bbox": matched_sh.get("bbox", [0, 0, 0, 0]),
+            })
+            i += matched_k
+            continue
+
+        if line.startswith("#"):
+            m = re.match(r"^(#+)\s+(.+)$", line)
             if m:
                 level = len(m.group(1))
                 blocks.append({"type": f"h{level}", "text": m.group(2).strip(), "bbox": [0, 0, 0, 0]})
             else:
-                blocks.append({"type": "h1", "text": stripped.lstrip("#").strip(), "bbox": [0, 0, 0, 0]})
-        elif stripped.startswith("|") and stripped.endswith("|"):
-            flush_p()
-            blocks.append({"type": "table_row", "text": stripped, "bbox": [0, 0, 0, 0]})
+                blocks.append({"type": "h1", "text": line.lstrip("#").strip(), "bbox": [0, 0, 0, 0]})
+        elif line.startswith("|") and line.endswith("|"):
+            blocks.append({"type": "table_row", "text": line, "bbox": [0, 0, 0, 0]})
+        elif re.match(r"^(\d+[\.\)]|[a-zA-Z][\.\)]|[-*•])\s+", line):
+            blocks.append({"type": "p", "text": line, "bbox": [0, 0, 0, 0]})
         else:
-            current_p.append(stripped)
+            p_lines = [line]
+            while i + 1 < len(lines):
+                next_l = lines[i + 1].strip()
+                if not next_l or next_l.startswith("#") or (next_l.startswith("|") and next_l.endswith("|")):
+                    break
+                if re.match(r"^(\d+[\.\)]|[a-zA-Z][\.\)]|[-*•])\s+", next_l):
+                    break
+                # Check if next_l starts a known sidehead
+                is_next_sh = False
+                if sh_targets:
+                    for k in range(1, 4):
+                        if i + 1 + k > len(lines):
+                            break
+                        c_chk = " ".join(re.sub(r"^#+\s*", "", lines[i + 1 + j].strip()) for j in range(k))
+                        if clean_tok(c_chk) in sh_targets:
+                            is_next_sh = True
+                            break
+                if is_next_sh:
+                    break
+                i += 1
+                p_lines.append(next_l)
+            blocks.append({"type": "p", "text": " ".join(p_lines), "bbox": [0, 0, 0, 0]})
+        i += 1
 
-    flush_p()
     return {
         "facs": md_path.stem.replace(".mistral", "") + ".png",
         "bbox": [0, 0, 0, 0],
-        "blocks": blocks
+        "blocks": blocks,
     }
 
 
@@ -281,6 +331,24 @@ def consolidate_job(
     sorted_stems = sorted(stems)
     log(f"Found {len(sorted_stems)} total page(s) for job '{job_name}'")
 
+    # 1. Discover layout profile if available
+    layout_profile = None
+    layout_profile_cands = [
+        output_dir / "layout.profile.json",
+        input_dir / "layout.profile.json",
+        (data_dir / "output" / job_name / "layout.profile.json") if data_dir else None,
+        (data_dir / "input" / job_name / "layout.profile.json") if data_dir else None,
+    ]
+    for cand in layout_profile_cands:
+        if cand and cand.is_file():
+            try:
+                with open(cand, "r", encoding="utf-8") as f:
+                    layout_profile = json.load(f)
+                log(f"Loaded layout profile from: {cand} (macro_layout={layout_profile.get('macro_layout')})")
+                break
+            except Exception:
+                pass
+
     pages_data = []
     for idx, base in enumerate(sorted_stems, start=1):
         # Check for Mistral Markdown (HIGH PRECISION PRIORITY)
@@ -304,7 +372,10 @@ def consolidate_job(
 
         if md_file:
             log(f"page {base}: using high-precision Mistral markdown ({md_file.name})")
-            p = parse_markdown_page(md_file)
+            page_sh = []
+            if layout_profile and "pages" in layout_profile:
+                page_sh = layout_profile["pages"].get(str(idx), {}).get("sideheads", [])
+            p = parse_markdown_page(md_file, sideheads=page_sh)
             p["page_num"] = idx
             # If hOCR exists, inherit geometry
             if hocr_file:
@@ -396,6 +467,8 @@ def consolidate_job(
             meta_dict[field] = job_cfg[field]
     if heuristics:
         meta_dict["heuristics"] = heuristics
+    if layout_profile:
+        meta_dict["layout_profile"] = layout_profile
 
     book_data = {
         "metadata": meta_dict,

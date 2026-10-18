@@ -29,18 +29,182 @@
 #let page_content(body) = layout(size => context {
   let m = measure(block(width: size.width)[#body])
   if m.height > size.height {
-    let factor = (size.height / m.height) * 98%
+    let ratio_val = (size.height / m.height) * 0.98
+    let f = calc.max(0.82, ratio_val)
     place(top + left)[
-      #scale(x: factor, y: factor, origin: top + left)[
-        #block(width: size.width / (factor / 100%))[#body]
+      #scale(x: f * 100%, y: f * 100%, origin: top + left)[
+        #block(width: size.width / f, height: size.height / f)[#body]
       ]
     ]
   } else {
-    block(width: size.width)[#body]
+    block(width: size.width, height: size.height)[#body]
   }
 })
 
 #let fit-page = page_content
+
+#let book-half-title(title: "", subtitle: none) = {
+  align(center)[
+    #v(4.2cm)
+    #text(size: 24pt, weight: "bold", font: book_fonts)[#title]
+    #if subtitle != none and subtitle != "" [
+      #v(1.2cm)
+      #text(size: 13pt, font: book_fonts, tracking: 0.12em)[#upper(subtitle)]
+    ]
+    #v(1fr)
+  ]
+}
+
+#let book-title-page(
+  title: "",
+  subtitle: none,
+  author: none,
+  publisher: none,
+) = {
+  align(center)[
+    #v(2.6cm)
+    #if title != "" [
+      #text(size: 28pt, weight: "bold", font: book_fonts)[#title]
+    ]
+    #if author != none and author != "" [
+      #v(3.0cm)
+      #text(size: 13.5pt, weight: "medium", font: book_fonts, tracking: 0.18em)[#upper(author)]
+    ]
+    #if subtitle != none and subtitle != "" [
+      #v(2.8cm)
+      #text(size: 11.5pt, font: book_fonts, tracking: 0.14em)[#upper(subtitle)]
+    ]
+    #v(1fr)
+    #if publisher != none and publisher != "" [
+      #text(size: 9.5pt, font: book_fonts, tracking: 0.08em)[
+        #set par(leading: 0.55em)
+        #publisher
+      ]
+    ]
+    #v(1.8cm)
+  ]
+}
+
+#let book-imprint-page(
+  editions: (),
+  copyright: "",
+  isbn: "",
+  publisher_name: "",
+  available_at: none,
+  addresses: (),
+  sales_restriction: none,
+  colophon: ()
+) = {
+  let ed_arr = if type(editions) == array { editions } else if editions != none and editions != "" { (editions,) } else { () }
+  let addr_arr = if type(addresses) == array { addresses } else if addresses != none and addresses != "" { (addresses,) } else { () }
+  let col_arr = if type(colophon) == array { colophon } else if colophon != none and colophon != "" { (colophon,) } else { () }
+
+  align(center)[
+    #set text(size: 8.5pt, font: book_fonts)
+    #set par(leading: 0.45em, justify: false)
+    
+    #v(1.6cm)
+    
+    // 1. Edition History
+    #if ed_arr.len() > 0 [
+      #for ed in ed_arr [
+        #ed
+        #v(0.12em)
+      ]
+    ]
+    
+    #v(0.6cm)
+    
+    // 2. Copyright & Rights
+    #if copyright != "" [
+      #text(weight: "medium")[#copyright]
+    ]
+    
+    #if isbn != "" [
+      #v(0.45cm)
+      #text(weight: "bold")[#isbn]
+    ]
+    
+    #v(0.6cm)
+    
+    // 3. Publisher & Branch Addresses
+    #if available_at != none and available_at != "" [
+      #text(style: "italic")[#available_at] \
+      #v(0.15cm)
+    ]
+    #if publisher_name != "" [
+      #text(size: 10pt, weight: "bold", tracking: 0.1em)[#upper(publisher_name)]
+      #v(0.35cm)
+    ]
+    #if addr_arr.len() > 0 [
+      #for addr in addr_arr [
+        #text(size: 7.5pt)[#addr]
+        #v(0.12em)
+      ]
+    ]
+    
+    #v(1fr)
+    
+    // 4. Sales Restriction / Territory notice
+    #if sales_restriction != none and sales_restriction != "" [
+      #text(size: 7.5pt, style: "italic", tracking: 0.06em)[#sales_restriction]
+      #v(1.0cm)
+    ]
+    
+    // 5. Printer Colophon at bottom
+    #if col_arr.len() > 0 [
+      #for line in col_arr [
+        #text(size: 7.2pt, tracking: 0.04em)[#line]
+        #v(0.1em)
+      ]
+    ]
+    #v(1.2cm)
+  ]
+}
+
+#let book-toc-page(
+  is_first: false,
+  roman_label: "",
+  body
+) = {
+  set text(font: book_fonts)
+  if is_first [
+    #v(0.2cm)
+    #align(center)[= CONTENTS]
+    #v(0.45cm)
+  ]
+  body
+}
+
+#let book-lesson-page(
+  number: "",
+  title: "",
+  syllabus: (),
+  num_dx: -168pt,
+) = {
+  set text(font: book_fonts)
+  v(1.6cm)
+  if number != "" and number != none [
+    #place(left, dx: num_dx)[
+      #text(size: 88pt, weight: "bold", fill: rgb("#03192e"), font: book_fonts)[#number]
+    ]
+  ]
+  [= #upper(title)]
+  v(1.4em)
+  if syllabus.len() > 0 [
+    #grid(
+      columns: (84pt, 1fr),
+      row-gutter: 1.85em,
+      ..syllabus.map(cat => (
+        text(weight: "bold", size: 10.5pt)[#cat.at(0)],
+        stack(
+          spacing: 0.65em,
+          ..cat.at(1).map(item => text(size: 10.5pt)[#item])
+        )
+      )).flatten()
+    )
+  ]
+}
 
 #let page-footnotes(notes) = {
   if notes != none and notes.len() > 0 {
@@ -54,6 +218,16 @@
     ]
   }
 }
+
+#let sidehead(body, dx: -160pt, width: 92pt) = place(
+  left,
+  dx: dx,
+  block(width: width)[
+    #set text(size: 9.0pt, weight: "bold", font: book_fonts, hyphenate: false)
+    #set par(leading: 0.35em, justify: false)
+    #body
+  ]
+)
 
 #let book(
   title: "Untitled Book",
@@ -79,29 +253,31 @@
   // Typography rules
   set text(
     font: book_fonts,
-    size: if preserve_pages { 9.5pt } else { 10pt },
+    size: if preserve_pages { 11.5pt } else { 11pt },
     lang: lang,
     hyphenate: true
   )
 
   set par(
     justify: true,
-    leading: if preserve_pages { 0.55em } else { 0.72em },
+    leading: if preserve_pages { 0.72em } else { 0.72em },
     first-line-indent: if preserve_pages { 0em } else { 1.4em }
   )
 
-  set block(spacing: if preserve_pages { 0.52em } else { 0.65em })
+  set block(spacing: if preserve_pages { 0.55em } else { 0.65em })
 
   // Headings
   show heading: it => {
     set text(font: book_fonts, weight: "bold")
     if preserve_pages {
       if it.level == 1 {
-        align(center)[#v(1.2cm)#text(size: 16pt)[#it.body]#v(0.8cm)]
+        block(above: 0.8em, below: 0.6em)[
+          #text(size: 14pt, weight: "bold", tracking: 0.08em)[#it.body]
+        ]
       } else if it.level == 2 {
-        block(above: 0.8em, below: 0.4em)[#text(size: 11.5pt)[#it.body]]
+        block(above: 0.6em, below: 0.3em)[#text(size: 11.5pt)[#it.body]]
       } else {
-        block(above: 0.6em, below: 0.3em)[#text(size: 10pt, style: "italic")[#it.body]]
+        block(above: 0.45em, below: 0.25em)[#text(size: 10pt, style: "italic")[#it.body]]
       }
     } else {
       if it.level == 1 {
@@ -154,10 +330,10 @@
       let h1_on_page = query(heading.where(level: 1)).filter(h => h.location().page() == page_num)
       let is_chapter_start = h1_on_page.len() > 0
 
-      // Suppress headers on unnumbered front-matter pages (cover, card, title, imprint, dedication)
+      // Suppress headers on unnumbered pages (plabel == "" or None)
       // AND on any chapter opening page!
-      let suppress = is_chapter_start or (if preserve_pages {
-        idx < 6
+      let suppress = is_chapter_start or plabel == "" or plabel == none or (if preserve_pages {
+        idx < 3
       } else {
         page_num <= 2
       })
@@ -172,31 +348,34 @@
           clean_title
         }
 
-        // Determine parity based on printed page label (plabel) if numeric
+        // Determine parity based on printed page label (plabel) supporting arabic and roman numerals
+        let roman_map = (
+          i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10,
+          xi: 11, xii: 12, xiii: 13, xiv: 14, xv: 15, xvi: 16, xvii: 17, xviii: 18, xix: 19, xx: 20,
+          xxi: 21, xxii: 22, xxiii: 23, xxiv: 24, xxv: 25, xxvi: 26, xxvii: 27, xxviii: 28, xxix: 29, xxx: 30,
+          xxxi: 31, xxxii: 32, xxxiii: 33, xxxiv: 34, xxxv: 35
+        )
         let is_even = if plabel.matches(regex("^\d+$")).len() > 0 {
           calc.even(int(plabel))
+        } else if lower(plabel) in roman_map {
+          calc.even(roman_map.at(lower(plabel)))
         } else {
           calc.even(page_num)
         }
 
-        let is_back_matter = clean_ch_title in ("Bibliography", "Index of Sūtras", "Index of Terms")
-        let verso_title = if is_back_matter { clean_ch_title } else { clean_title }
-
-        set text(size: 8.5pt, font: book_fonts, fill: luma(60))
+        set text(size: 8.5pt, font: book_fonts, fill: luma(20))
         if is_even {
           grid(
-            columns: (1fr, auto, 1fr),
-            align: (left, center, right),
+            columns: (auto, 1fr),
+            align: (left, right),
             [#plabel],
-            [#text(style: "italic")[#verso_title]],
-            []
+            [#text(tracking: 0.08em)[#upper(clean_title)]]
           )
         } else {
           grid(
-            columns: (1fr, auto, 1fr),
-            align: (left, center, right),
-            [],
-            [#text(style: "italic")[#clean_ch_title]],
+            columns: (1fr, auto),
+            align: (left, right),
+            [#text(tracking: 0.08em)[#upper(clean_ch_title)]],
             [#plabel]
           )
         }

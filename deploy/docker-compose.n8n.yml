@@ -4,7 +4,7 @@ services:
     container_name: alexandria_n8n
     restart: unless-stopped
     ports:
-      - "5678:5678"
+      - "127.0.0.1:5678:5678"
     environment:
       - N8N_HOST=alex.local
       - N8N_PORT=5678

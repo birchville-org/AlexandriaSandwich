@@ -31,7 +31,7 @@ services:
     container_name: alexandria_ui
     restart: unless-stopped
     ports:
-      - "${PORT_UI:-8080}:8080"
+      - "${HOST_UI:-127.0.0.1}:${PORT_UI:-8080}:8080"
     env_file:
       - path: .env
         required: false
@@ -57,7 +57,7 @@ services:
     container_name: alexandria_n8n
     restart: unless-stopped
     ports:
-      - "${PORT_N8N:-5678}:5678"
+      - "${HOST_N8N:-127.0.0.1}:${PORT_N8N:-5678}:5678"
     environment:
       - N8N_HOST=${N8N_HOST:-localhost}
       - N8N_PORT=5678

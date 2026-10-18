@@ -42,9 +42,13 @@ USE_MISTRAL=1
 USE_UNPAPER=1
 SKIP_PREPROCESS=0
 LIMIT=0
-INPUT_DIR="${AS_INPUT_DIR:-/data/input}"
-PROC_DIR="${AS_PROCESSING_DIR:-/data/processing}"
-OUT_DIR="${AS_OUTPUT_DIR:-/data/output}"
+DEFAULT_DATA="/data"
+if [[ ! -w "/data" && -d "${SCRIPT_DIR}/../data" ]]; then
+  DEFAULT_DATA="$(cd "${SCRIPT_DIR}/../data" && pwd)"
+fi
+INPUT_DIR="${AS_INPUT_DIR:-${DEFAULT_DATA}/input}"
+PROC_DIR="${AS_PROCESSING_DIR:-${DEFAULT_DATA}/processing}"
+OUT_DIR="${AS_OUTPUT_DIR:-${DEFAULT_DATA}/output}"
 
 log() { printf '[%s] %s\n' "$(date -Iseconds)" "$*" >&2; }
 die() { log "ERROR: $*"; exit 2; }
@@ -58,9 +62,12 @@ LIMIT_EXPLICIT=0
 TYPESET_MODE=""
 TYPESET_MODE_EXPLICIT=0
 
+PDF_SRC=""
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --job|-j) JOB_NAME="$2"; shift 2 ;;
+    --pdf) PDF_SRC="$2"; shift 2 ;;
     --pull) DO_PULL=1; shift ;;
     --push) DO_PUSH=1; shift ;;
     --lang) LANG_OCR="$2"; LANG_EXPLICIT=1; shift 2 ;;
@@ -105,6 +112,9 @@ try:
     if t_mode:
         val = re.sub(r"[^a-zA-Z0-9_.-]", "", str(t_mode))
         print(f"CFG_TYPESET_MODE={shlex.quote(val)}")
+    s_pdf = cfg.get("heuristics", {}).get("source_pdf") or cfg.get("source_pdf")
+    if s_pdf:
+        print(f"CFG_SOURCE_PDF={shlex.quote(str(s_pdf))}")
 except Exception:
     pass
 PY
@@ -116,6 +126,7 @@ PY
   [[ -n "${CFG_LIMIT:-}" && "$LIMIT_EXPLICIT" -eq 0 ]] && LIMIT="$CFG_LIMIT"
   [[ -n "${CFG_SKIP_PREPROCESS:-}" && "$SKIP_PREPROCESS_EXPLICIT" -eq 0 ]] && SKIP_PREPROCESS="$CFG_SKIP_PREPROCESS"
   [[ -n "${CFG_TYPESET_MODE:-}" && "$TYPESET_MODE_EXPLICIT" -eq 0 ]] && TYPESET_MODE="$CFG_TYPESET_MODE"
+  [[ -n "${CFG_SOURCE_PDF:-}" && -z "${PDF_SRC:-}" ]] && PDF_SRC="$CFG_SOURCE_PDF"
 fi
 
 JOB_OUT="${OUT_DIR}/${JOB_NAME}"
@@ -155,6 +166,55 @@ if [[ ! -d "$JOB_INPUT" ]]; then
   fi
 fi
 
+# Auto-detect or extract pages from source PDF if no images are present in JOB_INPUT
+shopt -s nullglob
+_input_imgs=( "$JOB_INPUT"/*.png "$JOB_INPUT"/*.jpg "$JOB_INPUT"/*.jpeg "$JOB_INPUT"/*.tif "$JOB_INPUT"/*.tiff )
+_input_pdfs=( "$JOB_INPUT"/*.pdf )
+shopt -u nullglob
+
+_candidate_pdf=""
+if [[ -n "${PDF_SRC:-}" && -f "$PDF_SRC" ]]; then
+  _candidate_pdf="$PDF_SRC"
+elif [[ ${#_input_imgs[@]} -eq 0 && ${#_input_pdfs[@]} -gt 0 ]]; then
+  _candidate_pdf="${_input_pdfs[0]}"
+elif [[ ${#_input_imgs[@]} -eq 0 && -f "${INPUT_DIR}/${JOB_NAME}.pdf" ]]; then
+  _candidate_pdf="${INPUT_DIR}/${JOB_NAME}.pdf"
+fi
+
+if [[ -n "$_candidate_pdf" && ${#_input_imgs[@]} -eq 0 ]]; then
+  log "extract pages from PDF: $_candidate_pdf -> $JOB_INPUT"
+  mkdir -p "$JOB_INPUT"
+  python3 - "$_candidate_pdf" "$JOB_INPUT" <<'PY'
+import sys, os
+from pathlib import Path
+pdf_path = Path(sys.argv[1])
+out_dir = Path(sys.argv[2])
+out_dir.mkdir(parents=True, exist_ok=True)
+try:
+    import pymupdf, concurrent.futures
+    with pymupdf.open(pdf_path) as doc:
+        total = len(doc)
+    digits = max(3, len(str(total)))
+    def _extract_page(pno):
+        out_png = out_dir / f"page-{pno+1:0{digits}d}.png"
+        if not (out_png.exists() and out_png.stat().st_size > 1000):
+            with pymupdf.open(pdf_path) as d:
+                pix = d[pno].get_pixmap(dpi=300)
+                pix.save(str(out_png))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+        list(ex.map(_extract_page, range(total)))
+    print(f"Extracted {total} pages via PyMuPDF (dpi=300)")
+except Exception as e:
+    import subprocess, shutil
+    if shutil.which("pdftoppm"):
+        cmd = ["pdftoppm", "-png", "-r", "300", str(pdf_path), str(out_dir / "page")]
+        subprocess.run(cmd, check=True)
+        print("Extracted pages via pdftoppm (dpi=300)")
+    else:
+        raise e
+PY
+fi
+
 if [[ "$SKIP_PREPROCESS" -eq 1 ]]; then
   shopt -s nullglob
   existing_pre=( "$PRE_DIR"/*.png )
@@ -190,7 +250,7 @@ for page in "${PAGES[@]}"; do
   qc_json="${QC_DIR}/${base}.quality.json"
 
   if [[ -s "$qc_json" ]]; then
-    passed="$(python3 -c 'import json,sys; print(1 if json.load(open(sys.argv[1])).get("passed",False) else 0)' "$qc_json" 2>/dev/null || echo 0)"
+    passed="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(1 if d.get("mean_confidence",0) >= float(sys.argv[2]) and d.get("passed",False) else 0)' "$qc_json" "$THRESHOLD" 2>/dev/null || echo 0)"
     if [[ "$passed" -eq 1 ]]; then qc_rc=0; else qc_rc=1; fi
   else
     log "quality_check $base"
@@ -288,6 +348,29 @@ TYPESET_PDF_OUT="${JOB_OUT}/${JOB_NAME}.typeset_edition.pdf"
 EPUB_OUT="${JOB_OUT}/${JOB_NAME}.epub"
 PERFECT_SANDWICH_OUT="${JOB_OUT}/${JOB_NAME}.perfect_sandwich.pdf"
 mkdir -p "$BOOK_DIR"
+
+PROFILE_LAYOUT_SCRIPT="${SCRIPT_DIR}/profile_source_layout.py"
+LAYOUT_PROFILE_OUT="${JOB_OUT}/layout.profile.json"
+PROFILE_SOURCE_PDF=""
+for cand_pdf in "${PERFECT_SANDWICH_OUT:-}" "${ALIGNED_PDF:-}" "${PDF_OUT:-}" "${JOB_INPUT}/source.pdf" "${PDF_SRC:-}"; do
+  if [[ -n "$cand_pdf" && -f "$cand_pdf" ]]; then
+    PROFILE_SOURCE_PDF="$cand_pdf"
+    break
+  fi
+done
+
+if [[ -f "$PROFILE_LAYOUT_SCRIPT" && -n "$PROFILE_SOURCE_PDF" && -f "$PROFILE_SOURCE_PDF" ]]; then
+  log "profile source layout -> $LAYOUT_PROFILE_OUT"
+  set +e
+  python3 "$PROFILE_LAYOUT_SCRIPT" --pdf "$PROFILE_SOURCE_PDF" --output "$LAYOUT_PROFILE_OUT"
+  prof_rc=$?
+  set -e
+  if [[ "$prof_rc" -eq 0 && -f "$LAYOUT_PROFILE_OUT" ]]; then
+    log "source layout profile ok: $LAYOUT_PROFILE_OUT"
+  else
+    log "warn: profile_source_layout failed (rc=$prof_rc)"
+  fi
+fi
 
 if [[ -f "$CONSOLIDATE" ]]; then
   log "consolidate book -> $BOOK_DIR"
@@ -463,6 +546,35 @@ if [[ -f "$INJECT_TOC" ]]; then
       set -e
     fi
   done
+fi
+
+AUDIT_LAYOUT_SCRIPT="${SCRIPT_DIR}/audit_layout_concordance.py"
+LAYOUT_AUDIT_OUT="${JOB_OUT}/${JOB_NAME}.layout_audit.json"
+LAYOUT_AUDIT_MD="${JOB_OUT}/${JOB_NAME}.layout_audit.md"
+AUDIT_REF_PDF=""
+for cand in "${ALIGNED_PDF:-}" "${PERFECT_SANDWICH_OUT:-}" "${PDF_OUT:-}"; do
+  if [[ -n "$cand" && -f "$cand" ]]; then
+    AUDIT_REF_PDF="$cand"
+    break
+  fi
+done
+
+if [[ -f "$AUDIT_LAYOUT_SCRIPT" && -n "$DIGITAL_PDF_OUT" && -f "$DIGITAL_PDF_OUT" && -n "$AUDIT_REF_PDF" && -f "$AUDIT_REF_PDF" ]]; then
+  log "audit layout concordance -> $LAYOUT_AUDIT_OUT"
+  set +e
+  python3 "$AUDIT_LAYOUT_SCRIPT" \
+    --orig "$AUDIT_REF_PDF" \
+    --digital "$DIGITAL_PDF_OUT" \
+    --job "$JOB_NAME" \
+    --json-out "$LAYOUT_AUDIT_OUT" \
+    --md-out "$LAYOUT_AUDIT_MD"
+  audit_rc=$?
+  set -e
+  if [[ "$audit_rc" -eq 0 && -f "$LAYOUT_AUDIT_OUT" ]]; then
+    log "layout concordance audit ok: $LAYOUT_AUDIT_OUT"
+  else
+    log "warn: audit_layout_concordance failed (rc=$audit_rc)"
+  fi
 fi
 
 REPORT="$(JOB_NAME="$JOB_NAME" INPUT_DIR="$INPUT_DIR" PRE_DIR="$PRE_DIR" \

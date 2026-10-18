@@ -2,6 +2,34 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.6.0] - 2026-10-18
+
+### Added
+- **Perfect Sandwich PDF Builder (`scripts/build_perfect_sandwich.py`):**
+  - Verlusterhaltendes PDF-Sandwich-Verfahren mit adaptiver Histogramm-Glättung und zlib-FlateDecode-Kompression.
+  - Exakte Text-Positionierungsmatrix mit horizontaler Skalierung (`Tz`) und Wortabstandskompensation für pixelgenaue Durchsuchbarkeit.
+- **Deklarativer 2D-Layout-Profiler & Konkordanz-Auditor (`scripts/profile_source_layout.py`, `scripts/audit_layout_concordance.py`):**
+  - Automatisierte geometrische Profilierung historischer Quellscans (Satzspiegel, Randbreiten, Zeilenhöhen, Spaltenraster).
+  - Strenges Konkordanz-Quality-Gate zur formalen Validierung von Seitenkongruenz und Zeilendichte zwischen Faksimile und digitalem Neusatz.
+- **1:1 Typst Digital Reconstruction Engine (`scripts/render_digital_pdf.py`, `templates/book.typ`):**
+  - Satzspiegelgetreue typografische Rekonstruktion mit Marginal-Sideheads, Initialen/Drop-Numerals, strukturierten Lehrplan-Syllabi, kalligrafischen Glyphen-Rastern sowie Titel- und Imprint-Makros.
+- **Automatisierte UI-Sicherheits- & Concurrency-Testsuite (`tests/test_ui_safety.py`):**
+  - Umfassende Pytest-Suite zur Absicherung von Path-Traversal-Prävention, Job-Sperren, Request-Validierung und dynamischem CSRF-Origin-Matching.
+
+### Changed
+- **Pipeline-Orchestrierung (`scripts/run_pipeline.sh`, `scripts/test_golden_regression.sh`):**
+  - Nahtlose Integration des Perfect-Sandwich-Generators und Layout-Profilers in den standardmäßigen Pipeline-Durchlauf und die Golden-Master-Regressionssuite.
+- **Dokumentations-Portal & Birchville Scholarly Synthesis:**
+  - Standardisiertes Curation-Badge und responsives Quick-Access-Grid für das MkDocs-Portal gemäß Birchville Corporate Design.
+
+### Security
+- **Web-UI Concurrency & Härtung (`ui/main.py`):**
+  - Implementierung asynchroner Concurrency-Locks (`asyncio.Lock`) und prozessweiter File-Locks (`.lock`), um Race-Conditions bei parallelen Job-Starts zu verhindern.
+  - Strikte Wertebereichs- und Längenprüfungen für alle Request-Parameter.
+  - Dynamischer CSRF-Schutz mit konfigurierten Whitelist-Origins statt statischer Host-Prüfung.
+- **Container-Sicherheit (`docker-compose.yml`, `deploy/docker-compose.n8n.yml`):**
+  - Standardmäßige Bindung aller exponierten Ports an `127.0.0.1` zur Vermeidung unbeabsichtigter Netzwerkfreigaben.
+
 ## [1.5.0] - 2026-10-16
 
 ### Added

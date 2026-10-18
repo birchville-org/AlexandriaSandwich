@@ -121,6 +121,7 @@ def run_tesseract(
             check=False,
             capture_output=True,
             text=True,
+            errors="replace",
         )
     except OSError as exc:
         die(f"failed to execute tesseract: {exc}")

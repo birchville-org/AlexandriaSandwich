@@ -56,14 +56,14 @@ def parse_toc_text(text: str) -> Tuple[List[List[Any]], Dict[str, Any]]:
 
         # Check for metadata headers
         m_meta = re.match(
-            r'^(Title|Author|Subject|Keywords|Roman-End|Arabic-Start|Roman_End|Arabic_Start):\s*(.+)$',
+            r'^(Title|Author|Subject|Keywords|Roman-End|Arabic-Start|Roman_End|Arabic_Start|Total-Pages|Total-Bookmarks|Total_Pages|Total_Bookmarks):\s*(.+)$',
             stripped,
             re.IGNORECASE,
         )
         if m_meta:
             key = m_meta.group(1).lower().replace("-", "_")
             val = m_meta.group(2).strip()
-            if key in ("roman_end", "arabic_start"):
+            if key in ("roman_end", "arabic_start", "total_pages", "total_bookmarks"):
                 try:
                     meta[key] = int(val)
                 except ValueError:

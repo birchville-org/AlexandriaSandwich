@@ -3,20 +3,21 @@
 AlexandriaSandwich — scripts/build_perfect_sandwich.py
 
 Builds a publication-grade Perfect Sandwich PDF:
-1. Restores scanned page images (contrast leveling 15%..82%, unsharp masking,
-   margin and thumb cleanup) to achieve pure #FFFFFF paper background and crisp dark ink.
-2. Injects or preserves the invisible OCR text layer (PDF Render Mode 3).
-3. Re-encodes image streams with zlib FlateDecode, drastically improving visual quality
-   and reducing file size (e.g. 278 MB -> ~60 MB).
+1. Restores scanned page images:
+   - Preserves full-color covers and color illustrations in native RGB without destructive clipping.
+   - Restores text pages via adaptive histogram leveling to achieve pure #FFFFFF paper background
+     and deep, crisp black ink without haloing or erasing subtle Sanskrit ligatures/diacritics.
+2. Accurately extracts images from the base sandwich PDF via pikepdf.PdfImage (avoiding raw byte distortion).
+3. Preserves the entire invisible vector text layer (PDF Render Mode 3).
+4. Re-encodes grayscale streams with zlib FlateDecode (and color with DCTDecode), producing
+   ultra-clean visual fidelity and compact publication file size.
 """
 from __future__ import annotations
 
 import argparse
 import concurrent.futures
 import io
-import json
 import os
-import re
 import sys
 import time
 import zlib
@@ -24,31 +25,53 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import pikepdf
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageFilter, ImageStat
 
 
 def log(msg: str):
     print(f"[{time.strftime('%X')}] [perfect_sandwich] {msg}", file=sys.stderr)
 
 
-def restore_pil_image(
+def is_color_image(im: Image.Image) -> bool:
+    """Detect whether an image contains significant color (e.g. cover or color plate)."""
+    if im.mode in ("L", "1"):
+        return False
+    rgb = im.convert("RGB")
+    stat = ImageStat.Stat(rgb)
+    r, g, b = stat.mean[:3]
+    var_r, var_g, var_b = stat.var[:3]
+    diff = abs(r - g) + abs(g - b) + abs(r - b)
+    return diff > 8.0 or abs(var_r - var_g) > 25.0
+
+
+def restore_text_image(
     im: Image.Image,
-    level_low: float = 0.15,
-    level_high: float = 0.82,
     apply_unsharp: bool = True,
-    mask_margins: bool = True,
 ) -> Image.Image:
     """
-    Restore a grayscale PIL image to pure white background and deep dark ink.
+    Restore a grayscale text image to pure white background and deep dark ink.
+    Uses adaptive background peak detection to avoid crushing thin strokes.
     """
     if im.mode != "L":
         im = im.convert("L")
-    w, h = im.size
 
-    # 1. Leveling (Contrast adjustment)
-    in_black = int(level_low * 255)
-    in_white = int(level_high * 255)
-    
+    hist = im.histogram()
+    total = sum(hist)
+    if total == 0:
+        return im
+
+    # Find paper background level from the top 5% of the histogram
+    cum = 0
+    p95 = 255
+    for val in range(255, -1, -1):
+        cum += hist[val]
+        if cum / total >= 0.05:
+            p95 = val
+            break
+
+    in_white = max(215, min(255, p95))
+    in_black = 20
+
     lut = []
     scale = 255.0 / max(1, in_white - in_black)
     for i in range(256):
@@ -60,61 +83,35 @@ def restore_pil_image(
             lut.append(int((i - in_black) * scale))
     im = im.point(lut)
 
-    # 2. Border & thumb cleanup (masking)
-    if mask_margins:
-        draw = ImageDraw.Draw(im)
-        mx = max(3, int(w * 0.015))
-        my = max(3, int(h * 0.015))
-        draw.rectangle([0, 0, w, my], fill=255)
-        draw.rectangle([0, h - my, w, h], fill=255)
-        draw.rectangle([0, 0, mx, h], fill=255)
-        draw.rectangle([w - mx, 0, w, h], fill=255)
-
-        # Bottom-left corner thumb / scanner clamp
-        bl_w = int(w * 0.08)
-        bl_h = int(h * 0.08)
-        crop_bl = im.crop((0, h - bl_h, bl_w, h))
-        hist_bl = crop_bl.histogram()
-        dark_bl = sum(hist_bl[:140])
-        if dark_bl > (bl_w * bl_h * 0.04):
-            draw.rectangle([0, h - bl_h, bl_w, h], fill=255)
-
-        # Bottom-right corner thumb
-        crop_br = im.crop((w - bl_w, h - bl_h, w, h))
-        hist_br = crop_br.histogram()
-        dark_br = sum(hist_br[:140])
-        if dark_br > (bl_w * bl_h * 0.04):
-            draw.rectangle([w - bl_w, h - bl_h, w, h], fill=255)
-
-    # 3. Unsharp Mask for crisp type edges
     if apply_unsharp:
-        im = im.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=2))
+        im = im.filter(ImageFilter.UnsharpMask(radius=1.0, percent=60, threshold=3))
 
     return im
 
 
-def process_page_image(
+def process_image(
     page_idx: int,
-    raw_bytes: bytes,
-    w: int,
-    h: int,
-    cs: str,
-    bpc: int,
-) -> Tuple[int, bytes, int, int]:
-    """Worker function for multiprocessing."""
-    if cs == "/DeviceGray" and bpc == 8:
-        im = Image.frombytes("L", (w, h), raw_bytes)
+    img_name: str,
+    im: Image.Image,
+) -> Tuple[int, str, bytes, int, int, str, str]:
+    """
+    Process image: preserve color or restore text.
+    Returns (page_idx, img_name, comp_bytes, width, height, colorspace, filter_name).
+    """
+    w, h = im.size
+    if is_color_image(im):
+        # Full-color cover or illustration: preserve RGB with high quality JPEG
+        rgb_im = im.convert("RGB")
+        buf = io.BytesIO()
+        rgb_im.save(buf, format="JPEG", quality=92, optimize=True)
+        comp_bytes = buf.getvalue()
+        return page_idx, img_name, comp_bytes, w, h, "DeviceRGB", "DCTDecode"
     else:
-        # Fallback via io
-        try:
-            im = Image.open(io.BytesIO(raw_bytes))
-        except Exception:
-            im = Image.frombytes("L", (w, h), raw_bytes)
-    
-    rest_im = restore_pil_image(im)
-    rest_w, rest_h = rest_im.size
-    comp_bytes = zlib.compress(rest_im.tobytes(), level=9)
-    return page_idx, comp_bytes, rest_w, rest_h
+        # Grayscale text page: adaptive white leveling + zlib compression
+        rest_im = restore_text_image(im)
+        rw, rh = rest_im.size
+        comp_bytes = zlib.compress(rest_im.tobytes(), level=6)
+        return page_idx, img_name, comp_bytes, rw, rh, "DeviceGray", "FlateDecode"
 
 
 def enhance_sandwich_pdf(
@@ -125,8 +122,8 @@ def enhance_sandwich_pdf(
     jobs: int = 4,
 ) -> None:
     """
-    Directly enhances an existing Sandwich PDF by restoring its background images
-    in-place while preserving the entire searchable vector text layer.
+    Directly enhances an existing Sandwich PDF by restoring background images
+    while preserving the entire searchable vector text layer and bookmarks.
     """
     log(f"Opening base sandwich PDF: {input_pdf_path}")
     pdf = pikepdf.open(input_pdf_path)
@@ -138,75 +135,67 @@ def enhance_sandwich_pdf(
     else:
         pages_to_process = list(range(total_pages))
 
-    log(f"Processing {len(pages_to_process)} pages with {jobs} worker threads...")
+    batch_size = max(8, jobs * 4)
+    total_extracted = 0
+    done_count = 0
 
-    # Extract images metadata for workers
-    work_items = []
-    for idx in pages_to_process:
-        p = pdf.pages[idx]
-        res = p.get("/Resources")
-        if not res or "/XObject" not in res:
-            continue
-        xobj = res["/XObject"]
-        # Find image object (typically /Im0 or first /Subtype /Image)
-        img_name = None
-        for k in xobj.keys():
-            val = xobj[k]
-            if isinstance(val, pikepdf.Stream) and val.get("/Subtype") == pikepdf.Name("/Image"):
-                img_name = k
-                break
-        if not img_name:
-            continue
-        
-        img_stream = xobj[img_name]
-        w = int(img_stream.get("/Width", 0))
-        h = int(img_stream.get("/Height", 0))
-        cs = str(img_stream.get("/ColorSpace", "/DeviceGray"))
-        bpc = int(img_stream.get("/BitsPerComponent", 8))
-        raw_bytes = img_stream.read_bytes()
-        work_items.append((idx, img_name, raw_bytes, w, h, cs, bpc))
+    log(f"Processing up to {len(pages_to_process)} pages in batches of {batch_size} with {jobs} worker threads...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+        for b_start in range(0, len(pages_to_process), batch_size):
+            b_indices = pages_to_process[b_start : b_start + batch_size]
+            batch_items: List[Tuple[int, str, Image.Image]] = []
+            for idx in b_indices:
+                p = pdf.pages[idx]
+                res = p.get("/Resources")
+                if not res or "/XObject" not in res:
+                    continue
+                xobj = res["/XObject"]
+                img_name = None
+                for k in xobj.keys():
+                    val = xobj[k]
+                    if isinstance(val, pikepdf.Stream) and val.get("/Subtype") == pikepdf.Name("/Image"):
+                        img_name = k
+                        break
+                if not img_name:
+                    continue
 
-    log(f"Found {len(work_items)} page images to restore.")
+                try:
+                    pdf_img = pikepdf.PdfImage(xobj[img_name])
+                    pil_img = pdf_img.as_pil_image()
+                    batch_items.append((idx, img_name, pil_img))
+                except Exception as exc:
+                    log(f"Warning: could not extract image from page {idx + 1}: {exc}")
 
-    # Process in parallel
-    restored_map: Dict[int, Tuple[str, bytes, int, int]] = {}
-    with concurrent.futures.ProcessPoolExecutor(max_workers=jobs) as executor:
-        futures = {
-            executor.submit(process_page_image, item[0], item[2], item[3], item[4], item[5], item[6]): (item[0], item[1])
-            for item in work_items
-        }
-        done_count = 0
-        for f in concurrent.futures.as_completed(futures):
-            p_idx, img_name = futures[f]
-            try:
-                res_idx, comp_bytes, rw, rh = f.result()
-                restored_map[res_idx] = (img_name, comp_bytes, rw, rh)
-                done_count += 1
-                if done_count % 50 == 0 or done_count == len(work_items):
-                    log(f"Restored {done_count}/{len(work_items)} pages...")
-            except Exception as e:
-                log(f"Error on page {p_idx}: {e}")
+            if not batch_items:
+                continue
 
-    # Inject restored images back into PDF
-    log("Injecting restored images into PDF...")
-    for idx, (img_name, comp_bytes, rw, rh) in restored_map.items():
-        p = pdf.pages[idx]
-        xobj = p.Resources.XObject
-        old_img = xobj[img_name]
-        new_img = pikepdf.Stream(
-            pdf,
-            comp_bytes,
-            Type=pikepdf.Name.XObject,
-            Subtype=pikepdf.Name.Image,
-            Width=rw,
-            Height=rh,
-            ColorSpace=pikepdf.Name.DeviceGray,
-            BitsPerComponent=8,
-            Filter=pikepdf.Name.FlateDecode,
-        )
-        xobj[img_name] = new_img
+            total_extracted += len(batch_items)
+            futures = [executor.submit(process_image, item[0], item[1], item[2]) for item in batch_items]
+            for f in concurrent.futures.as_completed(futures):
+                try:
+                    p_idx, i_name, comp_bytes, rw, rh, cs_name, filter_name = f.result()
+                    p = pdf.pages[p_idx]
+                    xobj = p.Resources.XObject
+                    new_img = pikepdf.Stream(
+                        pdf,
+                        comp_bytes,
+                        Type=pikepdf.Name.XObject,
+                        Subtype=pikepdf.Name.Image,
+                        Width=rw,
+                        Height=rh,
+                        ColorSpace=pikepdf.Name(f"/{cs_name}"),
+                        BitsPerComponent=8,
+                        Filter=pikepdf.Name(f"/{filter_name}"),
+                    )
+                    xobj[i_name] = new_img
+                    done_count += 1
+                    if done_count % 50 == 0 or done_count == total_extracted:
+                        log(f"Processed {done_count} page images...")
+                except Exception as e:
+                    log(f"Error processing page image: {e}")
 
-    # If page_indices or max_pages was specified, construct clean output pages
+            del batch_items
+
     if page_indices is not None:
         new_pdf = pikepdf.new()
         for idx in page_indices:
@@ -224,7 +213,7 @@ def enhance_sandwich_pdf(
 
 def main():
     parser = argparse.ArgumentParser(description="AlexandriaSandwich Perfect Sandwich PDF Builder")
-    parser.add_argument("--input-pdf", "-i", type=Path, help="Input base sandwich PDF (e.g. Dhatu-patha.sandwich.pdf)")
+    parser.add_argument("--input-pdf", "-i", type=Path, help="Input base sandwich PDF")
     parser.add_argument("--output", "-o", type=Path, required=True, help="Output target PDF path")
     parser.add_argument("--max-pages", "-n", type=int, default=None, help="Process first N pages (for test)")
     parser.add_argument("--pages", "-p", type=str, default=None, help="Specific pages (e.g. '27,73' or '1-50')")

@@ -113,7 +113,7 @@ def apply_mapping_to_text(text: str, mapping: Dict[str, str]) -> Tuple[str, int]
         # Word boundary replacement for alphanumeric words
         if re.match(r"^\w+$", old):
             pattern = re.compile(r"(?<!\w)" + re.escape(old) + r"(?!\w)")
-            new_current, n = pattern.subn(new, current)
+            new_current, n = pattern.subn(lambda _m, r=new: r, current)
             if n:
                 current = new_current
                 total += n
@@ -121,8 +121,9 @@ def apply_mapping_to_text(text: str, mapping: Dict[str, str]) -> Tuple[str, int]
             # If old contains punctuation / dots / noise:
             # Only match substring if len(old) >= 3 to avoid short punctuation collateral damage
             if len(old) >= 3 and old in current:
+                cnt = current.count(old)
                 current = current.replace(old, new)
-                total += 1
+                total += cnt
 
     return current, total
 

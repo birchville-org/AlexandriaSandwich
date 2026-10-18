@@ -91,6 +91,28 @@ def _validate_lang(lang: str) -> str:
     return cleaned
 
 
+def _validate_threshold(val: Any) -> int:
+    """Validiert den Konfidenz-Schwellenwert (0-100%)."""
+    try:
+        t = int(val)
+        if not (0 <= t <= 100):
+            raise ValueError
+        return t
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=422, detail="Threshold muss eine Ganzzahl zwischen 0 und 100 sein")
+
+
+def _validate_limit(val: Any) -> int:
+    """Validiert das optionale Seitenlimit (0-100000)."""
+    try:
+        lim = int(val)
+        if not (0 <= lim <= 100000):
+            raise ValueError
+        return lim
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=422, detail="Limit muss eine Ganzzahl zwischen 0 und 100000 sein")
+
+
 def _check_csrf_origin(request: Request) -> None:
     """Prüft den Origin-Header bei zustandsändernden POST-Requests."""
     origin = request.headers.get("origin")
@@ -99,9 +121,58 @@ def _check_csrf_origin(request: Request) -> None:
         parsed_origin = urlparse(origin)
         origin_host = parsed_origin.hostname or ""
         pub_host = urlparse(PUBLIC_URL).hostname or ""
-        allowed = {host, pub_host, "localhost", "127.0.0.1", "synology.local", "alex.local", "alex.birchville.org"}
+        allowed = {host, pub_host, "localhost", "127.0.0.1"}
+        env_allowed = os.getenv("ALLOWED_ORIGINS") or os.getenv("CSRF_TRUSTED_ORIGINS")
+        if env_allowed:
+            for item in env_allowed.split(","):
+                h = item.strip().split(":")[0]
+                if h:
+                    allowed.add(h)
+        else:
+            allowed.update({"synology.local", "alex.local", "alex.birchville.org"})
         if origin_host and origin_host not in allowed:
             raise HTTPException(status_code=403, detail="Cross-Origin Request Blocked")
+
+
+# ── Job Execution Concurrency Lock ───────────────────────────────────────────
+_active_job_locks: set[str] = set()
+_job_lock_mutex = asyncio.Lock()
+
+
+async def _acquire_job_lock(job: str) -> bool:
+    """Erwirbt einen atomaren Lock für einen Job, um Race Conditions zu verhindern."""
+    async with _job_lock_mutex:
+        lock_file = PROC_DIR / f"{job}.lock"
+        if job in _active_job_locks or lock_file.exists():
+            if lock_file.exists():
+                try:
+                    # Auto-clearing stale locks older than 2 hours
+                    if time.time() - lock_file.stat().st_mtime > 7200:
+                        lock_file.unlink(missing_ok=True)
+                    else:
+                        return False
+                except OSError:
+                    return False
+            else:
+                return False
+        _active_job_locks.add(job)
+        try:
+            PROC_DIR.mkdir(parents=True, exist_ok=True)
+            lock_file.write_text(json.dumps({"job": job, "pid": os.getpid(), "time": time.time()}))
+        except Exception:
+            pass
+        return True
+
+
+async def _release_job_lock(job: str) -> None:
+    """Gibt den Job-Lock wieder frei."""
+    async with _job_lock_mutex:
+        _active_job_locks.discard(job)
+        lock_file = PROC_DIR / f"{job}.lock"
+        try:
+            lock_file.unlink(missing_ok=True)
+        except OSError:
+            pass
 
 
 def _content_disposition(disposition: str, filename: str) -> str:
@@ -1602,83 +1673,67 @@ async def job_status_api(job: str):
 async def trigger_job(request: Request, job: str):
     _check_csrf_origin(request)
     job = _validate_job(job)
-    lang = "deu+eng"
-    threshold = 100
-    limit = 0
-    no_mistral = False
-    skip_preprocess = False
-
-    # 1. Query Params
-    qp = request.query_params
-    if "lang" in qp: lang = qp["lang"]
-    if "threshold" in qp:
-        try:
-            threshold = int(qp["threshold"])
-        except ValueError:
-            raise HTTPException(status_code=422, detail="Threshold muss eine Ganzzahl sein")
-    if "limit" in qp:
-        try:
-            limit = int(qp["limit"])
-        except ValueError:
-            raise HTTPException(status_code=422, detail="Limit muss eine Ganzzahl sein")
-    if "no_mistral" in qp: no_mistral = qp["no_mistral"].lower() in ("1", "true", "yes", "on")
-    if "skip_preprocess" in qp: skip_preprocess = qp["skip_preprocess"].lower() in ("1", "true", "yes", "on")
-
-    # 2. Form or JSON Body
-    ct = request.headers.get("content-type", "")
-    if "application/json" in ct:
-        try:
-            body = await request.json()
-            if "lang" in body: lang = str(body["lang"])
-            if "threshold" in body:
-                try: threshold = int(body["threshold"])
-                except ValueError: raise HTTPException(status_code=422, detail="Threshold muss eine Ganzzahl sein")
-            if "limit" in body:
-                try: limit = int(body["limit"])
-                except ValueError: raise HTTPException(status_code=422, detail="Limit muss eine Ganzzahl sein")
-            no_mistral = bool(body.get("no_mistral", no_mistral))
-            skip_preprocess = bool(body.get("skip_preprocess", skip_preprocess))
-        except HTTPException:
-            raise
-        except Exception:
-            pass
-    elif "application/x-www-form-urlencoded" in ct or "multipart/form-data" in ct:
-        try:
-            form = await request.form()
-            if "lang" in form: lang = str(form["lang"])
-            if "threshold" in form:
-                try: threshold = int(form["threshold"])
-                except ValueError: raise HTTPException(status_code=422, detail="Threshold muss eine Ganzzahl sein")
-            if "limit" in form:
-                try: limit = int(form["limit"])
-                except ValueError: raise HTTPException(status_code=422, detail="Limit muss eine Ganzzahl sein")
-            if "no_mistral" in form: no_mistral = str(form["no_mistral"]).lower() in ("1", "true", "yes", "on")
-            if "skip_preprocess" in form: skip_preprocess = str(form["skip_preprocess"]).lower() in ("1", "true", "yes", "on")
-        except HTTPException:
-            raise
-        except Exception:
-            pass
-
-    lang = _validate_lang(lang)
-
-    # 3. Vor Re-Run: bisherigen Lauf automatisch archivieren, falls Artefakte vorhanden sind
-    current_art = _get_job_artifacts(job)
-    if current_art.get("has_any"):
-        archived_id = _archive_current_run(
-            job,
-            note=f"Snapshot vor Re-Run (Threshold {threshold}%, {lang})"
+    if not await _acquire_job_lock(job):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Job '{job}' wird bereits ausgeführt. Bitte warten Sie auf den Abschluss.",
         )
-        logging.info(f"Job '{job}': Aktueller Stand archiviert als '{archived_id}'")
 
-    resp = await asyncio.to_thread(
-        _trigger_n8n,
-        job,
-        lang=lang,
-        threshold=threshold,
-        limit=limit,
-        no_mistral=no_mistral,
-        skip_preprocess=skip_preprocess
-    )
+    try:
+        lang = "deu+eng"
+        threshold = 100
+        limit = 0
+        no_mistral = False
+        skip_preprocess = False
+
+        # Parse from Query Params, Form or JSON Body uniformly
+        raw_params: dict[str, Any] = dict(request.query_params)
+        ct = request.headers.get("content-type", "")
+        if "application/json" in ct:
+            try:
+                body = await request.json()
+                if isinstance(body, dict):
+                    raw_params.update(body)
+            except Exception:
+                pass
+        elif "application/x-www-form-urlencoded" in ct or "multipart/form-data" in ct:
+            try:
+                form = await request.form()
+                raw_params.update(dict(form))
+            except Exception:
+                pass
+
+        if "lang" in raw_params:
+            lang = _validate_lang(str(raw_params["lang"]))
+        if "threshold" in raw_params:
+            threshold = _validate_threshold(raw_params["threshold"])
+        if "limit" in raw_params:
+            limit = _validate_limit(raw_params["limit"])
+        if "no_mistral" in raw_params:
+            no_mistral = str(raw_params["no_mistral"]).lower() in ("1", "true", "yes", "on")
+        if "skip_preprocess" in raw_params:
+            skip_preprocess = str(raw_params["skip_preprocess"]).lower() in ("1", "true", "yes", "on")
+
+        # Vor Re-Run: bisherigen Lauf automatisch archivieren, falls Artefakte vorhanden sind
+        current_art = _get_job_artifacts(job)
+        if current_art.get("has_any"):
+            archived_id = _archive_current_run(
+                job,
+                note=f"Snapshot vor Re-Run (Threshold {threshold}%, {lang})"
+            )
+            logging.info(f"Job '{job}': Aktueller Stand archiviert als '{archived_id}'")
+
+        resp = await asyncio.to_thread(
+            _trigger_n8n,
+            job,
+            lang=lang,
+            threshold=threshold,
+            limit=limit,
+            no_mistral=no_mistral,
+            skip_preprocess=skip_preprocess
+        )
+    finally:
+        await _release_job_lock(job)
 
     redirect_target = request.query_params.get("redirect", "")
     if redirect_target and (not redirect_target.startswith("/") or redirect_target.startswith("//")):
@@ -2144,59 +2199,68 @@ async def job_preview_page(job: str, page: int):
 async def job_correct(request: Request, job: str, body: dict = None):
     _check_csrf_origin(request)
     job = _validate_job(job)
-    pdf = _get_sandwich_pdf(job)
-    if pdf is None:
-        return JSONResponse({"ok": False, "error": "no sandwich PDF"}, status_code=404)
-    if not _HAS_PATHB:
-        return JSONResponse({"ok": False, "error": f"PDF-Textlayer-Modul nicht verfügbar: {_PATHB_ERR}"}, status_code=500)
+    if not await _acquire_job_lock(job):
+        return JSONResponse(
+            {"ok": False, "error": f"Job '{job}' wird gerade ausgeführt oder korrigiert."},
+            status_code=409,
+        )
 
-    corrections = (body or {}).get("corrections", {})
-    if not isinstance(corrections, dict):
-        return JSONResponse({"ok": False, "error": "corrections must be an object"}, status_code=400)
-
-    # Filter to non-identity mappings
-    mapping = {str(k): str(v) for k, v in corrections.items() if k and str(k) != str(v)}
-    if not mapping:
-        return JSONResponse({"ok": False, "error": "no non-identity corrections provided"}, status_code=400)
-
-    # Save corrections for audit trail
-    qc_dir = PROC_DIR / "quality" / job
-    qc_dir.mkdir(parents=True, exist_ok=True)
-    corr_file = qc_dir / "aligned_corrections.json"
-    corr_file.write_text(json.dumps({"corrections": mapping}, ensure_ascii=False, indent=2))
-
-    # Apply corrections (generate .aligned.pdf and update .pathb.pdf link for compatibility)
-    out_pdf = PDF_DIR / f"{job}.aligned.pdf"
-    pathb_pdf = PDF_DIR / f"{job}.pathb.pdf"
     try:
-        summary = _replace_in_pdf(pdf, out_pdf, mapping)
+        pdf = _get_sandwich_pdf(job)
+        if pdf is None:
+            return JSONResponse({"ok": False, "error": "no sandwich PDF"}, status_code=404)
+        if not _HAS_PATHB:
+            return JSONResponse({"ok": False, "error": f"PDF-Textlayer-Modul nicht verfügbar: {_PATHB_ERR}"}, status_code=500)
+
+        corrections = (body or {}).get("corrections", {})
+        if not isinstance(corrections, dict):
+            return JSONResponse({"ok": False, "error": "corrections must be an object"}, status_code=400)
+
+        # Filter to non-identity mappings
+        mapping = {str(k): str(v) for k, v in corrections.items() if k and str(k) != str(v)}
+        if not mapping:
+            return JSONResponse({"ok": False, "error": "no non-identity corrections provided"}, status_code=400)
+
+        # Save corrections for audit trail
+        qc_dir = PROC_DIR / "quality" / job
+        qc_dir.mkdir(parents=True, exist_ok=True)
+        corr_file = qc_dir / "aligned_corrections.json"
+        corr_file.write_text(json.dumps({"corrections": mapping}, ensure_ascii=False, indent=2))
+
+        # Apply corrections (generate .aligned.pdf and update .pathb.pdf link for compatibility)
+        out_pdf = PDF_DIR / f"{job}.aligned.pdf"
+        pathb_pdf = PDF_DIR / f"{job}.pathb.pdf"
         try:
-            if pathb_pdf.exists() or pathb_pdf.is_symlink():
-                pathb_pdf.unlink()
-            os.link(out_pdf, pathb_pdf)
-        except Exception:
+            summary = _replace_in_pdf(pdf, out_pdf, mapping)
             try:
-                shutil.copy2(out_pdf, pathb_pdf)
+                if pathb_pdf.exists() or pathb_pdf.is_symlink():
+                    pathb_pdf.unlink()
+                os.link(out_pdf, pathb_pdf)
             except Exception:
-                pass
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+                try:
+                    shutil.copy2(out_pdf, pathb_pdf)
+                except Exception:
+                    pass
+        except Exception as e:
+            return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
-    # Extract text after correction for verification
-    try:
-        text_after = _pdftotext(out_pdf)
-    except Exception:
-        text_after = ""
+        # Extract text after correction for verification
+        try:
+            text_after = _pdftotext(out_pdf)
+        except Exception:
+            text_after = ""
 
-    return JSONResponse({
-        "ok": True,
-        "hits": summary.get("replacement_hits", 0),
-        "streams_touched": len(summary.get("streams_touched", [])),
-        "output": str(out_pdf),
-        "text_after": text_after[:2000],
-    })
+        return JSONResponse({
+            "ok": True,
+            "hits": summary.get("replacement_hits", 0),
+            "streams_touched": len(summary.get("streams_touched", [])),
+            "output": str(out_pdf),
+            "text_after": text_after[:2000],
+        })
+    finally:
+        await _release_job_lock(job)
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host=os.getenv("UI_HOST", "127.0.0.1"), port=int(os.getenv("PORT_UI", "8080")))

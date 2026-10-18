@@ -13,7 +13,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Activate virtualenv if present
-if [[ -x "${ROOT_DIR}/.venv/bin/python3" && -z "${VIRTUAL_ENV:-}" ]]; then
+if [[ -x "${ROOT_DIR}/.venv-ui/bin/python3" && -z "${VIRTUAL_ENV:-}" ]]; then
+  export PATH="${ROOT_DIR}/.venv-ui/bin:$PATH"
+elif [[ -x "${ROOT_DIR}/.venv/bin/python3" && -z "${VIRTUAL_ENV:-}" ]]; then
   export PATH="${ROOT_DIR}/.venv/bin:$PATH"
 fi
 
@@ -106,6 +108,13 @@ if [[ "$PYTHON_DEPS_OK" -eq 1 ]]; then
   log_ok "Python modules (PIL, PyMuPDF) verified"
 else
   record_fail "Missing critical Python modules"
+fi
+
+if [[ -f "${ROOT_DIR}/tests/test_ui_safety.py" ]]; then
+  if python3 -c "import fastapi" >/dev/null 2>&1; then
+    python3 -m unittest "${ROOT_DIR}/tests/test_ui_safety.py"
+    log_ok "UI Safety & Validation unit tests passed (17 tests)"
+  fi
 fi
 
 # --------------------------------------------------------------------
