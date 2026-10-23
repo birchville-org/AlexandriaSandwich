@@ -96,12 +96,9 @@ def clean_tok(s: str) -> str:
     return re.sub(r"[^a-zA-Z0-9]", "", s).lower()
 
 
-def parse_markdown_page(md_path: Path, sideheads: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
-    """Parse a single page markdown file (e.g. from Mistral OCR) with layout sidehead awareness."""
-    text = md_path.read_text(encoding="utf-8")
-    lines = text.splitlines()
+def _parse_markdown_lines(lines: List[str], sideheads: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
+    """Parse raw markdown lines into structured blocks with sidehead awareness."""
     blocks = []
-    
     sh_targets: Dict[str, Dict[str, Any]] = {}
     if sideheads:
         for sh in sideheads:
@@ -177,10 +174,149 @@ def parse_markdown_page(md_path: Path, sideheads: Optional[List[Dict[str, Any]]]
                 p_lines.append(next_l)
             blocks.append({"type": "p", "text": " ".join(p_lines), "bbox": [0, 0, 0, 0]})
         i += 1
+    return blocks
+
+
+def parse_markdown_page(md_path: Path, sideheads: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    """Parse a single page markdown file (e.g. from Mistral OCR) with layout sidehead awareness."""
+    text = md_path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    blocks = _parse_markdown_lines(lines, sideheads=sideheads)
 
     return {
         "facs": md_path.stem.replace(".mistral", "") + ".png",
         "bbox": [0, 0, 0, 0],
+        "blocks": blocks,
+    }
+
+
+def parse_mistral_json_page(
+    json_path: Path,
+    sideheads: Optional[List[Dict[str, Any]]] = None
+) -> Dict[str, Any]:
+    """Parse a Mistral OCR JSON output file and extract structured geometry, dimensions, and blocks."""
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # 1. Resolve page object
+    pages = data.get("pages") or []
+    page_obj = pages[0] if (pages and isinstance(pages[0], dict)) else {}
+
+    # 2. Extract dimensions
+    dims = page_obj.get("dimensions") or data.get("dimensions") or {}
+    w = int(round(dims.get("width", 0)))
+    h = int(round(dims.get("height", 0)))
+    page_bbox = [0, 0, w, h] if (w > 0 and h > 0) else [0, 0, 0, 0]
+
+    # 3. Facsimile image
+    facs = json_path.stem.replace(".mistral", "") + ".png"
+    if data.get("source"):
+        src_name = Path(data["source"]).name
+        if src_name.lower().endswith((".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp")):
+            facs = src_name
+
+    sh_targets: Dict[str, Dict[str, Any]] = {}
+    if sideheads:
+        for sh in sideheads:
+            raw_t = sh.get("text") or sh.get("raw_text") or ""
+            tok = clean_tok(raw_t)
+            if tok:
+                sh_targets[tok] = sh
+
+    raw_blocks = page_obj.get("blocks") if isinstance(page_obj, dict) else None
+
+    blocks = []
+    if raw_blocks and isinstance(raw_blocks, list):
+        for b in raw_blocks:
+            if not isinstance(b, dict):
+                continue
+            content = (b.get("content") or "").strip()
+            if not content:
+                continue
+
+            b_type = (b.get("type") or "text").lower()
+            x0 = int(round(b.get("top_left_x", 0)))
+            y0 = int(round(b.get("top_left_y", 0)))
+            x1 = int(round(b.get("bottom_right_x", 0)))
+            y1 = int(round(b.get("bottom_right_y", 0)))
+            bbox = [x0, y0, x1, y1]
+
+            # Sidehead check
+            tok = clean_tok(content)
+            matched_sh = sh_targets.get(tok)
+            if matched_sh:
+                blocks.append({
+                    "type": "sidehead",
+                    "text": matched_sh.get("text") or content,
+                    "bbox": bbox if bbox != [0, 0, 0, 0] else matched_sh.get("bbox", [0, 0, 0, 0]),
+                })
+                continue
+
+            # Heading check
+            if content.startswith("#"):
+                m = re.match(r"^(#+)\s+(.+)$", content, flags=re.DOTALL)
+                if m:
+                    level = len(m.group(1))
+                    blocks.append({
+                        "type": f"h{level}",
+                        "text": m.group(2).strip(),
+                        "bbox": bbox,
+                    })
+                else:
+                    blocks.append({
+                        "type": "h1",
+                        "text": content.lstrip("#").strip(),
+                        "bbox": bbox,
+                    })
+            elif b_type in ("title", "header"):
+                clean_h = re.sub(r"^#+\s*", "", content).strip()
+                h_level = "h1" if b_type == "title" else "h2"
+                blocks.append({
+                    "type": h_level,
+                    "text": clean_h,
+                    "bbox": bbox,
+                })
+            elif b_type == "table":
+                tbl_lines = [l.strip() for l in content.splitlines() if l.strip()]
+                for l in tbl_lines:
+                    if l.startswith("|") and l.endswith("|"):
+                        blocks.append({"type": "table_row", "text": l, "bbox": bbox})
+                    else:
+                        blocks.append({"type": "p", "text": l, "bbox": bbox})
+            elif (content.startswith("|") and content.endswith("|")) or "\n|" in content:
+                tbl_lines = [l.strip() for l in content.splitlines() if l.strip()]
+                if all(l.startswith("|") for l in tbl_lines):
+                    for l in tbl_lines:
+                        blocks.append({"type": "table_row", "text": l, "bbox": bbox})
+                else:
+                    blocks.append({
+                        "type": "p",
+                        "text": content,
+                        "bbox": bbox,
+                    })
+            elif b_type == "image":
+                blocks.append({
+                    "type": "image",
+                    "text": content,
+                    "bbox": bbox,
+                    "image_id": b.get("image_id"),
+                })
+            else:
+                blocks.append({
+                    "type": "p",
+                    "text": content,
+                    "bbox": bbox,
+                })
+    else:
+        # Fallback to markdown text if blocks was empty or missing
+        md_text = page_obj.get("markdown") or data.get("markdown") or ""
+        if md_text:
+            lines = md_text.splitlines()
+            blocks = _parse_markdown_lines(lines, sideheads=sideheads)
+
+    return {
+        "facs": facs,
+        "bbox": page_bbox,
         "blocks": blocks,
     }
 
@@ -252,11 +388,18 @@ def clean_page_artifacts(
             if seen_texts[text] > 3:
                 continue
 
+            # If preceding block is a title/heading and this is a bracketed number (e.g. [ १ ]), it's a section header
+            is_section_header = idx > 0 and page["blocks"][idx - 1].get("type") in ("h1", "h2") and bool(re.match(r'^[\[\(]\s*([०-९\d]+|[ivxlcdm]+)\s*[\]\)]$', text, re.I))
+
             # Check if block is a standalone page number (e.g., "12", "- 12 -", "[12]")
-            is_standalone_page_no = bool(re.match(r'^[-–—\[\(]?\s*\d{1,4}\s*[-–—\]\)]?$', text))
+            is_standalone_page_no = not is_section_header and bool(re.match(r'^[-–—\[\(]?\s*\d{1,4}\s*[-–—\]\)]?$', text))
             
             # If it's near the top (first or second block) or near the bottom (last or second-to-last block), strip it
             if is_standalone_page_no and (idx <= 1 or idx >= max(0, num_blocks - 2)):
+                if not page.get("printed_page"):
+                    m_num = re.search(r'\d{1,4}', text)
+                    if m_num:
+                        page["printed_page"] = m_num.group(0)
                 continue
             
             cleaned_blocks.append(block)
@@ -324,7 +467,13 @@ def consolidate_job(
         stems.add(f.stem)
     for f in input_dir.glob("*.png"):
         stems.add(f.stem)
+    for f in input_dir.glob("*.mistral.json"):
+        stems.add(f.name.replace(".mistral.json", ""))
+    for f in input_dir.glob("*.mistral.md"):
+        stems.add(f.name.replace(".mistral.md", ""))
     if markdown_dir and markdown_dir.is_dir():
+        for f in markdown_dir.glob("*.mistral.json"):
+            stems.add(f.name.replace(".mistral.json", ""))
         for f in markdown_dir.glob("*.md"):
             stems.add(f.name.replace(".mistral.md", "").replace(".md", ""))
 
@@ -351,7 +500,24 @@ def consolidate_job(
 
     pages_data = []
     for idx, base in enumerate(sorted_stems, start=1):
-        # Check for Mistral Markdown (HIGH PRECISION PRIORITY)
+        # 1. Check for Mistral JSON (HIGHEST GEOMETRIC & TEXT PRECISION)
+        mistral_json_file = None
+        json_candidates = [
+            input_dir / f"{base}.mistral.json",
+            input_dir / f"{base}.json",
+            (markdown_dir / f"{base}.mistral.json") if (markdown_dir and markdown_dir.is_dir()) else None,
+            (markdown_dir / f"{base}.json") if (markdown_dir and markdown_dir.is_dir()) else None,
+            (data_dir / "processing" / "quality" / job_name / f"{base}.mistral.json") if data_dir else None,
+            (data_dir / "processing" / job_name / f"{base}.mistral.json") if data_dir else None,
+            (data_dir / "processing" / "quality" / job_name / f"page-{idx:03d}.mistral.json") if data_dir else None,
+            (data_dir / "processing" / "quality" / job_name / f"page-{idx}.mistral.json") if data_dir else None,
+        ]
+        for cand in json_candidates:
+            if cand and cand.is_file() and cand.stat().st_size > 0:
+                mistral_json_file = cand
+                break
+
+        # 2. Check for Mistral Markdown (FALLBACK TEXT)
         md_file = None
         if markdown_dir and markdown_dir.is_dir():
             if (markdown_dir / f"{base}.mistral.md").is_file():
@@ -364,17 +530,34 @@ def consolidate_job(
             elif (input_dir / f"{base}.md").is_file():
                 md_file = input_dir / f"{base}.md"
 
+        # 3. Check for hOCR
         hocr_file = None
         if (input_dir / f"{base}.corrected.hocr").is_file():
             hocr_file = input_dir / f"{base}.corrected.hocr"
         elif (input_dir / f"{base}.hocr").is_file():
             hocr_file = input_dir / f"{base}.hocr"
 
-        if md_file:
+        page_sh = []
+        if layout_profile and "pages" in layout_profile:
+            page_sh = layout_profile["pages"].get(str(idx), {}).get("sideheads", [])
+
+        if mistral_json_file:
+            log(f"page {base}: using high-precision Mistral JSON geometry ({mistral_json_file.name})")
+            p = parse_mistral_json_page(mistral_json_file, sideheads=page_sh)
+            p["page_num"] = idx
+            # If hOCR exists and page bbox or facs was empty, inherit from hOCR
+            if hocr_file:
+                try:
+                    h_info = parse_hocr_page(hocr_file)
+                    if p.get("bbox") == [0, 0, 0, 0] and h_info.get("bbox") != [0, 0, 0, 0]:
+                        p["bbox"] = h_info["bbox"]
+                    if not p.get("facs") and h_info.get("facs"):
+                        p["facs"] = h_info["facs"]
+                except Exception:
+                    pass
+            pages_data.append(p)
+        elif md_file:
             log(f"page {base}: using high-precision Mistral markdown ({md_file.name})")
-            page_sh = []
-            if layout_profile and "pages" in layout_profile:
-                page_sh = layout_profile["pages"].get(str(idx), {}).get("sideheads", [])
             p = parse_markdown_page(md_file, sideheads=page_sh)
             p["page_num"] = idx
             # If hOCR exists, inherit geometry
@@ -462,7 +645,7 @@ def consolidate_job(
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "pipeline": "AlexandriaSandwich"
     }
-    for field in ("editor", "year", "publisher", "iiif_manifest", "iiif_template", "canonical_reference"):
+    for field in ("book", "editor", "year", "publisher", "iiif_manifest", "iiif_template", "canonical_reference"):
         if field in job_cfg:
             meta_dict[field] = job_cfg[field]
     if heuristics:

@@ -2,6 +2,26 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.7.0] - 2026-10-23
+
+### Added
+- **Content-Aware Margin Masking (`scripts/build_perfect_sandwich.py`):**
+  - Dynamische Erkennung des Textkörperbereichs pro Seite aus Mistral-JSON-BBoxes bzw. PyMuPDF-Wortvektoren.
+  - Vollständige Eliminierung von Buchfalzen, Schatten, Bindungsstreifen und Scannerkanten außerhalb des Satzspiegels (`pad_x=75, pad_y=60`).
+  - Mehrskaliges Hintergrund-Leveling mit Re-Nivellierung auf Reinweiß (`#FFFFFF`).
+- **Layout-gesteuerte Neusatz-Kalibrierung (`scripts/render_digital_pdf.py`, `templates/book.typ`):**
+  - Automatischer Einzug bei Absatzbeginn (`first-line-indent: 1.5em`).
+  - Zentrierte Dokumententitel auf Satzspiegelmitte.
+  - Symmetrische Drei-Spalten-Kopfzeilen mit Devanāgarī-Paginierung.
+  - Automatische Erkennung, Abtrennung und Formatierung von Fußnoten am Seitenende.
+- **Visuelle Side-by-Side-Differenzprüfungen (`scripts/compare_layout.py`):**
+  - Automatisches Rendern von Vergleichsbildern (Faksimile vs. digitaler Neusatz) in `comparison_samples/`.
+
+### Changed
+- **Kausale Pipeline-Orchestrierung (`scripts/run_pipeline.sh`):**
+  - Strikt sequentielle Reihenfolge: `assemble_sandwich` -> `consolidate_book` -> `align_mistral_pdf` -> `build_perfect_sandwich` -> `profile_source_layout` -> `render_digital_pdf` -> `inject_toc` -> `audit_layout_concordance` -> `compare_layout`.
+  - Layout-Profilierung und Audit greifen priorisiert direkt auf das bereinigte `perfect_sandwich.pdf` zu.
+
 ## [1.6.0] - 2026-10-18
 
 ### Added

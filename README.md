@@ -6,7 +6,7 @@
 
 [![GitHub Pages](https://img.shields.io/badge/docs-gh--pages-blue?logo=github)](https://birchville-org.github.io/AlexandriaSandwich/)
 ![Build Status](https://img.shields.io/badge/docker-multi--arch-blue)
-![Release](https://img.shields.io/badge/release-v1.3.0-blue)
+![Release](https://img.shields.io/badge/release-v1.7.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Python](https://img.shields.io/badge/python-3.12-yellow)
 
@@ -114,12 +114,16 @@ Scans (PNG / TIFF / JPEG)
 
 | Skript | Typ | Funktion |
 | :--- | :--- | :--- |
-| [`run_pipeline.sh`](scripts/run_pipeline.sh) | Bash | Haupt-Orchestrator: steuert Preprocessing, Quality Gate, Fallback, Assembly und Multi-Format-Exporte. |
+| [`run_pipeline.sh`](scripts/run_pipeline.sh) | Bash | Haupt-Orchestrator: steuert Preprocessing, Quality Gate, Fallback, Assembly, Bereinigung, Profilierung und Multi-Format-Exporte. |
+| [`build_perfect_sandwich.py`](scripts/build_perfect_sandwich.py) | Python | Content-Aware Margin Masking & Leveling: Bereinigt Buchfalze, Ränder und Schatten außerhalb des Satzspiegels (`.perfect_sandwich.pdf`). |
+| [`align_mistral_pdf.py`](scripts/align_mistral_pdf.py) | Python | Post-Assembly: Synchronisiert Mistral-Text mit Tesseract-Bounding-Boxes direkt im PDF-Inhaltsstrom (`.aligned.pdf`). |
+| [`profile_source_layout.py`](scripts/profile_source_layout.py) | Python | Vermisst Satzspiegel, Ränder, Durchschuss, Kolumnentitel und Paginierung des bereinigten Faksimiles (`layout.profile.json`). |
+| [`render_digital_pdf.py`](scripts/render_digital_pdf.py) | Python | Erzeugt ein typografisches Neusatz-PDF mit modernem Schriftsatz via Typst-Engine, kalibriert am Layout-Profil. |
+| [`audit_layout_concordance.py`](scripts/audit_layout_concordance.py) | Python | Layout-Quality-Gate: Berechnet Fill-Ratio, Whitespace-Divergenz und Token-Overlap zwischen Faksimile und Neusatz. |
+| [`compare_layout.py`](scripts/compare_layout.py) | Python | Rendert visuelle Side-by-Side-Gegenüberstellungen (Faksimile vs. Neusatz) nach `comparison_samples/`. |
 | [`build_typeset_edition.py`](scripts/build_typeset_edition.py) | Python | Erzeugt sektionsspezifische Typst-Vektorneueditionen (Böhtlingk-Standard) mit automatischem Font-Vendoring. |
 | [`align_dhatupatha.py`](scripts/align_dhatupatha.py) | Python | Bilinguale Facing-Page-Alignment-Engine: Gleicht Devanāgarī & IAST gegen kanonische Ground-Truth ab. |
-| [`align_mistral_pdf.py`](scripts/align_mistral_pdf.py) | Python | Post-Assembly: Synchronisiert Mistral-Text mit Tesseract-Bounding-Boxes direkt im PDF-Inhaltsstrom (`.aligned.pdf`). |
 | [`export_epub.py`](scripts/export_epub.py) | Python | Baut standardkonformes EPUB 3 mit semantischem XHTML und eingebetteten Unicode-Schriften. |
-| [`render_digital_pdf.py`](scripts/render_digital_pdf.py) | Python | Erzeugt ein typografisches Neusatz-PDF mit modernem Schriftsatz via Typst-Engine. |
 | [`export_tei.py`](scripts/export_tei.py) | Python | Generiert standardkonformes TEI-P5 XML für Langzeitarchive und Metadatenkataloge. |
 | [`consolidate_book.py`](scripts/consolidate_book.py) | Python | Führt Einzelseiten-hOCR/Markdown-Daten in ein einheitliches Zwischenformat (`book.json` / `book.md`) zusammen. |
 | [`mistral_ocr.py`](scripts/mistral_ocr.py) | Python | Parallelisierter API-Client für LLM-Vision mit exponentiellem Backoff und Caching. |

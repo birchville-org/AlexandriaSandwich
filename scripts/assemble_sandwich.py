@@ -61,14 +61,15 @@ def build_base_pdf(images: Sequence[Path], base_pdf: Path, dpi: int) -> None:
 
     try:
         import pymupdf
+        from PIL import Image
         doc = pymupdf.open()
         for img_path in images:
-            img_doc = pymupdf.open(str(img_path))
-            pdf_bytes = img_doc.convert_to_pdf()
-            img_doc.close()
-            sub_pdf = pymupdf.open("pdf", pdf_bytes)
-            doc.insert_pdf(sub_pdf)
-            sub_pdf.close()
+            with Image.open(str(img_path)) as im:
+                pix_w, pix_h = im.size
+            pt_w = pix_w * 72.0 / dpi
+            pt_h = pix_h * 72.0 / dpi
+            page = doc.new_page(width=pt_w, height=pt_h)
+            page.insert_image(pymupdf.Rect(0, 0, pt_w, pt_h), filename=str(img_path))
         doc.save(str(base_pdf))
         doc.close()
         return

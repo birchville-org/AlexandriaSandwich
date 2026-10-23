@@ -68,8 +68,12 @@ def profile_pdf_layout(
     left_column_x1_list: List[float] = []
     main_column_x0_list: List[float] = []
     main_column_x1_list: List[float] = []
+    inside_margins_list: List[float] = []
+    outside_margins_list: List[float] = []
     top_y_list: List[float] = []
     bottom_y_list: List[float] = []
+    font_sizes_list: List[float] = []
+    line_spacings_list: List[float] = []
 
     per_page_profiles: Dict[str, Any] = {}
 
@@ -130,11 +134,37 @@ def profile_pdf_layout(
                     if len(col1) >= 3 and len(col2) >= 3:
                         pages_with_multicolumn += 1
     
+                p_min_x = min(b[0] for b in main_blocks)
+                p_max_x = max(b[2] for b in main_blocks)
+                if pno % 2 == 0:
+                    inside_margins_list.append(p_min_x)
+                    outside_margins_list.append(p_width - p_max_x)
+                else:
+                    inside_margins_list.append(p_width - p_max_x)
+                    outside_margins_list.append(p_min_x)
+
                 for b in main_blocks:
                     main_column_x0_list.append(b[0])
                     main_column_x1_list.append(b[2])
                     top_y_list.append(b[1])
                     bottom_y_list.append(b[3])
+
+                try:
+                    p_dict = page.get_text("dict")
+                    for blk in p_dict.get("blocks", []):
+                        lines = blk.get("lines", [])
+                        for l_idx, l in enumerate(lines):
+                            for s in l.get("spans", []):
+                                txt = s.get("text", "").strip()
+                                sz = s.get("size", 0.0)
+                                if len(txt) >= 3 and 6.0 <= sz <= 24.0:
+                                    font_sizes_list.append(sz)
+                            if l_idx + 1 < len(lines):
+                                gap = lines[l_idx + 1]["bbox"][1] - l["bbox"][3]
+                                if 0.5 <= gap <= 25.0:
+                                    line_spacings_list.append(gap)
+                except Exception:
+                    pass
     
             # Record page sidehead texts for concordance (merging vertically adjacent fragments)
             if sidehead_blocks:
@@ -194,11 +224,21 @@ def profile_pdf_layout(
     marginal_x0 = safe_median(left_column_x0_list, 45.0)
     marginal_x1 = safe_median(left_column_x1_list, 150.0)
 
-    # Clean and bound margins
-    margin_left = max(35.0, min(body_left, p_width * 0.45))
-    margin_right = max(35.0, min(p_width - body_right, p_width * 0.25))
-    margin_top = max(40.0, min(top_margin, 80.0))
-    margin_bottom = max(40.0, min(bottom_margin, 80.0))
+    # Safety bounds without artificial clamping
+    min_margin = 18.0
+    max_h_margin = p_width * 0.45
+    max_v_margin = p_height * 0.45
+
+    margin_left = max(min_margin, min(body_left, max_h_margin))
+    margin_right = max(min_margin, min(p_width - body_right, max_h_margin))
+    margin_inside = max(min_margin, min(safe_median(inside_margins_list, margin_left), max_h_margin))
+    margin_outside = max(min_margin, min(safe_median(outside_margins_list, margin_right), max_h_margin))
+    margin_top = max(min_margin, min(top_margin, max_v_margin))
+    margin_bottom = max(min_margin, min(bottom_margin, max_v_margin))
+
+    is_asymmetric_gutter = abs(margin_inside - margin_outside) >= 4.0
+    med_font = round(statistics.median(font_sizes_list), 1) if font_sizes_list else None
+    med_leading = round(statistics.median(line_spacings_list), 1) if line_spacings_list else None
 
     profile = {
         "source_pdf": str(pdf_path.resolve()),
@@ -217,8 +257,15 @@ def profile_pdf_layout(
         "calibrated_margins": {
             "left_pt": round(margin_left, 1),
             "right_pt": round(margin_right, 1),
+            "inside_pt": round(margin_inside, 1),
+            "outside_pt": round(margin_outside, 1),
             "top_pt": round(margin_top, 1),
             "bottom_pt": round(margin_bottom, 1),
+            "is_asymmetric_gutter": is_asymmetric_gutter,
+        },
+        "typography": {
+            "font_size_pt": med_font,
+            "leading_pt": med_leading,
         },
         "marginal_zone": {
             "x0": round(marginal_x0, 1),

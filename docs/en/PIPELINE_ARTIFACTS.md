@@ -96,22 +96,35 @@ graph TD
 
 #### `<job>.perfect_sandwich.pdf` (`build_perfect_sandwich.py`)
 - **Path**: `data/output/<job>/<job>.perfect_sandwich.pdf`
-- **Purpose**: Archival print-ready facsimile with adaptive contrast leveling, unsharp masking, gutter/thumb shadow suppression, and invisible vector text layers.
-- **Quality Status**: Visually superior to raw archive scans; ideal for readers who demand authentic historical page images with clean digital backgrounds.
+- **Purpose**: Archival print-ready facsimile with adaptive contrast leveling, unsharp masking, content-aware margin masking (automated suppression of gutter shadows, binding strips, and scanning edges outside text boundaries), and invisible vector text layers (Render Mode 3).
+- **Procedure (Content-Aware Margin Masking)**:
+  - Dynamically extracts exact text bounding boxes per page from Mistral JSON geometry or word vectors.
+  - Applies multiscale illumination background subtraction and leveling to pure white (`#FFFFFF`).
+  - Masks contiguous gutter folds and scanner edges outside text boundaries (`pad_x=75, pad_y=60`) without clipping marginalia or page numbers.
+- **Quality Status**: Visually superior to raw archive scans; serves as the clean reference baseline for layout profiling and digital typesetting.
 
 ---
 
 ### 2.5 Digital Vector Typeset Editions (Typst)
 
+#### `layout.profile.json` (`profile_source_layout.py`)
+- **Path**: `data/output/<job>/layout.profile.json`
+- **Purpose**: Automated geometric profiling of the source facsimile (`perfect_sandwich.pdf`). Measures text column dimensions (Satzspiegel), page margins (top, bottom, inner, outer), leading/line spacing, macro layout structure (single-column, two-column, marginal sideheads), and header/folio coordinates.
+- **Quality Status**: Fully automated; feeds calibrated geometric parameters into the typesetting renderer.
+
 #### `<job>.digital.typ` & `<job>.digital.pdf` (`render_digital_pdf.py`)
 - **Path**: `data/output/<job>/<job>.digital.pdf`
 - **Purpose**: Pure vector-based digital re-typesetting (not a raster image). Infinitely scalable, accessible, and rendered using authentic typefaces (Libertinus Serif, Noto Sans Devanagari).
+- **Typographic Standards**:
+  - *Satzspiegel & Spacing*: Calibrated automatically from `layout.profile.json` and `.perfect_sandwich.pdf`.
+  - *Title & Paragraphs*: Centered title block; structured first-line indentation (`1.5em`) on body text.
+  - *Header & Folio*: Symmetrical three-column running headers with consistent Devanāgarī or Arabic page numbering.
+  - *Footnote Separation*: Automated extraction and bottom-of-page formatting with hairline divider rules and reduced point sizes.
 - **Modes**:
   - *1:1 Original Page Correspondence (`--preserve-pages`)*: Every page starts on a new digital page matching original page numbers and headers, scaled adaptively via `page_content` to guarantee exact page parity.
   - *Scholarly Reflow*: Continuous re-typesetting with natural book breaks according to classical typographic proportions.
 - **Quality Status**:
   - *Strengths*: Razor-sharp typography, lightweight file size (200–800 KB vs. 20–50 MB for facsimiles), complete full-text accessibility.
-  - *Challenges*: Historical Clarendon styling may require custom TOC and profile tuning where needed.
 
 ---
 
@@ -138,10 +151,15 @@ graph TD
 - **Purpose**: Automated end-of-run quality audit with pass/fail ratios, OCR confidence distributions, runtime metrics, and SHA-256 artifact checksums.
 - **Quality Status**: Serves as a deterministic gate in n8n pipelines and renders directly inside the web UI.
 
-#### `<job>.audit.json` / `<job>.layout_audit.md` (`audit_digital_layout.py`)
-- **Path**: `data/output/<job>/<job>.layout_audit.md`
-- **Purpose**: Automated scan-vs-typeset comparison engine identifying line overflows, orphaned headings, and missing footnote blocks.
-- **Quality Status**: Core instrument in the Continuous Improvement Process (CIP).
+#### `<job>.layout_audit.json` / `<job>.layout_audit.md` (`audit_layout_concordance.py`)
+- **Path**: `data/output/<job>/<job>.layout_audit.md`, `data/output/<job>/<job>.layout_audit.json`
+- **Purpose**: Automated concordance gate comparing the cleaned facsimile (`perfect_sandwich.pdf`) against digital vector typesetting (`digital.pdf`). Computes fill ratio, whitespace divergence, structural zone concordance, horizontal center-of-mass, and Jaccard token overlap.
+- **Quality Status**: Indispensable automated layout gate.
+
+#### `comparison_samples/` (`compare_layout.py`)
+- **Path**: `data/output/<job>/comparison_samples/page_XXXX_comparison.png`
+- **Purpose**: Visual side-by-side verification images showing cleaned facsimile (left) versus digital typesetting (right) for instant inspection of Satzspiegel, line breaks, and page boundaries.
+- **Quality Status**: Generated automatically in every standard pipeline run.
 
 ---
 

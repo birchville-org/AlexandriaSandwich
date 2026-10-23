@@ -96,22 +96,35 @@ graph TD
 
 #### `<job>.perfect_sandwich.pdf` (`build_perfect_sandwich.py`)
 - **Pfad**: `data/output/<job>/<job>.perfect_sandwich.pdf`
-- **Zweck**: Druckfertiges High-End-Faksimile mit adaptiver Hintergrundaufhellung, Schärfung (Unsharp Mask), Bundsteg- und Daumenmaskierung sowie unsichtbarem Vektor-Textlayer.
-- **Qualitätsstand**: Optisch dem Rohscan weit überlegen; ideal für Nutzer, die das historische Originalbild im bereinigten Zustand bevorzugen.
+- **Zweck**: Druckfertiges High-End-Faksimile mit adaptiver Hintergrundaufhellung, Schärfung (Unsharp Mask), Content-Aware Margin Masking (automatische Beseitigung von Buchfalzen, Schatten, Bindestreifen und Scannerkanten außerhalb des Textbereichs) sowie unsichtbarem Vektor-Textlayer (Mode 3).
+- **Verfahren (Content-Aware Margin Masking)**:
+  - Ermittelt die exakte Bounding-Box des Textkörpers dynamisch aus den Mistral-JSON-Koordinaten oder PyMuPDF-Wortvektoren.
+  - Wendet mehrskaliges Ausleuchtungs-Leveling und Hintergrund-Nivellierung auf Reinweiß (`#FFFFFF`) an.
+  - Maskiert alle zusammenhängenden Schatten-, Falz- und Buchrückenflächen außerhalb der Textgrenzen (`pad_x=75, pad_y=60`), ohne Randnotizen oder Seitenzahlen anzutasten.
+- **Qualitätsstand**: Optisch dem Rohscan weit überlegen; dient als bereinigte Referenzbasis für die nachgelagerte Layout-Profilierung und den Neusatz.
 
 ---
 
 ### 2.5 Digitaler Neusatz & Vektor-Editionen (Typst)
 
+#### `layout.profile.json` (`profile_source_layout.py`)
+- **Pfad**: `data/output/<job>/layout.profile.json`
+- **Zweck**: Automatisierte geometrische Vermessung des Quell-Faksimiles (`perfect_sandwich.pdf`). Ermittelt Satzspiegel, Randabstände (Kopf, Fuß, Innen, Außen), Durchschuss, Makro-Layout (einspaltig, zweispaltig, Marginalspalten) sowie Paginierungs- und Kolumnentitel-Positionen.
+- **Qualitätsstand**: Vollautomatisch; liefert die kalibrierten Geometrieparameter für den Neusatz.
+
 #### `<job>.digital.typ` & `<job>.digital.pdf` (`render_digital_pdf.py`)
 - **Pfad**: `data/output/<job>/<job>.digital.pdf`
 - **Zweck**: Vollständiger digitaler Neusatz als Vektordokument (kein Rasterscan). Verlustfrei skalierbar, barrierefrei und mit echten Schriften gerendert (Libertinus Serif, Noto Sans Devanagari).
+- **Typografische Standards**:
+  - *Satzspiegel & Durchschuss*: Wird automatisch aus `layout.profile.json` und `.perfect_sandwich.pdf` abgeleitet.
+  - *Titel & Absätze*: Dokumententitel zentriert auf Satzspiegelmitte; strukturierter Erstzeileneinzug (`1.5em`) für Textabsätze.
+  - *Kopfzeile & Paginierung*: Symmetrischer Drei-Spalten-Kolumnentitel mit konsistenter Devanāgarī- oder arabischer Seitenzählung.
+  - *Fußnoten-Apparat*: Automatische Abtrennung und Formatierung von Anmerkungen am Seitenende mit horizontaler Trennlinie und verkleinertem Schriftgrad.
 - **Modi**:
   - *1:1 Seitenkongruenz (`--preserve-pages`)*: Jede Buchseite beginnt auf einer neuen digitalen Seite mit identischen Kolumnentiteln und adaptiver Skalierung (`page_content`), sodass die Paginierung exakt dem historischen Original entspricht.
   - *Scholarly Reflow*: Fließender Neusatz mit harmonischen Buchumbüchen nach klassischem typografischem Satzspiegel.
 - **Qualitätsstand**:
   - *Stärken*: Gestochen scharfes Schriftbild, minimale Dateigröße (ca. 200–800 KB statt 20–50 MB beim Faksimile), vollständige Durchsuchbarkeit.
-  - *Herausforderungen*: Erfordert für anspruchsvolle historische Clarendon-Layouts bei Bedarf manuelle TOC- und Profilanpassungen.
 
 ---
 
@@ -138,10 +151,15 @@ graph TD
 - **Zweck**: Automatisierte Zusammenfassung eines Pipeline-Laufs mit Kennzahlen (Pass/Fail-Verhältnis Tesseract vs. Mistral, Verarbeitungszeiten, Dateigrößen, Checksummen).
 - **Qualitätsstand**: Dient als deterministisches Quality-Gate im n8n-/Shell-Workflow und wird direkt in der Web-UI dargestellt.
 
-#### `<job>.audit.json` / `<job>.layout_audit.md` (`audit_digital_layout.py`)
-- **Pfad**: `data/output/<job>/<job>.layout_audit.md`
-- **Zweck**: Automatisierter Soll-Ist-Vergleich zwischen Original-Scan und Neusatz (Erkennung von Zeilenüberläufen, verwaisten Überschriften, fehlenden Fußnoten).
-- **Qualitätsstand**: Unverzichtbares Instrument für den kontinuierlichen Verbesserungsprozess (CIP), um Layoutabweichungen vor der visuellen Endkontrolle aufzudecken.
+#### `<job>.layout_audit.json` / `<job>.layout_audit.md` (`audit_layout_concordance.py`)
+- **Pfad**: `data/output/<job>/<job>.layout_audit.md`, `data/output/<job>/<job>.layout_audit.json`
+- **Zweck**: Automatisierter Soll-Ist-Vergleich zwischen Original-Faksimile (`perfect_sandwich.pdf`) und Neusatz (`digital.pdf`). Berechnet Satzspiegel-Ausfüllrate (Fill Ratio), Whitespace-Divergenz, strukturelle Zonen-Konkordanz (Marginalien vs. Hauptspalte), horizontale Massenschwerpunkte und Jaccard-Token-Überlappung.
+- **Qualitätsstand**: Unverzichtbares Instrument für das automatisierte Layout-Quality-Gate.
+
+#### `comparison_samples/` (`compare_layout.py`)
+- **Pfad**: `data/output/<job>/comparison_samples/page_XXXX_comparison.png`
+- **Zweck**: Visuelle Side-by-Side-Gegenüberstellung des bereinigten Faksimiles (links) und des digitalen Neusatzes (rechts) zur schnellen visuellen Begutachtung von Satzspiegel, Umbrüchen und Paginierung.
+- **Qualitätsstand**: Wird standardmäßig im Pipeline-Lauf erzeugt.
 
 ---
 

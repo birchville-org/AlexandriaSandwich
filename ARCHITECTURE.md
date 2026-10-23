@@ -61,12 +61,13 @@ AlexandriaSandwich löst das historische Dilemma zwischen archivalischer Beweisk
 ```
 
 1. **Zweig 1: Faksimile-Ebene (`*.perfect_sandwich.pdf`):**
-   * Das historische Druckbild bleibt 1:1 und ohne Rasterungsverlust erhalten.
-   * Der unsichtbare Textlayer liegt auf pixelgenauen Bounding-Boxen der Originalzeilen.
-2. **Zweig 2: Semantische Vektor-Neuedition (`*.typeset_edition.pdf`):**
-   * Kein blindes Raten des Layouts aus flachem OCR-Text (*Reverse-Layout*).
-   * Semantisches Alignment gegen kanonische Ground-Truth-Datenbanken (z. B. `dhatupatha_canonical.json`, `sutras.json`).
-   * Sektionsspezifische Typografie: 1-spaltiger Fließtext für Front Matter (Einleitungen), 2-spaltiges Tabellengitter mit `grid.vline` für Lexika und Wörterbücher.
+   * Das historische Druckbild wird durch **Content-Aware Margin Masking** von störenden Buchfalzen, Schatten und Scannerkanten außerhalb des Textbereichs bereinigt und auf Reinweiß nivelliert.
+   * Der unsichtbare Textlayer liegt auf pixelgenauen Bounding-Boxen der Originalzeilen (Mode 3).
+   * Dient als bereinigte Referenzbasis für die automatische Vermessung via `profile_source_layout.py`.
+2. **Zweig 2: Semantische Vektor-Neuedition (`*.digital.pdf` & `*.typeset_edition.pdf`):**
+   * Kalibriert Typst-Satzspiegel, Durchschuss, Kolumnentitel und Paginierung direkt aus den Messwerten des bereinigten Faksimiles.
+   * Semantisches Alignment gegen kanonische Ground-Truth-Datenbanken (z. B. `dhatupatha_canonical.json`, `sutras.json`) oder strukturierte `book.json` ASTs.
+   * Typografische Standards: zentrierte Haupttitel, Einrückung bei Absatzbeginn (`1.5em`), symmetrische Kopfzeilen mit Original-Paginierung (Devanāgarī/Arabisch) und automatische Fußnotenabtrennung am Seitenende.
 
 ---
 

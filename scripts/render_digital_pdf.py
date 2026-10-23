@@ -138,18 +138,21 @@ def format_block_as_typst(text: str) -> str:
   #set par(hanging-indent: 1.5em)
   {lbl} {body}
 ]"""
-        num_m = re.match(r"^(\b\d{1,3}\.)\s+(.*)$", line)
+        num_m = re.match(r"^(\b\d{1,3}\.|[०-९]{1,3}\.)\s+(.*)$", line)
         if num_m and not SUTRA_PREFIX_RE.match(line):
             lbl = format_inline_markdown(num_m.group(1))
             body = format_inline_markdown(num_m.group(2))
             return f"""#block(spacing: 0.85em)[
-  #set par(justify: true, leading: 0.52em)
+  #set par(justify: true, leading: 0.52em, first-line-indent: 0pt)
   #grid(
     columns: (2.0em, 1fr),
     [{lbl}],
     [{body}]
   )
 ]"""
+        sec_m = re.match(r"^[\[\(]\s*([०-९\d]+|[ivxlcdm]+)\s*[\]\)]$", line, re.IGNORECASE)
+        if sec_m:
+            return f"#align(center)[#v(0.4em)#text(size: 11.5pt, weight: \"bold\")[{format_inline_markdown(line)}]#v(0.4em)]"
         return format_inline_markdown(line)
 
     item_matches = [bool(is_item_line(l)) for l in raw_lines]
@@ -186,7 +189,7 @@ def format_block_as_typst(text: str) -> str:
         cells_str = ",\n".join(grid_cells)
         if is_main_num_list:
             res_parts.append(f"""#block(spacing: 0.85em)[
-  #set par(leading: 0.52em)
+  #set par(leading: 0.52em, first-line-indent: 0pt)
   #grid(
     columns: (2.0em, 1fr),
     row-gutter: 0.85em,
@@ -195,7 +198,7 @@ def format_block_as_typst(text: str) -> str:
 ]""")
         else:
             res_parts.append(f"""#block(inset: (left: 3.8em), spacing: 0.45em)[
-  #set par(leading: 0.42em)
+  #set par(leading: 0.42em, first-line-indent: 0pt)
   #grid(
     columns: (auto, 1fr),
     column-gutter: 0.6em,
@@ -268,7 +271,7 @@ def format_block_as_typst(text: str) -> str:
         lbl = format_inline_markdown(num_m.group(1))
         body = format_inline_markdown(num_m.group(2))
         return f"""#block(spacing: 0.85em)[
-  #set par(justify: true, leading: 0.52em)
+  #set par(justify: true, leading: 0.52em, first-line-indent: 0pt)
   #grid(
     columns: (2.0em, 1fr),
     [{lbl}],
@@ -351,10 +354,11 @@ def format_inline_markdown(text: str) -> str:
     return text
 
 
-def calibrate_layout_from_pdf(pdf_path: Path) -> Optional[Dict[str, float]]:
+def calibrate_layout_from_pdf(pdf_path: Path) -> Optional[Dict[str, Any]]:
     """
-    Extract median page dimensions and printable text bounding box from reference PDF (aligned/sandwich).
-    Returns dict with width, height, left, right, top, bottom in points.
+    Extract median page dimensions, printable text bounding box, gutter asymmetry,
+    and typography metrics (font size, leading) from reference PDF (aligned/sandwich).
+    Returns dict with width, height, inside, outside, left, right, top, bottom, font_size_pt, leading_pt.
     """
     try:
         import pymupdf
@@ -384,8 +388,14 @@ def calibrate_layout_from_pdf(pdf_path: Path) -> Optional[Dict[str, float]]:
         page_heights: List[float] = []
         left_margins: List[float] = []
         right_margins: List[float] = []
+        inside_margins: List[float] = []
+        outside_margins: List[float] = []
         top_margins: List[float] = []
         bottom_margins: List[float] = []
+        font_sizes: List[float] = []
+        line_spacings: List[float] = []
+        page_line_counts: List[int] = []
+        page_text_heights: List[float] = []
 
         for pno in range(start_p, end_p):
             page = doc[pno]
@@ -402,10 +412,49 @@ def calibrate_layout_from_pdf(pdf_path: Path) -> Optional[Dict[str, float]]:
             min_y = min(b[1] for b in blocks)
             max_y = max(b[3] for b in blocks)
 
-            left_margins.append(min_x)
-            right_margins.append(rect.width - max_x)
-            top_margins.append(min_y)
-            bottom_margins.append(rect.height - max_y)
+            left_m = min_x
+            right_m = rect.width - max_x
+            top_m = min_y
+            bottom_m = rect.height - max_y
+
+            left_margins.append(left_m)
+            right_margins.append(right_m)
+            top_margins.append(top_m)
+            bottom_margins.append(bottom_m)
+
+            text_h = max_y - min_y
+
+            # Recto (odd page, 0-indexed pno even): spine/inside on left, outside on right
+            # Verso (even page, 0-indexed pno odd): spine/inside on right, outside on left
+            if pno % 2 == 0:
+                inside_margins.append(left_m)
+                outside_margins.append(right_m)
+            else:
+                inside_margins.append(right_m)
+                outside_margins.append(left_m)
+
+            # Sample typography (spans and lines)
+            try:
+                page_dict = page.get_text("dict")
+                line_count = 0
+                for blk in page_dict.get("blocks", []):
+                    lines = blk.get("lines", [])
+                    line_count += len(lines)
+                    for idx, l in enumerate(lines):
+                        for s in l.get("spans", []):
+                            txt = s.get("text", "").strip()
+                            sz = s.get("size", 0.0)
+                            if len(txt) >= 3 and 6.0 <= sz <= 48.0:
+                                font_sizes.append(sz)
+                        if idx + 1 < len(lines):
+                            gap = lines[idx + 1]["bbox"][1] - l["bbox"][3]
+                            if 0.5 <= gap <= 30.0:
+                                line_spacings.append(gap)
+                if line_count >= 12 and text_h > rect.height * 0.40:
+                    page_line_counts.append(line_count)
+                    page_text_heights.append(text_h)
+            except Exception:
+                pass
 
         doc.close()
 
@@ -414,28 +463,63 @@ def calibrate_layout_from_pdf(pdf_path: Path) -> Optional[Dict[str, float]]:
 
         w = round(statistics.median(page_widths), 1)
         h = round(statistics.median(page_heights), 1)
-        l = round(statistics.median(left_margins), 1)
-        r = round(statistics.median(right_margins), 1)
-        t = round(statistics.median(top_margins), 1)
+        med_l = round(statistics.median(left_margins), 1)
+        med_r = round(statistics.median(right_margins), 1)
+        med_top = round(statistics.median(top_margins), 1)
 
         # Bottom margin: use the 20th percentile to measure full text pages (ignoring short chapter ends)
         sorted_b = sorted(bottom_margins)
         idx_20 = max(0, int(len(sorted_b) * 0.20))
-        b = round(sorted_b[idx_20], 1)
+        med_b = round(sorted_b[idx_20], 1)
 
-        # Normalize and balance margins for digital typesetting to maximize usable reading space
-        side_margin = round(min(42.0, max(28.0, (l + r) / 2.0)), 1)
-        top_margin = round(min(45.0, max(28.0, t)), 1)
-        bottom_margin = round(min(48.0, max(32.0, b)), 1)
+        med_inside = round(statistics.median(inside_margins), 1) if inside_margins else med_l
+        med_outside = round(statistics.median(outside_margins), 1) if outside_margins else med_r
 
-        cal = {
+        # Safety bounds: prevent text bleeding off page or negative content box, without artificial clamping.
+        # Historical margins can freely be 54pt, 65pt, 80pt, etc.
+        min_margin = 18.0  # 0.25 inch safety from physical sheet edge
+        max_h_margin = w * 0.40
+        max_v_margin = h * 0.40
+
+        left_safe = round(max(min_margin, min(med_l, max_h_margin)), 1)
+        right_safe = round(max(min_margin, min(med_r, max_h_margin)), 1)
+        inside_safe = round(max(min_margin, min(med_inside, max_h_margin)), 1)
+        outside_safe = round(max(min_margin, min(med_outside, max_h_margin)), 1)
+        top_safe = round(max(min_margin, min(med_top, max_v_margin)), 1)
+        bottom_safe = round(max(min_margin, min(med_b, max_v_margin)), 1)
+
+        is_asymmetric_gutter = abs(inside_safe - outside_safe) >= 4.0
+
+        med_font = round(statistics.median(font_sizes), 1) if font_sizes else None
+        med_leading = round(statistics.median(line_spacings), 1) if line_spacings else None
+
+        # Satzspiegel line-advance calibration:
+        # If the original document has a full vertical text height (>= 600pt on an >= 750pt page),
+        # scale up font size and leading so the digital Neusatz matches the historical Satzspiegel height.
+        if page_text_heights:
+            med_th = statistics.median(page_text_heights)
+            if med_th >= 600.0 and h >= 750.0:
+                if med_font is None or med_font < 14.5:
+                    med_font = 15.0
+                if med_leading is None or med_leading < 8.0:
+                    med_leading = 9.5
+
+        cal: Dict[str, Any] = {
             "width": w,
             "height": h,
-            "left": side_margin,
-            "right": side_margin,
-            "top": top_margin,
-            "bottom": bottom_margin,
+            "left": left_safe,
+            "right": right_safe,
+            "inside": inside_safe,
+            "outside": outside_safe,
+            "top": top_safe,
+            "bottom": bottom_safe,
+            "is_asymmetric_gutter": is_asymmetric_gutter,
         }
+        if med_font is not None:
+            cal["font_size_pt"] = med_font
+        if med_leading is not None:
+            cal["leading_pt"] = med_leading
+
         log(f"Calibrated layout from {pdf_path.name}: {cal}")
         return cal
     except Exception as e:
@@ -1064,9 +1148,44 @@ def build_book_page_labels(
     pages: List[Dict[str, Any]],
     toc_path: Optional[Path] = None,
 ) -> Tuple[int, List[str]]:
-    """Build accurate printed page labels supporting unnumbered front matter, roman numerals, and arabic body pages."""
+    """Build accurate printed page labels supporting unnumbered front matter, roman numerals, devanagari numerals, and arabic body pages."""
     total = len(pages)
     first_body_idx = None
+
+    # 0. Check if pages have printed_page annotations from OCR / consolidation
+    DEV_DIGITS = "०१२३४५६७८९"
+
+    def _dev_to_int(s: str) -> Optional[int]:
+        try:
+            norm = "".join(str(DEV_DIGITS.index(c)) if c in DEV_DIGITS else c for c in s if c in DEV_DIGITS or c.isdigit())
+            return int(norm) if norm else None
+        except Exception:
+            return None
+
+    def _int_to_dev(n: int) -> str:
+        return "".join(DEV_DIGITS[int(d)] for d in str(n))
+
+    printed_offsets = []
+    is_dev_script = False
+    for idx, page in enumerate(pages):
+        raw_pp = str(page.get("printed_page", "")).strip()
+        if any(c in DEV_DIGITS for c in raw_pp):
+            is_dev_script = True
+        val = _dev_to_int(raw_pp)
+        if val is not None and val > 0:
+            printed_offsets.append(val - idx)
+
+    if printed_offsets:
+        import collections
+        counter = collections.Counter(printed_offsets)
+        base_offset, votes = counter.most_common(1)[0]
+        if votes >= 2 and base_offset > 0:
+            labels = []
+            for idx in range(total):
+                num = base_offset + idx
+                labels.append(_int_to_dev(num) if is_dev_script else str(num))
+            first_body_idx = 1
+            return first_body_idx, labels
 
     # 1. Try from toc_path: search top-level entries for the first main body lesson/chapter
     if toc_path and Path(toc_path).is_file():
@@ -1147,47 +1266,106 @@ def strip_running_headers(
     pr_label: str,
     ch_title: str,
     is_chapter_page: bool,
+    book_title: str = "",
 ) -> List[Dict[str, Any]]:
     """Strip scanned running headers (page numbers, chapter running headers) from page blocks."""
     if not blocks:
         return blocks
     clean_ch = ch_title.strip().upper() if ch_title else ""
+    clean_book = book_title.strip().upper() if book_title else ""
 
     if is_chapter_page:
         skip = 0
         while skip < min(len(blocks), 2):
             t = blocks[skip].get("text", "").strip()
             btype = blocks[skip].get("type", "")
-            if btype in {"h1", "h2"} or (clean_ch and clean_ch in t.upper()) or (pr_label and t.lower() == pr_label.lower()):
+            t_u = t.upper()
+            if btype in {"h1", "h2"} or (clean_ch and clean_ch in t_u) or (clean_book and clean_book in t_u) or (pr_label and t.lower() == pr_label.lower()):
                 skip += 1
             else:
                 break
         return blocks[skip:]
 
+    def _is_hdr(txt: str) -> bool:
+        if not txt:
+            return False
+        tu = txt.upper()
+        return bool(RH_PATTERN.match(txt)) or bool(clean_ch and clean_ch in tu and len(txt) < 65) or bool(clean_book and clean_book in tu and len(txt) < 65)
+
+    def _is_label(txt: str) -> bool:
+        if not txt:
+            return False
+        if pr_label and txt.lower() == pr_label.lower():
+            return True
+        return bool(re.match(r"^(?:[ivxlcdm]+|\d+|[\u0966-\u096F]+)$", txt, re.IGNORECASE))
+
     if len(blocks) >= 2:
         t0 = blocks[0].get("text", "").strip()
         t1 = blocks[1].get("text", "").strip()
-        t0_u = t0.upper()
-        t1_u = t1.upper()
-
-        is_p0_label = (pr_label and t0.lower() == pr_label.lower()) or bool(re.match(r"^(?:[ivxlcdm]+|\d+)$", t0, re.IGNORECASE))
-        is_p1_label = (pr_label and t1.lower() == pr_label.lower()) or bool(re.match(r"^(?:[ivxlcdm]+|\d+)$", t1, re.IGNORECASE))
-
-        is_p0_hdr = bool(RH_PATTERN.match(t0)) or (clean_ch and clean_ch in t0_u and len(t0) < 65)
-        is_p1_hdr = bool(RH_PATTERN.match(t1)) or (clean_ch and clean_ch in t1_u and len(t1) < 65)
-
-        if (is_p0_label and is_p1_hdr) or (is_p0_hdr and is_p1_label):
+        if (_is_label(t0) and _is_hdr(t1)) or (_is_hdr(t0) and _is_label(t1)):
             return blocks[2:]
 
     if len(blocks) >= 1:
         t0 = blocks[0].get("text", "").strip()
-        t0_u = t0.upper()
-        is_p0_label = pr_label and (t0.lower() == pr_label.lower()) and len(t0) <= 6
-        is_p0_hdr = bool(RH_PATTERN.match(t0)) or (clean_ch and clean_ch in t0_u and len(t0) < 65)
-        if is_p0_hdr or is_p0_label:
+        b0_type = blocks[0].get("type", "")
+        if _is_hdr(t0) or (_is_label(t0) and len(t0) <= 6):
+            return blocks[1:]
+        if b0_type == "h2" and ((clean_ch and clean_ch in t0.upper()) or (clean_book and clean_book in t0.upper())):
             return blocks[1:]
 
     return blocks
+
+
+FN_FIRST_RE = re.compile(r"^(?:[1१][\.\)]|\([1१]\)|\*)\s+")
+
+def extract_page_footnotes(blocks: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Identify trailing footnote blocks at the bottom of a page."""
+    if len(blocks) < 2:
+        return blocks, []
+    start_idx = None
+    for i in range(len(blocks) - 1, max(0, len(blocks) - 5), -1):
+        t = blocks[i].get("text", "").strip()
+        if FN_FIRST_RE.match(t):
+            start_idx = i
+            break
+    if start_idx is not None:
+        return blocks[:start_idx], blocks[start_idx:]
+    return blocks, []
+
+
+def format_page_footnotes_as_typst(fn_blocks: List[Dict[str, Any]]) -> str:
+    """Format footnote blocks with a horizontal separator line, footnote typography, and grid alignment."""
+    entries: List[List[str]] = []
+    for b in fn_blocks:
+        t = b.get("text", "").strip()
+        m = re.match(r"^([१-९\d]{1,2}[\.\)]|\([१-९\d]{1,2}\))\s*(.*)$", t, re.DOTALL)
+        if m:
+            entries.append([m.group(1), m.group(2)])
+        elif entries:
+            entries[-1][1] += " " + t
+        else:
+            entries.append(["", t])
+
+    grid_items = []
+    for lbl, body in entries:
+        lbl_typ = format_inline_markdown(lbl)
+        body_typ = format_inline_markdown(body).replace("\n", " ")
+        grid_items.append(f"    [{lbl_typ}], [{body_typ}]")
+
+    cells_str = ",\n".join(grid_items)
+    return f"""#v(0.6em)
+#line(length: 28%, stroke: 0.5pt + luma(40))
+#v(0.35em)
+#block(spacing: 0.45em)[
+  #set text(size: 11.5pt)
+  #set par(justify: true, leading: 0.50em, first-line-indent: 0pt)
+  #grid(
+    columns: (2.0em, 1fr),
+    column-gutter: 0.35em,
+    row-gutter: 0.45em,
+{cells_str}
+  )
+]"""
 
 
 def ensure_extracted_images(
@@ -1485,7 +1663,7 @@ def build_typst_document(
     # Map OCR lang code to Typst language code
     lang_map = {
         "deu": "de", "ger": "de", "eng": "en", "fra": "fr", "fre": "fr",
-        "ita": "it", "spa": "es", "lat": "la", "san": "sa"
+        "ita": "it", "spa": "es", "lat": "la", "san": "sa", "hin": "hi"
     }
     first_lang = raw_lang.split("+")[0].strip().lower()
     typst_lang = lang_map.get(first_lang, "de")
@@ -1493,7 +1671,10 @@ def build_typst_document(
     # Check layout profile from metadata or book_data
     layout_profile = meta.get("layout_profile") or book_data.get("layout_profile")
     macro_layout = layout_profile.get("macro_layout", "single_column") if layout_profile else "single_column"
-    is_sideheads = (macro_layout == "marginal_sideheads") or (heuristics.get("layout_mode") == "sidehead")
+    if heuristics.get("layout_mode") == "single_column":
+        is_sideheads = False
+    else:
+        is_sideheads = (macro_layout == "marginal_sideheads") or (heuristics.get("layout_mode") == "sidehead")
 
     sh_dx = -160.0
     sh_width = 115.0
@@ -1530,7 +1711,7 @@ def build_typst_document(
             last_fm_page = i
 
     first_body_idx = last_fm_page + 1 if last_fm_page > 0 else 1
-    if layout_profile and layout_profile.get("pages"):
+    if is_sideheads and layout_profile and layout_profile.get("pages") and heuristics.get("layout_mode") != "single_column":
         sh_pages = [int(p) for p, v in layout_profile["pages"].items() if v.get("has_sideheads")]
         valid_sh = [p for p in sh_pages if p >= 4]
         if valid_sh and first_body_idx < min(valid_sh):
@@ -1543,11 +1724,28 @@ def build_typst_document(
         if first_body_idx > 1:
             dim_args.append(f'  margin: (x: 54pt, top: 60pt, bottom: 60pt),')
         else:
-            dim_args.append(f'  margin: (left: {cm["left_pt"]}pt, right: {cm["right_pt"]}pt, top: {cm["top_pt"]}pt, bottom: {cm["bottom_pt"]}pt),')
+            if cm.get("is_asymmetric_gutter") and "inside_pt" in cm and "outside_pt" in cm:
+                dim_args.append(f'  margin: (inside: {cm["inside_pt"]}pt, outside: {cm["outside_pt"]}pt, top: {cm["top_pt"]}pt, bottom: {cm["bottom_pt"]}pt),')
+            else:
+                dim_args.append(f'  margin: (left: {cm["left_pt"]}pt, right: {cm["right_pt"]}pt, top: {cm["top_pt"]}pt, bottom: {cm["bottom_pt"]}pt),')
+        typo = layout_profile.get("typography", {})
+        if typo.get("font_size_pt"):
+            dim_args.append(f'  font_size: {typo["font_size_pt"]}pt,')
+        if typo.get("leading_pt"):
+            dim_args.append(f'  leading: {typo["leading_pt"]}pt,')
     elif layout_calibration:
         dim_args.append(f'  width: {layout_calibration["width"]}pt,')
         dim_args.append(f'  height: {layout_calibration["height"]}pt,')
-        dim_args.append(f'  margin: (left: {layout_calibration["left"]}pt, right: {layout_calibration["right"]}pt, top: {layout_calibration["top"]}pt, bottom: {layout_calibration["bottom"]}pt),')
+        if layout_calibration.get("is_asymmetric_gutter") and "inside" in layout_calibration and "outside" in layout_calibration:
+            dim_args.append(f'  margin: (inside: {layout_calibration["inside"]}pt, outside: {layout_calibration["outside"]}pt, top: {layout_calibration["top"]}pt, bottom: {layout_calibration["bottom"]}pt),')
+        else:
+            l_val = layout_calibration.get("left", layout_calibration.get("inside", 42.0))
+            r_val = layout_calibration.get("right", layout_calibration.get("outside", 42.0))
+            dim_args.append(f'  margin: (left: {l_val}pt, right: {r_val}pt, top: {layout_calibration["top"]}pt, bottom: {layout_calibration["bottom"]}pt),')
+        if layout_calibration.get("font_size_pt"):
+            dim_args.append(f'  font_size: {layout_calibration["font_size_pt"]}pt,')
+        if layout_calibration.get("leading_pt"):
+            dim_args.append(f'  leading: {layout_calibration["leading_pt"]}pt,')
     elif paper:
         dim_args.append(f'  paper: "{paper}",')
     elif preserve_pages and pages:
@@ -1570,10 +1768,17 @@ def build_typst_document(
         first_body_idx = fb_idx
     labels_typst = ", ".join(f'"{l}"' for l in page_labels)
 
+    book_title = meta.get("book") or heuristics.get("book") or ""
+    book_title_arg = f'  book_title: "{escape_typst(book_title)}",' if book_title else ''
+
     lines = [
         f'#import "{template_path}": book, orig-page, fit-page, page-footnotes, sidehead, book-half-title, book-title-page, book-imprint-page, book-toc-page, book-lesson-page',
         f'#show: book.with(',
         f'  title: "{escape_typst(title)}",',
+    ]
+    if book_title_arg:
+        lines.append(book_title_arg)
+    lines.extend([
         f'  author: "{escape_typst(author)}",',
         f'  date: "{date_val}",',
         *dim_args,
@@ -1586,7 +1791,7 @@ def build_typst_document(
         '// Auto-scale layout macro ensuring each original page stays strictly within 1 page without row clumping',
         '#let page_content = fit-page',
         ''
-    ]
+    ])
 
     # Build TOC chapter mapping to recognize real chapter titles vs running headers
     toc_map: Dict[str, str] = {}
@@ -1645,7 +1850,10 @@ def build_typst_document(
             m_r = cm.get("right_pt", 104.8)
             m_t = cm.get("top_pt", 80.0)
             m_b = cm.get("bottom_pt", 80.0)
-            lines.append(f'#set page(margin: (left: {m_l}pt, right: {m_r}pt, top: {m_t}pt, bottom: {m_b}pt))')
+            if cm.get("is_asymmetric_gutter") and "inside_pt" in cm and "outside_pt" in cm:
+                lines.append(f'#set page(margin: (inside: {cm["inside_pt"]}pt, outside: {cm["outside_pt"]}pt, top: {m_t}pt, bottom: {m_b}pt))')
+            else:
+                lines.append(f'#set page(margin: (left: {m_l}pt, right: {m_r}pt, top: {m_t}pt, bottom: {m_b}pt))')
             lines.append('')
 
         # Check if page is half-title or full title page
@@ -1779,7 +1987,7 @@ def build_typst_document(
         elif blocks:
             b0_text = blocks[0].get("text", "").strip()
             b0_type = blocks[0].get("type", "")
-            if b0_type in {"h1", "h2"} and RH_PATTERN.match(b0_text):
+            if (b0_type in {"h1", "h2"} and RH_PATTERN.match(b0_text)) or b0_type == "h1":
                 is_chapter_page = True
                 ch_title_cand = b0_text
 
@@ -1790,16 +1998,18 @@ def build_typst_document(
                 if RH_PATTERN.match(b0_t):
                     clean_display_title = b0_t.upper()
             if not clean_display_title:
-                clean_display_title = re.sub(r":.*$", "", ch_title_cand).strip().upper()
+                clean_display_title = re.sub(r":.*$", "", ch_title_cand).strip()
             current_ch_title = clean_display_title
             page_elements.append(f"= {format_inline_markdown(clean_display_title)}")
 
-        blocks_to_process = strip_running_headers(blocks, pr_label, current_ch_title, is_chapter_page)
+        book_title_meta = meta.get("book") or heuristics.get("book") or ""
+        blocks_to_process = strip_running_headers(blocks, pr_label, current_ch_title, is_chapter_page, book_title=book_title_meta)
+        body_blocks, fn_blocks = extract_page_footnotes(blocks_to_process)
 
         b_idx = 0
-        while b_idx < len(blocks_to_process):
+        while b_idx < len(body_blocks):
             # Check for Calligraphy Glyphs Grid (label_beside or label_below)
-            glyph_style, glyph_pairs, consumed = detect_glyph_pairs(blocks_to_process, b_idx, p_num, img_map)
+            glyph_style, glyph_pairs, consumed = detect_glyph_pairs(body_blocks, b_idx, p_num, img_map)
             if consumed > 0:
                 flush_table()
                 if glyph_style == "label_beside":
@@ -1809,7 +2019,7 @@ def build_typst_document(
                 b_idx += consumed
                 continue
 
-            block = blocks_to_process[b_idx]
+            block = body_blocks[b_idx]
             b_idx += 1
             b_type = block.get("type", "p")
             text = block.get("text", "").strip()
@@ -1871,6 +2081,8 @@ def build_typst_document(
                 page_elements.append(format_block_as_typst(text))
 
         flush_table()
+        if fn_blocks:
+            page_elements.append(format_page_footnotes_as_typst(fn_blocks))
 
         # Multi-column heuristic: detect dictionary, list, or vocabulary pages without table syntax
         is_narrow_list = False
@@ -1975,9 +2187,11 @@ def render_pdf(
         pdf_dir = output_file.parent
         data_root = project_root / "data"
         candidate_refs.extend([
+            pdf_dir / f"{job_name}.perfect_sandwich.pdf",
             pdf_dir / f"{job_name}.aligned.pdf",
             pdf_dir / f"{job_name}.sandwich.pdf",
             pdf_dir / f"{job_name}.pdf",
+            input_file.parent / f"{job_name}.perfect_sandwich.pdf",
             input_file.parent / f"{job_name}.aligned.pdf",
             data_root / "input" / job_name / f"{job_name}.pdf",
             data_root / "input" / f"{job_name}.pdf",

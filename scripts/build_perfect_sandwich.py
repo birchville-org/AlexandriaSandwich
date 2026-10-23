@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import pikepdf
-from PIL import Image, ImageFilter, ImageStat
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 
 
 def log(msg: str):
@@ -44,55 +44,155 @@ def is_color_image(im: Image.Image) -> bool:
     return diff > 8.0 or abs(var_r - var_g) > 25.0
 
 
+def get_page_text_bboxes(pdf_path: Path, mistral_dir: Optional[Path] = None) -> Dict[int, Tuple[float, float, float, float, float, float]]:
+    """Extract content bounding box (x0, y0, x1, y1, width, height) per page from Mistral JSON or PDF words."""
+    bboxes = {}
+    job_dir = pdf_path.parent
+    mistral_files = []
+    if mistral_dir and mistral_dir.exists():
+        mistral_files = sorted(mistral_dir.glob("page-*.mistral.json"))
+    if not mistral_files:
+        mistral_files = sorted(job_dir.glob("markdown/page-*.mistral.json"))
+    if not mistral_files:
+        mistral_files = sorted((job_dir.parent / "markdown").glob("page-*.mistral.json"))
+    if not mistral_files:
+        mistral_files = sorted(job_dir.glob("page-*.mistral.json"))
+
+    try:
+        import pymupdf
+        doc = pymupdf.open(pdf_path)
+        total_p = len(doc)
+    except Exception:
+        total_p = 0
+        doc = None
+
+    if mistral_files and (total_p == 0 or len(mistral_files) == total_p):
+        for idx, mf in enumerate(mistral_files):
+            try:
+                import json
+                with open(mf, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                mp = d["pages"][0]
+                w = float(mp["dimensions"]["width"])
+                h = float(mp["dimensions"]["height"])
+                blocks = mp.get("blocks", [])
+                if blocks:
+                    x0 = float(min(b["top_left_x"] for b in blocks))
+                    y0 = float(min(b["top_left_y"] for b in blocks))
+                    x1 = float(max(b["bottom_right_x"] for b in blocks))
+                    y1 = float(max(b["bottom_right_y"] for b in blocks))
+                    bboxes[idx] = (x0, y0, x1, y1, w, h)
+            except Exception:
+                pass
+        if doc:
+            doc.close()
+        return bboxes
+
+    if doc:
+        for idx, p in enumerate(doc):
+            rect = p.rect
+            words = p.get_text("words")
+            clean_words = [w for w in words if w[1] >= rect.height * 0.03 and w[3] <= rect.height * 0.98]
+            if clean_words:
+                wx0 = min(w[0] for w in clean_words)
+                wy0 = min(w[1] for w in clean_words)
+                wx1 = max(w[2] for w in clean_words)
+                wy1 = max(w[3] for w in clean_words)
+                bboxes[idx] = (wx0, wy0, wx1, wy1, rect.width, rect.height)
+        doc.close()
+
+    return bboxes
+
+
 def restore_text_image(
     im: Image.Image,
+    text_bbox: Optional[Tuple[float, float, float, float, float, float]] = None,
     apply_unsharp: bool = True,
 ) -> Image.Image:
     """
-    Restore a grayscale text image to pure white background and deep dark ink.
-    Uses adaptive background peak detection to avoid crushing thin strokes.
+    Restore a grayscale text image to pure #FFFFFF white background and deep dark ink.
+    Uses multi-scale morphological background subtraction and content-aware margin masking
+    to completely eliminate gutter shadows, binding stripes, scanner edge artifacts, and paper bleed-through
+    without damaging thin Sanskrit ligatures or diacritics.
     """
     if im.mode != "L":
         im = im.convert("L")
 
-    hist = im.histogram()
-    total = sum(hist)
-    if total == 0:
-        return im
+    w, h = im.size
 
-    # Find paper background level from the top 5% of the histogram
-    cum = 0
-    p95 = 255
-    for val in range(255, -1, -1):
-        cum += hist[val]
-        if cum / total >= 0.05:
-            p95 = val
-            break
+    # 1. Multi-scale background illumination modeling
+    scale_factor = 4
+    sw, sh = max(1, w // scale_factor), max(1, h // scale_factor)
+    small = im.resize((sw, sh), Image.Resampling.BILINEAR)
 
-    in_white = max(215, min(255, p95))
-    in_black = 20
+    # Filter size proportional to image resolution
+    filter_size = max(11, int(sw * 0.03) | 1)
+    blur_radius = max(5, int(filter_size // 2))
+    bg_small = small.filter(ImageFilter.MaxFilter(size=filter_size)).filter(ImageFilter.GaussianBlur(radius=blur_radius))
+    bg = bg_small.resize((w, h), Image.Resampling.BILINEAR)
 
-    lut = []
+    # 2. Local background subtraction (removes shadows, gradients, and paper discoloration)
+    diff = ImageChops.subtract(bg, im)
+    inv = ImageChops.invert(diff)
+
+    # 3. Dynamic contrast leveling: snap paper to #FFFFFF and deepen ink to rich black
+    in_white = 232
+    in_black = 65
     scale = 255.0 / max(1, in_white - in_black)
+    lut = []
     for i in range(256):
-        if i <= in_black:
-            lut.append(0)
-        elif i >= in_white:
+        if i >= in_white:
             lut.append(255)
+        elif i <= in_black:
+            lut.append(0)
         else:
             lut.append(int((i - in_black) * scale))
-    im = im.point(lut)
+    out = inv.point(lut)
 
+    # 4. Content-aware margin masking (removes book binding, gutter bars, and scanner edge bars)
+    draw = ImageDraw.Draw(out)
+    if text_bbox:
+        bx0, by0, bx1, by1, ref_w, ref_h = text_bbox
+        scale_x = w / ref_w
+        scale_y = h / ref_h
+        pad_x = max(55, int(w * 0.025))
+        pad_y = max(40, int(h * 0.012))
+        safe_x0 = max(0, int(bx0 * scale_x - pad_x))
+        safe_y0 = max(0, int(by0 * scale_y - pad_y))
+        safe_x1 = min(w, int(bx1 * scale_x + pad_x))
+        safe_y1 = min(h, int(by1 * scale_y + pad_y))
+
+        if safe_x0 > 0:
+            draw.rectangle([0, 0, safe_x0, h], fill=255)
+        if safe_x1 < w:
+            draw.rectangle([safe_x1, 0, w, h], fill=255)
+        if safe_y0 > 0:
+            draw.rectangle([0, 0, w, safe_y0], fill=255)
+        if safe_y1 < h:
+            draw.rectangle([0, safe_y1, w, h], fill=255)
+    else:
+        # Fallback to outer 2% margin shave
+        m_top = int(h * 0.02)
+        m_bot = int(h * 0.02)
+        m_left = int(w * 0.02)
+        m_right = int(w * 0.02)
+        draw.rectangle([0, 0, w, m_top], fill=255)
+        draw.rectangle([0, h - m_bot, w, h], fill=255)
+        draw.rectangle([0, 0, m_left, h], fill=255)
+        draw.rectangle([w - m_right, 0, w, h], fill=255)
+
+    # 5. Crisp stroke unsharp mask
     if apply_unsharp:
-        im = im.filter(ImageFilter.UnsharpMask(radius=1.0, percent=60, threshold=3))
+        out = out.filter(ImageFilter.UnsharpMask(radius=1.0, percent=60, threshold=3))
 
-    return im
+    return out
 
 
 def process_image(
     page_idx: int,
     img_name: str,
     im: Image.Image,
+    text_bbox: Optional[Tuple[float, float, float, float, float, float]] = None,
 ) -> Tuple[int, str, bytes, int, int, str, str]:
     """
     Process image: preserve color or restore text.
@@ -108,7 +208,7 @@ def process_image(
         return page_idx, img_name, comp_bytes, w, h, "DeviceRGB", "DCTDecode"
     else:
         # Grayscale text page: adaptive white leveling + zlib compression
-        rest_im = restore_text_image(im)
+        rest_im = restore_text_image(im, text_bbox=text_bbox)
         rw, rh = rest_im.size
         comp_bytes = zlib.compress(rest_im.tobytes(), level=6)
         return page_idx, img_name, comp_bytes, rw, rh, "DeviceGray", "FlateDecode"
@@ -120,6 +220,7 @@ def enhance_sandwich_pdf(
     max_pages: Optional[int] = None,
     page_indices: Optional[List[int]] = None,
     jobs: int = 4,
+    mistral_dir: Optional[Path] = None,
 ) -> None:
     """
     Directly enhances an existing Sandwich PDF by restoring background images
@@ -139,11 +240,14 @@ def enhance_sandwich_pdf(
     total_extracted = 0
     done_count = 0
 
+    page_text_bboxes = get_page_text_bboxes(input_pdf_path, mistral_dir=mistral_dir)
+    log(f"Extracted content bounding boxes for {len(page_text_bboxes)} pages.")
+
     log(f"Processing up to {len(pages_to_process)} pages in batches of {batch_size} with {jobs} worker threads...")
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
         for b_start in range(0, len(pages_to_process), batch_size):
             b_indices = pages_to_process[b_start : b_start + batch_size]
-            batch_items: List[Tuple[int, str, Image.Image]] = []
+            batch_items: List[Tuple[int, str, Image.Image, Any]] = []
             for idx in b_indices:
                 p = pdf.pages[idx]
                 res = p.get("/Resources")
@@ -162,7 +266,7 @@ def enhance_sandwich_pdf(
                 try:
                     pdf_img = pikepdf.PdfImage(xobj[img_name])
                     pil_img = pdf_img.as_pil_image()
-                    batch_items.append((idx, img_name, pil_img))
+                    batch_items.append((idx, img_name, pil_img, page_text_bboxes.get(idx)))
                 except Exception as exc:
                     log(f"Warning: could not extract image from page {idx + 1}: {exc}")
 
@@ -170,7 +274,7 @@ def enhance_sandwich_pdf(
                 continue
 
             total_extracted += len(batch_items)
-            futures = [executor.submit(process_image, item[0], item[1], item[2]) for item in batch_items]
+            futures = [executor.submit(process_image, item[0], item[1], item[2], item[3]) for item in batch_items]
             for f in concurrent.futures.as_completed(futures):
                 try:
                     p_idx, i_name, comp_bytes, rw, rh, cs_name, filter_name = f.result()
@@ -218,6 +322,7 @@ def main():
     parser.add_argument("--max-pages", "-n", type=int, default=None, help="Process first N pages (for test)")
     parser.add_argument("--pages", "-p", type=str, default=None, help="Specific pages (e.g. '27,73' or '1-50')")
     parser.add_argument("--jobs", "-j", type=int, default=4, help="Parallel worker processes")
+    parser.add_argument("--markdown-dir", "--mistral-dir", "-m", type=Path, default=None, help="Directory containing page-*.mistral.json")
     args = parser.parse_args()
 
     t0 = time.time()
@@ -237,7 +342,14 @@ def main():
                 indices.append(int(part) - 1)
         page_indices = sorted(set(indices))
 
-    enhance_sandwich_pdf(args.input_pdf, args.output, max_pages=args.max_pages, page_indices=page_indices, jobs=args.jobs)
+    enhance_sandwich_pdf(
+        args.input_pdf,
+        args.output,
+        max_pages=args.max_pages,
+        page_indices=page_indices,
+        jobs=args.jobs,
+        mistral_dir=args.markdown_dir,
+    )
     log(f"Total time: {time.time() - t0:.2f}s")
 
 

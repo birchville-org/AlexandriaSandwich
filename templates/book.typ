@@ -231,12 +231,15 @@
 
 #let book(
   title: "Untitled Book",
+  book_title: none,
   author: "Alexandria Archive",
   date: none,
   paper: "a5",
   width: none,
   height: none,
   margin: none,
+  font_size: none,
+  leading: none,
   preserve_pages: false,
   title_page: none,
   lang: "de",
@@ -250,18 +253,34 @@
   // Determine whether to emit upfront title page
   let show_title_page = if title_page != none { title_page } else { not preserve_pages }
 
+  let base_font_size = if font_size != none {
+    font_size
+  } else if preserve_pages {
+    11.5pt
+  } else {
+    11pt
+  }
+
+  let base_leading = if leading != none {
+    leading
+  } else if preserve_pages {
+    0.72em
+  } else {
+    0.72em
+  }
+
   // Typography rules
   set text(
     font: book_fonts,
-    size: if preserve_pages { 11.5pt } else { 11pt },
+    size: base_font_size,
     lang: lang,
     hyphenate: true
   )
 
   set par(
     justify: true,
-    leading: if preserve_pages { 0.72em } else { 0.72em },
-    first-line-indent: if preserve_pages { 0em } else { 1.4em }
+    leading: base_leading,
+    first-line-indent: (amount: 1.5em, all: true)
   )
 
   set block(spacing: if preserve_pages { 0.55em } else { 0.65em })
@@ -271,11 +290,15 @@
     set text(font: book_fonts, weight: "bold")
     if preserve_pages {
       if it.level == 1 {
-        block(above: 0.8em, below: 0.6em)[
-          #text(size: 14pt, weight: "bold", tracking: 0.08em)[#it.body]
+        align(center)[
+          #block(above: 0.8em, below: 0.6em)[
+            #text(size: 14pt, weight: "bold", tracking: 0.08em)[#it.body]
+          ]
         ]
       } else if it.level == 2 {
-        block(above: 0.6em, below: 0.3em)[#text(size: 11.5pt)[#it.body]]
+        align(center)[
+          #block(above: 0.6em, below: 0.3em)[#text(size: 11.5pt)[#it.body]]
+        ]
       } else {
         block(above: 0.45em, below: 0.25em)[#text(size: 10pt, style: "italic")[#it.body]]
       }
@@ -288,7 +311,9 @@
         v(0.6cm)
       } else if it.level == 2 {
         v(0.6cm)
-        text(size: 12pt)[#it.body]
+        align(center)[
+          #text(size: 12pt)[#it.body]
+        ]
         v(0.35cm)
       } else {
         v(0.4cm)
@@ -330,13 +355,8 @@
       let h1_on_page = query(heading.where(level: 1)).filter(h => h.location().page() == page_num)
       let is_chapter_start = h1_on_page.len() > 0
 
-      // Suppress headers on unnumbered pages (plabel == "" or None)
-      // AND on any chapter opening page!
-      let suppress = is_chapter_start or plabel == "" or plabel == none or (if preserve_pages {
-        idx < 3
-      } else {
-        page_num <= 2
-      })
+      // Suppress headers on unnumbered pages, front matter pages, or chapter opening pages
+      let suppress = is_chapter_start or plabel == "" or plabel == none or idx < front_matter_pages or (if show_title_page { page_num <= 2 } else { false })
 
       if not suppress {
         let clean_title = title.split("(").at(0).trim()
@@ -348,14 +368,28 @@
           clean_title
         }
 
-        // Determine parity based on printed page label (plabel) supporting arabic and roman numerals
+        let devanagari_digits = ("०": 0, "१": 1, "२": 2, "३": 3, "४": 4, "५": 5, "६": 6, "७": 7, "८": 8, "९": 9)
+        let parse_dev_int(s) = {
+          let acc = 0
+          for ch in s {
+            if ch in devanagari_digits {
+              acc = acc * 10 + devanagari_digits.at(ch)
+            }
+          }
+          acc
+        }
+        let is_dev_num = plabel.clusters().all(c => c in devanagari_digits) and plabel.len() > 0
+
+        // Determine parity based on printed page label (plabel) supporting Devanagari, Arabic and Roman numerals
         let roman_map = (
           i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10,
           xi: 11, xii: 12, xiii: 13, xiv: 14, xv: 15, xvi: 16, xvii: 17, xviii: 18, xix: 19, xx: 20,
           xxi: 21, xxii: 22, xxiii: 23, xxiv: 24, xxv: 25, xxvi: 26, xxvii: 27, xxviii: 28, xxix: 29, xxx: 30,
           xxxi: 31, xxxii: 32, xxxiii: 33, xxxiv: 34, xxxv: 35
         )
-        let is_even = if plabel.matches(regex("^\d+$")).len() > 0 {
+        let is_even = if is_dev_num {
+          calc.even(parse_dev_int(plabel))
+        } else if plabel.matches(regex("^\d+$")).len() > 0 {
           calc.even(int(plabel))
         } else if lower(plabel) in roman_map {
           calc.even(roman_map.at(lower(plabel)))
@@ -363,19 +397,24 @@
           calc.even(page_num)
         }
 
-        set text(size: 8.5pt, font: book_fonts, fill: luma(20))
+        let v_title = if book_title != none and book_title != "" { book_title } else { clean_title }
+        let r_title = clean_ch_title
+
+        set text(size: 10.5pt, font: book_fonts, fill: luma(20))
         if is_even {
           grid(
-            columns: (auto, 1fr),
-            align: (left, right),
+            columns: (1fr, auto, 1fr),
+            align: (left + horizon, center + horizon, right + horizon),
             [#plabel],
-            [#text(tracking: 0.08em)[#upper(clean_title)]]
+            [#text(tracking: 0.04em)[#v_title]],
+            []
           )
         } else {
           grid(
-            columns: (1fr, auto),
-            align: (left, right),
-            [#text(tracking: 0.08em)[#upper(clean_ch_title)]],
+            columns: (1fr, auto, 1fr),
+            align: (left + horizon, center + horizon, right + horizon),
+            [],
+            [#text(tracking: 0.04em)[#r_title]],
             [#plabel]
           )
         }

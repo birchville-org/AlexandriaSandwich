@@ -336,42 +336,28 @@ fi
 
 # Multi-format outputs: TEI-P5 XML, Typst Digital PDF, Typeset Edition & EPUB 3
 CONSOLIDATE="${SCRIPT_DIR}/consolidate_book.py"
-EXPORT_TEI="${SCRIPT_DIR}/export_tei.py"
+ALIGN_SCRIPT="${SCRIPT_DIR}/align_mistral_pdf.py"
+PERFECT_SANDWICH_SCRIPT="${SCRIPT_DIR}/build_perfect_sandwich.py"
+PROFILE_LAYOUT_SCRIPT="${SCRIPT_DIR}/profile_source_layout.py"
 RENDER_DIGITAL="${SCRIPT_DIR}/render_digital_pdf.py"
 BUILD_TYPESET="${SCRIPT_DIR}/build_typeset_edition.py"
+EXPORT_TEI="${SCRIPT_DIR}/export_tei.py"
 EXPORT_EPUB="${SCRIPT_DIR}/export_epub.py"
+INJECT_TOC="${SCRIPT_DIR}/inject_toc.py"
+AUDIT_LAYOUT_SCRIPT="${SCRIPT_DIR}/audit_layout_concordance.py"
+COMPARE_LAYOUT_SCRIPT="${SCRIPT_DIR}/compare_layout.py"
 
 BOOK_DIR="${JOB_OUT}"
 TEI_OUT="${JOB_OUT}/${JOB_NAME}.tei.xml"
+ALIGNED_PDF="${JOB_OUT}/${JOB_NAME}.aligned.pdf"
+PERFECT_SANDWICH_OUT="${JOB_OUT}/${JOB_NAME}.perfect_sandwich.pdf"
+LAYOUT_PROFILE_OUT="${JOB_OUT}/layout.profile.json"
 DIGITAL_PDF_OUT="${JOB_OUT}/${JOB_NAME}.digital.pdf"
 TYPESET_PDF_OUT="${JOB_OUT}/${JOB_NAME}.typeset_edition.pdf"
 EPUB_OUT="${JOB_OUT}/${JOB_NAME}.epub"
-PERFECT_SANDWICH_OUT="${JOB_OUT}/${JOB_NAME}.perfect_sandwich.pdf"
 mkdir -p "$BOOK_DIR"
 
-PROFILE_LAYOUT_SCRIPT="${SCRIPT_DIR}/profile_source_layout.py"
-LAYOUT_PROFILE_OUT="${JOB_OUT}/layout.profile.json"
-PROFILE_SOURCE_PDF=""
-for cand_pdf in "${PERFECT_SANDWICH_OUT:-}" "${ALIGNED_PDF:-}" "${PDF_OUT:-}" "${JOB_INPUT}/source.pdf" "${PDF_SRC:-}"; do
-  if [[ -n "$cand_pdf" && -f "$cand_pdf" ]]; then
-    PROFILE_SOURCE_PDF="$cand_pdf"
-    break
-  fi
-done
-
-if [[ -f "$PROFILE_LAYOUT_SCRIPT" && -n "$PROFILE_SOURCE_PDF" && -f "$PROFILE_SOURCE_PDF" ]]; then
-  log "profile source layout -> $LAYOUT_PROFILE_OUT"
-  set +e
-  python3 "$PROFILE_LAYOUT_SCRIPT" --pdf "$PROFILE_SOURCE_PDF" --output "$LAYOUT_PROFILE_OUT"
-  prof_rc=$?
-  set -e
-  if [[ "$prof_rc" -eq 0 && -f "$LAYOUT_PROFILE_OUT" ]]; then
-    log "source layout profile ok: $LAYOUT_PROFILE_OUT"
-  else
-    log "warn: profile_source_layout failed (rc=$prof_rc)"
-  fi
-fi
-
+# 6) Consolidate book AST (book.json)
 if [[ -f "$CONSOLIDATE" ]]; then
   log "consolidate book -> $BOOK_DIR"
   set +e
@@ -383,89 +369,7 @@ if [[ -f "$CONSOLIDATE" ]]; then
   fi
 fi
 
-IIIF_PAGES_CAND="${JOB_INPUT}/iiif_pages.json"
-
-if [[ -f "$EXPORT_TEI" && -f "${BOOK_DIR}/book.json" ]]; then
-  log "export tei-p5 -> $TEI_OUT"
-  set +e
-  python3 "$EXPORT_TEI" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$TEI_OUT" \
-    ${JOB_CONFIG:+-c "$JOB_CONFIG"} \
-    ${IIIF_PAGES_CAND:+--iiif-pages "$IIIF_PAGES_CAND"}
-  tei_rc=$?
-  set -e
-  if [[ "$tei_rc" -ne 0 ]]; then
-    log "warn: export_tei failed (rc=$tei_rc)"
-    TEI_OUT=""
-  fi
-else
-  TEI_OUT=""
-fi
-
-if [[ -f "$RENDER_DIGITAL" && -f "${BOOK_DIR}/book.json" ]]; then
-  log "render digital book pdf -> $DIGITAL_PDF_OUT"
-  set +e
-  PRESERVE_ARG=""
-  if [[ "${TYPESET_MODE:-}" == "1to1" || "${TYPESET_MODE:-}" == "paginated" ]]; then
-    PRESERVE_ARG="--preserve-pages"
-  fi
-  python3 "$RENDER_DIGITAL" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$DIGITAL_PDF_OUT" \
-    $PRESERVE_ARG \
-    ${TYPESET_MODE:+--typeset-mode "$TYPESET_MODE"}
-  render_rc=$?
-  set -e
-  if [[ "$render_rc" -ne 0 ]]; then
-    log "warn: render_digital_pdf failed (rc=$render_rc)"
-    DIGITAL_PDF_OUT=""
-  fi
-else
-  DIGITAL_PDF_OUT=""
-fi
-
-if [[ -f "$BUILD_TYPESET" ]]; then
-  COMPLETE_JSON=""
-  if [[ -f "${JOB_INPUT}/${JOB_NAME}_complete.json" ]]; then
-    COMPLETE_JSON="${JOB_INPUT}/${JOB_NAME}_complete.json"
-  elif [[ -f "${JOB_INPUT}/dhatupatha_complete.json" && "$JOB_NAME" == *"dhatu"* ]]; then
-    COMPLETE_JSON="${JOB_INPUT}/dhatupatha_complete.json"
-  elif [[ "$JOB_NAME" == *"dhatu"* && -f "${SCRIPT_DIR}/../data/dhatupatha_complete.json" ]]; then
-    COMPLETE_JSON="${SCRIPT_DIR}/../data/dhatupatha_complete.json"
-  fi
-
-  if [[ -n "$COMPLETE_JSON" && -f "$COMPLETE_JSON" ]]; then
-    log "build semantic typeset edition (Boethlingk model) -> $TYPESET_PDF_OUT"
-    set +e
-    python3 "$BUILD_TYPESET" --job "$JOB_NAME" --complete-json "$COMPLETE_JSON" --output "$TYPESET_PDF_OUT" --source-pdf "$PERFECT_SANDWICH_OUT"
-    typeset_rc=$?
-    set -e
-    if [[ "$typeset_rc" -ne 0 ]]; then
-      log "warn: build_typeset_edition failed (rc=$typeset_rc)"
-      TYPESET_PDF_OUT=""
-    fi
-  else
-    log "skip typeset_edition: no job-specific canonical ground truth for $JOB_NAME"
-    TYPESET_PDF_OUT=""
-  fi
-else
-  TYPESET_PDF_OUT=""
-fi
-
-if [[ -f "$EXPORT_EPUB" && -f "${BOOK_DIR}/book.json" ]]; then
-  log "export epub 3 -> $EPUB_OUT"
-  set +e
-  python3 "$EXPORT_EPUB" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$EPUB_OUT"
-  epub_rc=$?
-  set -e
-  if [[ "$epub_rc" -ne 0 ]]; then
-    log "warn: export_epub failed (rc=$epub_rc)"
-    EPUB_OUT=""
-  fi
-else
-  EPUB_OUT=""
-fi
-
-# Post-Assembly Textlayer-Korrektur: Automatic Mistral Token Alignment into Sandwich PDF (.aligned.pdf)
-ALIGN_SCRIPT="${SCRIPT_DIR}/align_mistral_pdf.py"
-ALIGNED_PDF="${JOB_OUT}/${JOB_NAME}.aligned.pdf"
+# 7) Mistral Token Alignment into Facsimile PDF (.aligned.pdf)
 if [[ -f "$ALIGN_SCRIPT" && -n "$PDF_OUT" && -f "$PDF_OUT" ]]; then
   log "align mistral text with sandwich pdf -> $ALIGNED_PDF"
   set +e
@@ -488,16 +392,15 @@ else
   ALIGNED_PDF=""
 fi
 
-# Build Publication-Grade Perfect Sandwich PDF (Leveling, Unsharp, Thumb/Border mask)
-PERFECT_SANDWICH_SCRIPT="${SCRIPT_DIR}/build_perfect_sandwich.py"
-PERFECT_SANDWICH_OUT="${JOB_OUT}/${JOB_NAME}.perfect_sandwich.pdf"
+# 8) Publication-Grade Perfect Sandwich PDF (Content-aware margin masking, leveling, unsharp)
 BASE_SANDWICH_SOURCE="${ALIGNED_PDF:-$PDF_OUT}"
 if [[ -f "$PERFECT_SANDWICH_SCRIPT" && -n "$BASE_SANDWICH_SOURCE" && -f "$BASE_SANDWICH_SOURCE" ]]; then
-  log "build perfect sandwich pdf -> $PERFECT_SANDWICH_OUT"
+  log "build perfect sandwich pdf (content-aware margin mask & leveling) -> $PERFECT_SANDWICH_OUT"
   set +e
   python3 "$PERFECT_SANDWICH_SCRIPT" \
     --input-pdf "$BASE_SANDWICH_SOURCE" \
     --output "$PERFECT_SANDWICH_OUT" \
+    --markdown-dir "$MD_DIR" \
     --jobs 4
   perfect_rc=$?
   set -e
@@ -511,8 +414,113 @@ else
   PERFECT_SANDWICH_OUT=""
 fi
 
-# Hierarchical Outline (TOC) & Metadata Injection into PDF artifacts
-INJECT_TOC="${SCRIPT_DIR}/inject_toc.py"
+# 9) Layout Profiling (Satzspiegel, Durchschuss, Paginierung)
+PROFILE_SOURCE_PDF=""
+for cand_pdf in "${PERFECT_SANDWICH_OUT:-}" "${ALIGNED_PDF:-}" "${PDF_OUT:-}" "${JOB_INPUT}/source.pdf" "${PDF_SRC:-}"; do
+  if [[ -n "$cand_pdf" && -f "$cand_pdf" ]]; then
+    PROFILE_SOURCE_PDF="$cand_pdf"
+    break
+  fi
+done
+
+if [[ -f "$PROFILE_LAYOUT_SCRIPT" && -n "$PROFILE_SOURCE_PDF" && -f "$PROFILE_SOURCE_PDF" ]]; then
+  log "profile source layout ($PROFILE_SOURCE_PDF) -> $LAYOUT_PROFILE_OUT"
+  set +e
+  python3 "$PROFILE_LAYOUT_SCRIPT" --pdf "$PROFILE_SOURCE_PDF" --output "$LAYOUT_PROFILE_OUT"
+  prof_rc=$?
+  set -e
+  if [[ "$prof_rc" -eq 0 && -f "$LAYOUT_PROFILE_OUT" ]]; then
+    log "source layout profile ok: $LAYOUT_PROFILE_OUT"
+  else
+    log "warn: profile_source_layout failed (rc=$prof_rc)"
+  fi
+fi
+
+# 10) Digital Vector Typeset PDF (calibrated against source layout profile)
+if [[ -f "$RENDER_DIGITAL" && -f "${BOOK_DIR}/book.json" ]]; then
+  log "render digital book pdf (calibrated from layout & facsimile) -> $DIGITAL_PDF_OUT"
+  set +e
+  PRESERVE_ARG=""
+  if [[ "${TYPESET_MODE:-}" == "1to1" || "${TYPESET_MODE:-}" == "paginated" ]]; then
+    PRESERVE_ARG="--preserve-pages"
+  fi
+  python3 "$RENDER_DIGITAL" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$DIGITAL_PDF_OUT" \
+    $PRESERVE_ARG \
+    ${TYPESET_MODE:+--typeset-mode "$TYPESET_MODE"}
+  render_rc=$?
+  set -e
+  if [[ "$render_rc" -ne 0 ]]; then
+    log "warn: render_digital_pdf failed (rc=$render_rc)"
+    DIGITAL_PDF_OUT=""
+  fi
+else
+  DIGITAL_PDF_OUT=""
+fi
+
+# 11) Semantic Typeset Edition (optional Boethlingk model)
+if [[ -f "$BUILD_TYPESET" ]]; then
+  COMPLETE_JSON=""
+  if [[ -f "${JOB_INPUT}/${JOB_NAME}_complete.json" ]]; then
+    COMPLETE_JSON="${JOB_INPUT}/${JOB_NAME}_complete.json"
+  elif [[ -f "${JOB_INPUT}/dhatupatha_complete.json" && "$JOB_NAME" == *"dhatu"* ]]; then
+    COMPLETE_JSON="${JOB_INPUT}/dhatupatha_complete.json"
+  elif [[ "$JOB_NAME" == *"dhatu"* && -f "${SCRIPT_DIR}/../data/dhatupatha_complete.json" ]]; then
+    COMPLETE_JSON="${SCRIPT_DIR}/../data/dhatupatha_complete.json"
+  fi
+
+  if [[ -n "$COMPLETE_JSON" && -f "$COMPLETE_JSON" ]]; then
+    TYPESET_SOURCE_REF="${PERFECT_SANDWICH_OUT:-${ALIGNED_PDF:-$PDF_OUT}}"
+    log "build semantic typeset edition (Boethlingk model) -> $TYPESET_PDF_OUT"
+    set +e
+    python3 "$BUILD_TYPESET" --job "$JOB_NAME" --complete-json "$COMPLETE_JSON" --output "$TYPESET_PDF_OUT" ${TYPESET_SOURCE_REF:+--source-pdf "$TYPESET_SOURCE_REF"}
+    typeset_rc=$?
+    set -e
+    if [[ "$typeset_rc" -ne 0 ]]; then
+      log "warn: build_typeset_edition failed (rc=$typeset_rc)"
+      TYPESET_PDF_OUT=""
+    fi
+  else
+    log "skip typeset_edition: no job-specific canonical ground truth for $JOB_NAME"
+    TYPESET_PDF_OUT=""
+  fi
+else
+  TYPESET_PDF_OUT=""
+fi
+
+# 12) Multi-format structured exports: TEI-P5 XML & EPUB 3
+IIIF_PAGES_CAND="${JOB_INPUT}/iiif_pages.json"
+
+if [[ -f "$EXPORT_TEI" && -f "${BOOK_DIR}/book.json" ]]; then
+  log "export tei-p5 -> $TEI_OUT"
+  set +e
+  python3 "$EXPORT_TEI" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$TEI_OUT" \
+    ${JOB_CONFIG:+-c "$JOB_CONFIG"} \
+    ${IIIF_PAGES_CAND:+--iiif-pages "$IIIF_PAGES_CAND"}
+  tei_rc=$?
+  set -e
+  if [[ "$tei_rc" -ne 0 ]]; then
+    log "warn: export_tei failed (rc=$tei_rc)"
+    TEI_OUT=""
+  fi
+else
+  TEI_OUT=""
+fi
+
+if [[ -f "$EXPORT_EPUB" && -f "${BOOK_DIR}/book.json" ]]; then
+  log "export epub 3 -> $EPUB_OUT"
+  set +e
+  python3 "$EXPORT_EPUB" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$EPUB_OUT"
+  epub_rc=$?
+  set -e
+  if [[ "$epub_rc" -ne 0 ]]; then
+    log "warn: export_epub failed (rc=$epub_rc)"
+    EPUB_OUT=""
+  fi
+else
+  EPUB_OUT=""
+fi
+
+# 13) Hierarchical Outline (TOC) & Metadata Injection into PDF artifacts
 TOC_FILE=""
 for cand in \
   "${JOB_INPUT}/toc.txt" \
@@ -548,11 +556,11 @@ if [[ -f "$INJECT_TOC" ]]; then
   done
 fi
 
-AUDIT_LAYOUT_SCRIPT="${SCRIPT_DIR}/audit_layout_concordance.py"
+# 14) Layout Concordance Audit (Geometric & Structural Quality Gate)
 LAYOUT_AUDIT_OUT="${JOB_OUT}/${JOB_NAME}.layout_audit.json"
 LAYOUT_AUDIT_MD="${JOB_OUT}/${JOB_NAME}.layout_audit.md"
 AUDIT_REF_PDF=""
-for cand in "${ALIGNED_PDF:-}" "${PERFECT_SANDWICH_OUT:-}" "${PDF_OUT:-}"; do
+for cand in "${PERFECT_SANDWICH_OUT:-}" "${ALIGNED_PDF:-}" "${PDF_OUT:-}"; do
   if [[ -n "$cand" && -f "$cand" ]]; then
     AUDIT_REF_PDF="$cand"
     break
@@ -575,6 +583,20 @@ if [[ -f "$AUDIT_LAYOUT_SCRIPT" && -n "$DIGITAL_PDF_OUT" && -f "$DIGITAL_PDF_OUT
   else
     log "warn: audit_layout_concordance failed (rc=$audit_rc)"
   fi
+fi
+
+# 15) Visual Side-by-Side Comparison Diffs
+COMPARE_IMG_DIR="${JOB_OUT}/comparison_samples"
+if [[ -f "$COMPARE_LAYOUT_SCRIPT" && -n "$DIGITAL_PDF_OUT" && -f "$DIGITAL_PDF_OUT" && -n "$AUDIT_REF_PDF" && -f "$AUDIT_REF_PDF" ]]; then
+  log "render side-by-side layout comparisons -> $COMPARE_IMG_DIR"
+  set +e
+  python3 "$COMPARE_LAYOUT_SCRIPT" \
+    --orig "$AUDIT_REF_PDF" \
+    --digital "$DIGITAL_PDF_OUT" \
+    --job "$JOB_NAME" \
+    --book-json "${BOOK_DIR}/book.json" \
+    --img-dir "$COMPARE_IMG_DIR"
+  set -e
 fi
 
 REPORT="$(JOB_NAME="$JOB_NAME" INPUT_DIR="$INPUT_DIR" PRE_DIR="$PRE_DIR" \
