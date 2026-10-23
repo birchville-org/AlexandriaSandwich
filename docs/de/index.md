@@ -26,7 +26,7 @@
       </div>
     </div>
     <div class="quick-card-action">
-      <a href="architecture.md" class="quick-btn quick-btn-primary">
+      <a href="WIKI_VERFAHREN/" class="quick-btn quick-btn-primary">
         <span>➔</span> Verfahren ansehen
       </a>
     </div>
@@ -43,7 +43,7 @@
       </div>
     </div>
     <div class="quick-card-action">
-      <a href="case_studies/boehtlingk_1887.md" class="quick-btn quick-btn-outline">
+      <a href="case-study/" class="quick-btn quick-btn-outline">
         <span>➔</span> Fallstudie lesen
       </a>
     </div>
@@ -60,7 +60,7 @@
       </div>
     </div>
     <div class="quick-card-action">
-      <a href="target_formats.md" class="quick-btn quick-btn-outline">
+      <a href="TARGET_FORMATS/" class="quick-btn quick-btn-outline">
         <span>➔</span> Zielformate
       </a>
     </div>

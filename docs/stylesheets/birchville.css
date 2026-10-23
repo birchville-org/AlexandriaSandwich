@@ -175,6 +175,11 @@ body {
   color: var(--bv-header-fg) !important;
 }
 
+/* Hide top tabs bar: Scholarly Synthesis layout standard uses centralized drawer navigation */
+.md-tabs {
+  display: none !important;
+}
+
 .md-header__button {
   color: var(--bv-header-fg) !important;
 }
