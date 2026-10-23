@@ -7,6 +7,7 @@ repo_name: birchville-org/AlexandriaSandwich
 
 theme:
   name: material
+  custom_dir: docs/overrides
   language: de
   logo: assets/birchville_logo.png
   favicon: assets/birchville_logo.png
