@@ -32,7 +32,9 @@ Unlike standard unilinear book digitization (scanned pages `=>` sandwich PDF), r
 ## 3. Output Formats in the Edition Repository
 
 * **QA Viewer ([viewer.html](https://github.com/birchville-org/brhadaranyaka/blob/main/viewer.html)):** Interactive split-pane editor adhering to the Payer Global Web Editor Standard with silent auto-repair and diacritics bar.
+* **Restored Facsimile Sandwich (`slaje2009.perfect_sandwich.pdf`):** 15-page high-end facsimile (2.28 MB) with Content-Aware Margin Masking via AlexandriaSandwich v1.7.0.
 * **Typeset PDF (`brhadaranyaka_1_4_synopsis.pdf`):** 33-page scholarly publication via WeasyPrint.
 * **TEI-P5 XML (`brhadaranyaka_1_4.tei.xml`):** Standard archival format with parallel alignment.
 * **EPUB 3 (`brhadaranyaka_1_4.epub`):** Reflowable eBook with embedded fonts (*Noto Serif Devanagari* & *Linux Libertine O*).
 * **Master JSON (`brhadaranyaka_1_4_master.json`):** Single Source of Truth AST.
+* **Release:** Compiled and published live as [`brhadaranyaka v1.1.0`](https://github.com/birchville-org/brhadaranyaka/releases/tag/v1.1.0).

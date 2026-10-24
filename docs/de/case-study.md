@@ -128,14 +128,17 @@ Alle 8 Adhyāyas und die einleitenden Śiva-Sūtras wurden 1:1 gegen die kanonis
 
 ---
 
-## 5. Das Sandwich-PDF-Verfahren in AlexandriaSandwich
+## 5. Das Sandwich-PDF-Verfahren in AlexandriaSandwich (v1.7.0 Pipeline)
 
-Das fertige Sandwich-PDF wurde über das Skript [scripts/build_sandwich_pdf.py](https://github.com/birchville-org/boethlingk/blob/main/scripts/build_sandwich_pdf.py) assembliert:
-* **Zieldatei:** `data/output/boehtlingk1887_sandwich.pdf` (278,16 MB, 478 Seiten)
-* **Visuelle Ebene (Hintergrund):** Die 478 hochauflösenden Primärscans der UB Heidelberg werden verlustfrei eingebunden (1:1 Pixelauflösung).
-* **Unsichtbare Textebene (Vordergrund):** Mittels PDF Text Rendering Mode 3 (*Neither fill nor stroke text*) und Unicode-Font (*Arial Unicode* / *Identity-H*) wurden 14.267 Textblöcke auf ihren exakten Pixelkoordinaten platziert.
-* **Hierarchisches Inhaltsverzeichnis (PDF Bookmarks):** Alle 8 Adhyāyas, 32 Pādas, die Śiva-Sūtras und die Nachträge sind als klickbare Gliederung hinterlegt.
-* **Ergebnis:** Beim Betrachten erscheint das unveränderte historische Faksimile von 1887. Textauswahl, Copy-Paste und Volltextsuche (Devanāgarī, IAST und Deutsch) greifen unmittelbar auf die korrekten Zeilen und Koordinaten zu.
+Das fertige Sandwich-PDF und die Neuedition wurden über die AlexandriaSandwich-Maschinerie assembliert:
+* **Bereinigtes Faksimile (Content-Aware Perfect Sandwich):** `data/output/boehtlingk1887.perfect_sandwich.pdf` (248,85 MB, 478 Seiten)
+  - Vollständige Bereinigung von Buchfalzen, Bundstegschatten und Scannerrändern durch dynamisches Content-Aware Margin Masking.
+  - 1:1 Erhalt des historischen Druckbilds von 1887 bei reinweißem Papiergrund (`#FFFFFF`).
+* **Klassisches Faksimile:** `data/output/boehtlingk1887_sandwich.pdf` (278,16 MB, 478 Seiten)
+* **Unsichtbare Textebene:** Mittels PDF Text Rendering Mode 3 (*Neither fill nor stroke text*) und Unicode-Font wurden 14.267 Textblöcke auf ihren exakten Pixelkoordinaten platziert.
+* **Modernisierte typografische Neuedition v2:** `data/output/boethlingk1887_typeset_edition_v2.pdf` (7,62 MB, Typst-Vektorsatz nach Scholarly Synthesis) mit 47 hierarchischen Lesezeichen und nativer Page-Label-Injektion.
+* **Release:** Kompiliert und live publiziert als [`boethlingk v1.5.0`](https://github.com/birchville-org/boethlingk/releases/tag/v1.5.0).
+* **Ergebnis:** Beim Betrachten erscheint das unveränderte historische Faksimile von 1887 im gereinigten Zustand. Textauswahl, Copy-Paste und Volltextsuche (Devanāgarī, IAST und Deutsch) greifen unmittelbar auf die korrekten Zeilen und Koordinaten zu.
 
 ---
 

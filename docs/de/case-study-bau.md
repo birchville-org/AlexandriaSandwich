@@ -33,7 +33,9 @@ Im Gegensatz zur unilinearen Buchverarbeitung (einzelne Scan-Folge `=>` Sandwich
 ## 3. Erzeugte Zielformate im Editions-Repository
 
 * **QA-Viewer ([viewer.html](https://github.com/birchville-org/brhadaranyaka/blob/main/viewer.html)):** Interaktiver Split-Pane Editor nach dem Payer Global Web Editor Standard mit Snippet-Bar, File System Access API und Silent Auto-Repair.
+* **Bereinigtes Faksimile-Sandwich (`slaje2009.perfect_sandwich.pdf`):** 15-seitiges High-End-Faksimile (2,28 MB) mit Content-Aware Margin Masking via AlexandriaSandwich v1.7.0.
 * **Satz-PDF (`brhadaranyaka_1_4_synopsis.pdf`):** 33-seitige typografische Publikation via WeasyPrint.
 * **TEI-P5 XML (`brhadaranyaka_1_4.tei.xml`):** Standardkonformes Archivformat mit parallelen `<ab>`-Elementen.
 * **EPUB 3 (`brhadaranyaka_1_4.epub`):** Reflowable E-Book mit eingebetteten Schriften (*Noto Serif Devanagari* & *Linux Libertine O*).
 * **Single Source Master-JSON (`brhadaranyaka_1_4_master.json`):** Strukturierter AST aller 31 Abschnitte.
+* **Release:** Kompiliert und live publiziert als [`brhadaranyaka v1.1.0`](https://github.com/birchville-org/brhadaranyaka/releases/tag/v1.1.0).

@@ -170,16 +170,18 @@ fi
 
 ## 5. Validation & Results
 
-| Feature | Raw OCR Typesetting (Initial) | AlexandriaSandwich Böhtlingk Standard |
+| Feature | Raw OCR Typesetting (Initial) | AlexandriaSandwich Böhtlingk Standard (v1.7.0 Pipeline) |
 | :--- | :--- | :--- |
-| **Facsimile Layer** | Missing or misaligned | **100% 1:1 Scan Facsimile** (`*.perfect_sandwich.pdf`) |
+| **Facsimile Layer** | Missing or misaligned | **Content-Aware Perfect Sandwich** (`Dhatu-patha.perfect_sandwich.pdf`, 94 MB, 410 pages cleared of gutter shadows) |
+| **Layout Profiling** | Rigid fixed dimensions | **Dynamic 2D Measurement** (`layout.profile.json`, asymmetric gutter `60.1pt / 53.2pt`) |
 | **Front Matter Layout** | Cramped into 2 columns | **1-column continuous prose** with scan citations |
 | **Dictionary Layout** | Mixed into 1 column | **2-column grid** with `grid.vline` & Gaṇa hierarchy |
 | **Root Inventory** | ~1,850 noisy fragments | **2,259 roots (100% complete)** |
 | **Devanāgarī Rendering** | Tofu question marks (`?`) on Linux | **100% sharp vector glyphs** (Noto Serif Devanagari) |
-| **Compilation Time** | Several minutes | **~2.4 seconds** for 229 pages (Typst 0.11.1) |
+| **Compilation Time** | Several minutes | **~2.6 seconds** for 29,972 lines of Typst code |
 | **File Size (Vector)** | Unoptimized | **2.96 MB Vector PDF** (searchable, crisp) |
-| **Scholarly Citation** | Page mapping lost | **Marginal concordance `[S. XX]`** on every page |
+| **Scholarly Citation** | Page mapping lost | **Marginal concordance `[p. XX]`** on every page |
+| **Release & Distribution** | Manual assembly | **Compiled & published live** as `dhatupatha v1.2.0` |
 
 ---
 

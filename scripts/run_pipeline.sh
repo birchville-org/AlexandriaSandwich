@@ -270,13 +270,13 @@ for page in "${PAGES[@]}"; do
   else
     FAIL_N=$((FAIL_N + 1))
     decision="fallback"
-    if [[ "$USE_MISTRAL" -eq 1 ]]; then
+    if [[ -s "${MD_DIR}/${base}.mistral.md" ]]; then
+      log "mistral cached $base"
+      MISTRAL_N=$((MISTRAL_N + 1))
+      mistral_md="${MD_DIR}/${base}.mistral.md"
+    elif [[ "$USE_MISTRAL" -eq 1 ]]; then
       if [[ -z "${MISTRAL_API_KEY:-}" ]]; then
         log "warn: low confidence on $base but MISTRAL_API_KEY unset"
-      elif [[ -s "${MD_DIR}/${base}.mistral.md" ]]; then
-        log "mistral cached $base"
-        MISTRAL_N=$((MISTRAL_N + 1))
-        mistral_md="${MD_DIR}/${base}.mistral.md"
       elif [[ -f "$MISTRAL" ]]; then
         log "mistral fallback $base"
         set +e

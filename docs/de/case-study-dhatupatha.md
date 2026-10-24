@@ -170,16 +170,18 @@ fi
 
 ## 5. Validierung & Ergebnisse
 
-| Eigenschaft | Roher OCR-Neusatz (initial) | AlexandriaSandwich Böhtlingk-Standard |
+| Eigenschaft | Roher OCR-Neusatz (initial) | AlexandriaSandwich Böhtlingk-Standard (v1.7.0 Pipeline) |
 | :--- | :--- | :--- |
-| **Faksimile-Ebene** | Fehlend oder ungenau | **100 % 1:1 Scan-Faksimile** (`*.perfect_sandwich.pdf`) |
+| **Faksimile-Ebene** | Fehlend oder ungenau | **Content-Aware Perfect Sandwich** (`Dhatu-patha.perfect_sandwich.pdf`, 94 MB, 410 Seiten ohne Falz- und Randartefakte) |
+| **Layout-Profilierung** | Starres Festmaß | **Dynamische 2D-Vermessung** (`layout.profile.json`, asymmetrischer Bundsteg `60.1pt / 53.2pt`) |
 | **Layout Front Matter** | Fälschlich 2-spaltig gequetscht | **1-spaltiger eleganter Fließtext** mit Scan-Referenzen |
 | **Layout Wörterbuch** | 1-spaltig vermischt | **2-spaltiges Gitter** mit `grid.vline` & Gaṇa-Hierarchie |
 | **Wurzelbestand** | ~1.850 Fragmente mit OCR-Fehlern | **2.259 Wurzeln (100 % lückenlos)** |
 | **Devanāgarī-Rendering** | Tofu-Fragezeichen (`?`) auf Linux | **100 % saubere Vektorglyphen** (Noto Serif Devanagari) |
-| **Kompilierungszeit** | Mehrere Minuten | **~2,4 Sekunden** für 229 Seiten (Typst 0.11.1) |
+| **Kompilierungszeit** | Mehrere Minuten | **~2,6 Sekunden** für 29.972 Zeilen Typst-Code |
 | **Dateigröße Neusatz** | Unbereinigt | **2,96 MB Vektor-PDF** (durchsuchbar, gestochen scharf) |
 | **Zitierfähigkeit** | Seitenbezug ging verloren | **Marginal-Konkordanz `[S. XX]`** auf jeder Seite |
+| **Release & Distribution** | Manuelle Builds | **Kompiliert & live publiziert** als `dhatupatha v1.2.0` |
 
 ---
 

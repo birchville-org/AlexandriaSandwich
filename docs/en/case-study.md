@@ -127,14 +127,17 @@ All 8 Adhyāyas and introductory Śiva-Sūtras were verified 1:1 against the can
 
 ---
 
-## 5. Sandwich PDF Assembly in AlexandriaSandwich
+## 5. Sandwich PDF Assembly in AlexandriaSandwich (v1.7.0 Pipeline)
 
-The completed Sandwich PDF was compiled via `scripts/build_sandwich_pdf.py`:
-* **Target Artifact:** `data/output/boehtlingk1887_sandwich.pdf` (278.16 MB, 478 pages)
-* **Visual Layer (Background):** The 478 high-resolution UB Heidelberg primary scans are embedded without re-compression (1:1 pixel fidelity).
-* **Invisible Text Layer (Foreground):** Using PDF Text Rendering Mode 3 (*Neither fill nor stroke text*) and unicode font mapping (*Identity-H*), 14,267 text fragments are placed at their exact pixel coordinates.
-* **Hierarchical Outline (Bookmarks):** All 8 Adhyāyas, 32 Pādas, the Śiva-Sūtras, and addenda are accessible via clickable bookmarks.
-* **Result:** Reading presents the authentic historical facsimile of 1887. Text selection, copy-paste, and full-text search (Devanagari, IAST, German) interact directly with precise underlying vector coordinates.
+The completed Sandwich PDF and re-typeset editions were assembled via the AlexandriaSandwich machinery:
+* **Cleaned Facsimile (Content-Aware Perfect Sandwich):** `data/output/boehtlingk1887.perfect_sandwich.pdf` (248.85 MB, 478 pages)
+  - Complete elimination of gutter shadows, binding stripes, and scanner edge artifacts via dynamic Content-Aware Margin Masking.
+  - 1:1 pixel fidelity of the historical 1887 print with pure `#FFFFFF` background leveling.
+* **Standard Facsimile:** `data/output/boehtlingk1887_sandwich.pdf` (278.16 MB, 478 pages)
+* **Invisible Text Layer:** Using PDF Text Rendering Mode 3 (*Neither fill nor stroke text*) and unicode font mapping (*Identity-H*), 14,267 text fragments are placed at their exact pixel coordinates.
+* **Modernized Typeset Edition v2:** `data/output/boethlingk1887_typeset_edition_v2.pdf` (7.62 MB, Typst vector typography per Scholarly Synthesis) with 47 hierarchical bookmarks and native page label injection.
+* **Release:** Compiled and published live as [`boethlingk v1.5.0`](https://github.com/birchville-org/boethlingk/releases/tag/v1.5.0).
+* **Result:** Reading presents the authentic historical facsimile of 1887 in pristine restored condition. Text selection, copy-paste, and full-text search (Devanagari, IAST, German) interact directly with precise underlying vector coordinates.
 
 ---
 
