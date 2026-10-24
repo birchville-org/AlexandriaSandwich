@@ -1,0 +1,1341 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Automatisierte Buch-Digitalisierung mit Hybrid-OCR, TEI-P5, Sandwich-PDF & Typst Neusatz.">
+      
+      
+        <meta name="author" content="AlexandriaSandwich Team">
+      
+      
+        <link rel="canonical" href="https://birchville-org.github.io/AlexandriaSandwich/PIPELINE_ARTIFACTS/">
+      
+      
+        <link rel="prev" href="../WIKI_VERFAHREN/">
+      
+      
+        <link rel="next" href="../EVOLUTION_WORKFLOW/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="de">
+        
+          <link rel="alternate" href="../en/PIPELINE_ARTIFACTS/" hreflang="en">
+        
+      
+      
+      <link rel="icon" href="../assets/birchville_logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Pipeline-Artefakte & Qualitätsstand - AlexandriaSandwich</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/birchville.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://birchville-org.github.io/AlexandriaSandwich/assets/og-icon.png">
+  <meta property="og:image:width" content="128">
+  <meta property="og:image:height" content="128">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:image" content="https://birchville-org.github.io/AlexandriaSandwich/assets/og-icon.png">
+  <link rel="apple-touch-icon" href="https://birchville-org.github.io/AlexandriaSandwich/assets/og-icon.png">
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#pipeline-artefakte-qualitatsstand" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href=".." title="AlexandriaSandwich" class="md-header__button md-logo" aria-label="AlexandriaSandwich" data-md-component="logo">
+      
+  <img src="../assets/birchville_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AlexandriaSandwich
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Pipeline-Artefakte & Qualitätsstand
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Sprache wechseln">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="de" class="md-select__link">
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../en/PIPELINE_ARTIFACTS/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/birchville-org/AlexandriaSandwich" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    birchville-org/AlexandriaSandwich
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AlexandriaSandwich" class="md-nav__button md-logo" aria-label="AlexandriaSandwich" data-md-component="logo">
+      
+  <img src="../assets/birchville_logo.png" alt="logo">
+
+    </a>
+    AlexandriaSandwich
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/birchville-org/AlexandriaSandwich" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    birchville-org/AlexandriaSandwich
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startseite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALLATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../WIKI_VERFAHREN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verfahren
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline-Artefakte & Qualitätsstand
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline-Artefakte & Qualitätsstand
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-ubersicht-der-verarbeitungsstufen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Übersicht der Verarbeitungsstufen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-artefakt-katalog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Artefakt-Katalog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Artefakt-Katalog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-vorverarbeitung-bildbereinigung" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Vorverarbeitung &amp; Bildbereinigung
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.1 Vorverarbeitung &amp; Bildbereinigung">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preprocessedjobpage_xxxxpng" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        preprocessed/&lt;job&gt;/page_XXXX.png
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-ocr-transkriptions-bounding-box-schichten" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 OCR-, Transkriptions- &amp; Bounding-Box-Schichten
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.2 OCR-, Transkriptions- &amp; Bounding-Box-Schichten">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#page_xxxxhocr-page_xxxxjson-tesseract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        page_XXXX.hocr &amp; page_XXXX.json (Tesseract)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page_xxxxmistralmd-page_xxxxmistraljson-mistral-document-ocr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        page_XXXX.mistral.md &amp; page_XXXX.mistral.json (Mistral Document OCR)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page_xxxxsidecartxt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        page_XXXX.sidecar.txt
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-semantische-konsolidierung-buchmodell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Semantische Konsolidierung &amp; Buchmodell
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 Semantische Konsolidierung &amp; Buchmodell">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bookjson-consolidate_bookpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        book.json (consolidate_book.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tocjson-toctxt-inject_tocpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        toc.json / toc.txt (inject_toc.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-faksimile-sandwich-pdf-artefakte" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Faksimile- &amp; Sandwich-PDF-Artefakte
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.4 Faksimile- &amp; Sandwich-PDF-Artefakte">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#jobsandwichpdf-assemble_sandwichpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;job&gt;.sandwich.pdf (assemble_sandwich.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jobalignedpdf-align_mistral_pdfpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;job&gt;.aligned.pdf (align_mistral_pdf.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jobperfect_sandwichpdf-build_perfect_sandwichpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;job&gt;.perfect_sandwich.pdf (build_perfect_sandwich.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-digitaler-neusatz-vektor-editionen-typst" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Digitaler Neusatz &amp; Vektor-Editionen (Typst)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.5 Digitaler Neusatz &amp; Vektor-Editionen (Typst)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layoutprofilejson-profile_source_layoutpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        layout.profile.json (profile_source_layout.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jobdigitaltyp-jobdigitalpdf-render_digital_pdfpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;job&gt;.digital.typ &amp; &lt;job&gt;.digital.pdf (render_digital_pdf.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-interoperabilitats-distributionsformate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Interoperabilitäts- &amp; Distributionsformate
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.6 Interoperabilitäts- &amp; Distributionsformate">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#jobteixml-export_teipy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;job&gt;.tei.xml (export_tei.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jobepub-export_epubpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;job&gt;.epub (export_epub.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-diagnose-qualitatsaudits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 Diagnose- &amp; Qualitätsaudits
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.7 Diagnose- &amp; Qualitätsaudits">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#jobreportmd-generate_job_reportpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;job&gt;.report.md (generate_job_report.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#joblayout_auditjson-joblayout_auditmd-audit_layout_concordancepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &lt;job&gt;.layout_audit.json / &lt;job&gt;.layout_audit.md (audit_layout_concordance.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison_samples-compare_layoutpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        comparison_samples/ (compare_layout.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-qualitatsmatrix-reifegrad-dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Qualitätsmatrix &amp; Reifegrad-Dashboard
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-release-assoziation-kunftige-fortschritte" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Release-Assoziation &amp; Künftige Fortschritte
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EVOLUTION_WORKFLOW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evolutionäre Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TARGET_FORMATS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zielformate & Dualität
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CORRECTION_PATHS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Korrekturpfade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEPLOY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../STORAGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Speicherstruktur
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../N8N/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    n8n Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Böhtlingk 1887)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study-dhatupatha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Dhātu-Pāṭha)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study-bau/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Bṛhadāraṇyaka I.4)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/birchville-org/AlexandriaSandwich/edit/master/docs/de/PIPELINE_ARTIFACTS.md" title="Seite editieren" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="pipeline-artefakte-qualitatsstand">📚 Pipeline-Artefakte &amp; Qualitätsstand</h1>
+<p>Die <strong>AlexandriaSandwich-Pipeline</strong> transformiert historische Drucke und Handschriften über ein mehrstufiges Hybridverfahren in unterschiedliche wissenschaftliche Ausgabeformate (Faksimiles, Sandwich-PDFs, TEI-P5, EPUB 3 und digitale Neusätze).</p>
+<p>Diese Dokumentationsseite dient als zentrale Referenz aller erzeugten Artefakte, beschreibt deren Zweck und dokumentiert den aktuellen Qualitäts- und Reifegrad des Verfahrens für den kontinuierlichen Verbesserungsprozess (CIP).</p>
+<hr />
+<h2 id="1-ubersicht-der-verarbeitungsstufen">1. Übersicht der Verarbeitungsstufen</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>graph TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    A[Rohscan TIFF/PNG/PDF] --&gt; B[Vorverarbeitung: Deskew &amp; Unpaper]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    B --&gt; C[Tesseract HOCR &amp; Quality Gate]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    C --&gt;|Konfidenz &lt; Schwellenwert| D[Mistral Document OCR]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    C --&gt;|Konfidenz &gt;= Schwellenwert| E[Konsolidierung]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    D --&gt; E[Konsolidierung &amp; book.json]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    E --&gt; F1[Sandwich-PDF &amp; Aligned PDF]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    E --&gt; F2[Typst Vektor-Neusatz 1:1]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    E --&gt; F3[TEI-P5 XML &amp; EPUB 3]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    E --&gt; F4[Audit-Berichte &amp; Layout-Checks]
+</code></pre></div>
+<hr />
+<h2 id="2-artefakt-katalog">2. Artefakt-Katalog</h2>
+<h3 id="21-vorverarbeitung-bildbereinigung">2.1 Vorverarbeitung &amp; Bildbereinigung</h3>
+<h4 id="preprocessedjobpage_xxxxpng"><code>preprocessed/&lt;job&gt;/page_XXXX.png</code></h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/processing/preprocessed/&lt;job&gt;/</code></li>
+<li><strong>Zweck</strong>: Vorbereitung der Rohscans für OCR und Faksimile-Erstellung. Führt Deskewing (Geraderücken), Randbereinigung (Unpaper), Bundsteg-Entschattung und Weißpunkt-Kompensation (Reinweiß) durch.</li>
+<li><strong>Qualitätsstand</strong>:</li>
+<li><em>Stärken</em>: Homogene, gleichmäßige Weißflächen; Flecken und Scannerrauschen werden zuverlässig getrennt, ohne feine diakritische Punkte (Anusvāra, ṛ, ḍ) abzutrennen.</li>
+<li><em>Herausforderungen</em>: Bei stark gewölbten Buchrücken (Gutter Distortion) stößt rein lineares Deskewing an Grenzen; hier ist ggf. eine zylindrische Entzerrung erforderlich.</li>
+</ul>
+<hr />
+<h3 id="22-ocr-transkriptions-bounding-box-schichten">2.2 OCR-, Transkriptions- &amp; Bounding-Box-Schichten</h3>
+<h4 id="page_xxxxhocr-page_xxxxjson-tesseract"><code>page_XXXX.hocr</code> &amp; <code>page_XXXX.json</code> (Tesseract)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/processing/qc/&lt;job&gt;/</code></li>
+<li><strong>Zweck</strong>: Schnelle lokale Primärerkennung auf Wort- und Zeichenebene inklusive genauer geometrischer Bounding-Boxes (<code>bbox x0 y0 x1 y1</code>) und Konfidenzwerten zur Steuerung des Quality-Gates.</li>
+<li><strong>Qualitätsstand</strong>:</li>
+<li><em>Stärken</em>: Liefert exakte Koordinaten für jedes erkannte Wort auf der Originalseite.</li>
+<li><em>Herausforderungen</em>: Bei komplexen indologischen Texten (IAST-Diakritika, vedische Akzente, Devanagari) liegt die Trefferquote oft unter 85 %, was fehlerhafte Textlayer erzeugt.</li>
+</ul>
+<h4 id="page_xxxxmistralmd-page_xxxxmistraljson-mistral-document-ocr"><code>page_XXXX.mistral.md</code> &amp; <code>page_XXXX.mistral.json</code> (Mistral Document OCR)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/markdown/</code></li>
+<li><strong>Zweck</strong>: KI-gestütztes Fallback- und High-Fidelity-OCR für Seiten, die das Tesseract-Quality-Gate nicht bestehen, sowie für anspruchsvolle Tabellen, Fußnoten und Diakritika.</li>
+<li><strong>Qualitätsstand</strong>:</li>
+<li><em>Stärken</em>: Nahezu fehlerfreie Erkennung von IAST (ā, ī, ū, ṛ, ṝ, ḷ, ṃ, ḥ, ṅ, ñ, ṭ, ḍ, ṇ, ś, ṣ), Devanagari und vedischen Akzenten. Tabellenstrukturen werden semantisch erfasst.</li>
+<li><em>Herausforderungen</em>: Mistral interpretiert typografische Sonderheiten (z.B. Punktleisten im Inhaltsverzeichnis) gelegentlich als lange Punktfolgen oder Gleichheitszeichen. Zudem fehlen im Standard-Markdown Bounding-Box-Koordinaten für jedes einzelne Wort.</li>
+</ul>
+<h4 id="page_xxxxsidecartxt"><code>page_XXXX.sidecar.txt</code></h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/</code></li>
+<li><strong>Zweck</strong>: Bereitstellung des rohen Volltexts pro Seite für externe Suchmaschinen (Elasticsearch/Solr) und Unix-Tooling (<code>grep</code>).</li>
+<li><strong>Qualitätsstand</strong>: Vollständig und performant abrufbar; entspricht exakt dem verifizierten Textbestand.</li>
+</ul>
+<hr />
+<h3 id="23-semantische-konsolidierung-buchmodell">2.3 Semantische Konsolidierung &amp; Buchmodell</h3>
+<h4 id="bookjson-consolidate_bookpy"><code>book.json</code> (<code>consolidate_book.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/book.json</code></li>
+<li><strong>Zweck</strong>: Das zentrale, kanonische Datenmodell (Single Source of Truth). Führt Metadaten, Seitenfolgen, Tesseract-Koordinaten, Mistral-Markdown, Absatzhierarchien, Tabellen und Fußnoten in einem einheitlichen JSON-Schema zusammen.</li>
+<li><strong>Qualitätsstand</strong>:</li>
+<li><em>Stärken</em>: Ermöglicht die saubere Entkopplung von Ingestion und Rendering; Basis für alle Folgeformate (PDF, TEI, EPUB).</li>
+<li><em>Herausforderungen</em>: Die automatische Unterscheidung zwischen Kolumnentiteln und beginnendem Haupttext erfordert bei uneinheitlichen Vorlagen gelegentlich seitenbezogene Heuristiken.</li>
+</ul>
+<h4 id="tocjson-toctxt-inject_tocpy"><code>toc.json</code> / <code>toc.txt</code> (<code>inject_toc.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/&lt;job&gt;.toc.txt</code> (editierbar), <code>data/output/&lt;job&gt;/toc.json</code></li>
+<li><strong>Zweck</strong>: Hierarchischer Inhaltsbaum mit Seitenzuordnungen zur automatischen Injektion von PDF-Lesezeichen (Outlines/Bookmarks), PDF-Metadaten und echten Page-Labels (römisch für Front Matter, arabisch für Textteil).</li>
+<li><strong>TOC Outline &amp; Quality-Gate</strong>:</li>
+<li><em>Automatisierte Injektion</em>: Alle erzeugten PDFs (Faksimile, Sandwich, Vektor-Neusatz) werden über <code>inject_toc.py</code> mit Inhaltsverzeichnis und Page-Labels ausgestattet. Als Datenquelle dient vorrangig eine vorliegende <code>&lt;job&gt;.toc.txt</code> (oder <code>&lt;job&gt;.toc.json</code>) bzw. als automatischer Fallback die in <code>book.json</code> erfassten Kapitelüberschriften (<code>h1</code>/<code>h2</code>).</li>
+<li><em>Validierung &amp; Normalisierung</em>: Die Hierarchiestufen werden automatisch normalisiert (Start bei Ebene 1, kein Überspringen von Zwischenstufen), um Fehler beim Setzen der PDF-Outlines auszuschließen.</li>
+<li><em>Warnung bei leerer Outline</em>: Werden 0 Einträge gefunden, protokolliert das Gate eine deutliche Warnung (<code>Warning: Injected 0 hierarchical TOC entries</code>); bei gesetztem <code>--require-toc</code> bricht der Schritt mit Fehlercode 1 ab.</li>
+<li><em>Manuelle Korrigierbarkeit (<code>.toc.txt</code>)</em>: Neben dem PDF wird eine einfache Klartextdatei <code>&lt;job&gt;.toc.txt</code> bereitgestellt (Syntax: <code>Titel | Seitennummer</code> mit 2 Leerzeichen Einrückung pro Ebene). Diese kann vom Benutzer in jedem Texteditor manuell verfeinert und über <code>python3 scripts/inject_toc.py -i &lt;pdf&gt; --toc &lt;job&gt;.toc.txt</code> ohne Neukompilierung verlustfrei re-injiziert werden.</li>
+<li><strong>Qualitätsstand</strong>: Ermöglicht eine barrierefreie, standardisierte Navigationsleiste in PDF-Betrachtern (Apple Preview, Acrobat, PDF.js) mit 1:1 übereinstimmenden Seitenzahlen.</li>
+</ul>
+<hr />
+<h3 id="24-faksimile-sandwich-pdf-artefakte">2.4 Faksimile- &amp; Sandwich-PDF-Artefakte</h3>
+<h4 id="jobsandwichpdf-assemble_sandwichpy"><code>&lt;job&gt;.sandwich.pdf</code> (<code>assemble_sandwich.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/&lt;job&gt;.sandwich.pdf</code></li>
+<li><strong>Zweck</strong>: Klassisches PDF-Sandwich: Bereinigtes Faksimile-Bild oben, unsichtbare OCR-Textschicht dahinter.</li>
+<li><strong>Qualitätsstand</strong>: Solide für Volltextsuche und rudimentäres Kopieren; Textauswahl kann bei ungenauen Tesseract-Boxen leicht versetzt sein.</li>
+</ul>
+<h4 id="jobalignedpdf-align_mistral_pdfpy"><code>&lt;job&gt;.aligned.pdf</code> (<code>align_mistral_pdf.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/&lt;job&gt;.aligned.pdf</code></li>
+<li><strong>Zweck</strong>: Hybrides Faksimile-Sandwich. Ersetzt den fehleranfälligen Tesseract-Text durch den präzisen Mistral-Text und richtet ihn über Dynamic Time Warping (DTW) auf die Bounding-Boxes der Originalwörter aus.</li>
+<li><strong>Qualitätsstand</strong>:</li>
+<li><em>Stärken</em>: Höchste Textqualität im Faksimile; seltene Ligaturen und Sonderzeichen lassen sich exakt markieren und kopieren.</li>
+<li><em>Herausforderungen</em>: Bei stark abweichender Segmentierung zwischen OCR-Engines sind Fallbacks auf Zeilen- oder Absatzboxen nötig.</li>
+</ul>
+<h4 id="jobperfect_sandwichpdf-build_perfect_sandwichpy"><code>&lt;job&gt;.perfect_sandwich.pdf</code> (<code>build_perfect_sandwich.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/&lt;job&gt;.perfect_sandwich.pdf</code></li>
+<li><strong>Zweck</strong>: Druckfertiges High-End-Faksimile mit adaptiver Hintergrundaufhellung, Schärfung (Unsharp Mask), Content-Aware Margin Masking (automatische Beseitigung von Buchfalzen, Schatten, Bindestreifen und Scannerkanten außerhalb des Textbereichs) sowie unsichtbarem Vektor-Textlayer (Mode 3).</li>
+<li><strong>Verfahren (Content-Aware Margin Masking)</strong>:</li>
+<li>Ermittelt die exakte Bounding-Box des Textkörpers dynamisch aus den Mistral-JSON-Koordinaten oder PyMuPDF-Wortvektoren.</li>
+<li>Wendet mehrskaliges Ausleuchtungs-Leveling und Hintergrund-Nivellierung auf Reinweiß (<code>#FFFFFF</code>) an.</li>
+<li>Maskiert alle zusammenhängenden Schatten-, Falz- und Buchrückenflächen außerhalb der Textgrenzen (<code>pad_x=75, pad_y=60</code>), ohne Randnotizen oder Seitenzahlen anzutasten.</li>
+<li><strong>Qualitätsstand</strong>: Optisch dem Rohscan weit überlegen; dient als bereinigte Referenzbasis für die nachgelagerte Layout-Profilierung und den Neusatz.</li>
+</ul>
+<hr />
+<h3 id="25-digitaler-neusatz-vektor-editionen-typst">2.5 Digitaler Neusatz &amp; Vektor-Editionen (Typst)</h3>
+<h4 id="layoutprofilejson-profile_source_layoutpy"><code>layout.profile.json</code> (<code>profile_source_layout.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/layout.profile.json</code></li>
+<li><strong>Zweck</strong>: Automatisierte geometrische Vermessung des Quell-Faksimiles (<code>perfect_sandwich.pdf</code>). Ermittelt Satzspiegel, Randabstände (Kopf, Fuß, Innen, Außen), Durchschuss, Makro-Layout (einspaltig, zweispaltig, Marginalspalten) sowie Paginierungs- und Kolumnentitel-Positionen.</li>
+<li><strong>Qualitätsstand</strong>: Vollautomatisch; liefert die kalibrierten Geometrieparameter für den Neusatz.</li>
+</ul>
+<h4 id="jobdigitaltyp-jobdigitalpdf-render_digital_pdfpy"><code>&lt;job&gt;.digital.typ</code> &amp; <code>&lt;job&gt;.digital.pdf</code> (<code>render_digital_pdf.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/&lt;job&gt;.digital.pdf</code></li>
+<li><strong>Zweck</strong>: Vollständiger digitaler Neusatz als Vektordokument (kein Rasterscan). Verlustfrei skalierbar, barrierefrei und mit echten Schriften gerendert (Libertinus Serif, Noto Sans Devanagari).</li>
+<li><strong>Typografische Standards</strong>:</li>
+<li><em>Satzspiegel &amp; Durchschuss</em>: Wird automatisch aus <code>layout.profile.json</code> und <code>.perfect_sandwich.pdf</code> abgeleitet.</li>
+<li><em>Titel &amp; Absätze</em>: Dokumententitel zentriert auf Satzspiegelmitte; strukturierter Erstzeileneinzug (<code>1.5em</code>) für Textabsätze.</li>
+<li><em>Kopfzeile &amp; Paginierung</em>: Symmetrischer Drei-Spalten-Kolumnentitel mit konsistenter Devanāgarī- oder arabischer Seitenzählung.</li>
+<li><em>Fußnoten-Apparat</em>: Automatische Abtrennung und Formatierung von Anmerkungen am Seitenende mit horizontaler Trennlinie und verkleinertem Schriftgrad.</li>
+<li><strong>Modi</strong>:</li>
+<li><em>1:1 Seitenkongruenz (<code>--preserve-pages</code>)</em>: Jede Buchseite beginnt auf einer neuen digitalen Seite mit identischen Kolumnentiteln und adaptiver Skalierung (<code>page_content</code>), sodass die Paginierung exakt dem historischen Original entspricht.</li>
+<li><em>Scholarly Reflow</em>: Fließender Neusatz mit harmonischen Buchumbüchen nach klassischem typografischem Satzspiegel.</li>
+<li><strong>Qualitätsstand</strong>:</li>
+<li><em>Stärken</em>: Gestochen scharfes Schriftbild, minimale Dateigröße (ca. 200–800 KB statt 20–50 MB beim Faksimile), vollständige Durchsuchbarkeit.</li>
+</ul>
+<hr />
+<h3 id="26-interoperabilitats-distributionsformate">2.6 Interoperabilitäts- &amp; Distributionsformate</h3>
+<h4 id="jobteixml-export_teipy"><code>&lt;job&gt;.tei.xml</code> (<code>export_tei.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/&lt;job&gt;.tei.xml</code></li>
+<li><strong>Zweck</strong>: TEI-P5-konformes XML für Digital Humanities, Computerlinguistik und Langzeitarchivierung nach TEI-Konsortiumsstandard.</li>
+<li><strong>Qualitätsstand</strong>: Valides TEI-XML mit strukturierter Titelei, Divisionen (<code>&lt;div&gt;</code>), Paragraphen (<code>&lt;p&gt;</code>) und Zeilenumbrüchen (<code>&lt;lb/&gt;</code>). Tiefergehende morphosyntaktische Annotationen können nachgelagert über NLP-Pipelines angereichert werden.</li>
+</ul>
+<h4 id="jobepub-export_epubpy"><code>&lt;job&gt;.epub</code> (<code>export_epub.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/&lt;job&gt;.epub</code></li>
+<li><strong>Zweck</strong>: Reflowfähiges E-Book für mobile Lesegeräte (Apple Books, Kindle, Tolino) basierend auf semantischem XHTML5 und CSS.</li>
+<li><strong>Qualitätsstand</strong>:</li>
+<li><em>Stärken</em>: Fließtext und einfache Listen passen sich jeder Bildschirmgröße optimal an.</li>
+<li><em>Herausforderungen</em>: Breite grammatikalische Paradigmen (Deklinations- und Konjugationstabellen) erfordern horizontales Scrollen oder kompakte CSS-Sonderregeln.</li>
+</ul>
+<hr />
+<h3 id="27-diagnose-qualitatsaudits">2.7 Diagnose- &amp; Qualitätsaudits</h3>
+<h4 id="jobreportmd-generate_job_reportpy"><code>&lt;job&gt;.report.md</code> (<code>generate_job_report.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/&lt;job&gt;.report.md</code></li>
+<li><strong>Zweck</strong>: Automatisierte Zusammenfassung eines Pipeline-Laufs mit Kennzahlen (Pass/Fail-Verhältnis Tesseract vs. Mistral, Verarbeitungszeiten, Dateigrößen, Checksummen).</li>
+<li><strong>Qualitätsstand</strong>: Dient als deterministisches Quality-Gate im n8n-/Shell-Workflow und wird direkt in der Web-UI dargestellt.</li>
+</ul>
+<h4 id="joblayout_auditjson-joblayout_auditmd-audit_layout_concordancepy"><code>&lt;job&gt;.layout_audit.json</code> / <code>&lt;job&gt;.layout_audit.md</code> (<code>audit_layout_concordance.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/&lt;job&gt;.layout_audit.md</code>, <code>data/output/&lt;job&gt;/&lt;job&gt;.layout_audit.json</code></li>
+<li><strong>Zweck</strong>: Automatisierter Soll-Ist-Vergleich zwischen Original-Faksimile (<code>perfect_sandwich.pdf</code>) und Neusatz (<code>digital.pdf</code>). Berechnet Satzspiegel-Ausfüllrate (Fill Ratio), Whitespace-Divergenz, strukturelle Zonen-Konkordanz (Marginalien vs. Hauptspalte), horizontale Massenschwerpunkte und Jaccard-Token-Überlappung.</li>
+<li><strong>Qualitätsstand</strong>: Unverzichtbares Instrument für das automatisierte Layout-Quality-Gate.</li>
+</ul>
+<h4 id="comparison_samples-compare_layoutpy"><code>comparison_samples/</code> (<code>compare_layout.py</code>)</h4>
+<ul>
+<li><strong>Pfad</strong>: <code>data/output/&lt;job&gt;/comparison_samples/page_XXXX_comparison.png</code></li>
+<li><strong>Zweck</strong>: Visuelle Side-by-Side-Gegenüberstellung des bereinigten Faksimiles (links) und des digitalen Neusatzes (rechts) zur schnellen visuellen Begutachtung von Satzspiegel, Umbrüchen und Paginierung.</li>
+<li><strong>Qualitätsstand</strong>: Wird standardmäßig im Pipeline-Lauf erzeugt.</li>
+</ul>
+<hr />
+<h2 id="3-qualitatsmatrix-reifegrad-dashboard">3. Qualitätsmatrix &amp; Reifegrad-Dashboard</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Stufe / Artefakt</th>
+<th style="text-align: left;">Automatisierungsgrad</th>
+<th style="text-align: left;">Reifegrad</th>
+<th style="text-align: left;">Primäre Stärke</th>
+<th style="text-align: left;">Aktuelle Herausforderung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Preprocessed PNG</strong></td>
+<td style="text-align: left;">100 % automatisch</td>
+<td style="text-align: left;">Reif (Produktion)</td>
+<td style="text-align: left;">Gleichmäßige Weißflächen</td>
+<td style="text-align: left;">Gewölbter Bundsteg</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>OCR / Mistral MD</strong></td>
+<td style="text-align: left;">100 % automatisch</td>
+<td style="text-align: left;">Sehr hoch</td>
+<td style="text-align: left;">Diakritika-Präzision</td>
+<td style="text-align: left;">Semantik von Punktleisten/Layout</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>book.json</strong></td>
+<td style="text-align: left;">100 % automatisch</td>
+<td style="text-align: left;">Hoch</td>
+<td style="text-align: left;">Zentrales Schnittstellenmodell</td>
+<td style="text-align: left;">Header- vs. Body-Klassifikation</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>TOC Outline &amp; Labels</strong></td>
+<td style="text-align: left;">100 % automatisch / Manuell</td>
+<td style="text-align: left;">Publikationsreif</td>
+<td style="text-align: left;">Standard-Lesezeichenbaum &amp; Paginierung</td>
+<td style="text-align: left;">Feingliederung tiefer Paragraphen</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Aligned Sandwich PDF</strong></td>
+<td style="text-align: left;">100 % automatisch</td>
+<td style="text-align: left;">Hoch</td>
+<td style="text-align: left;">Textsuche im Faksimile</td>
+<td style="text-align: left;">Token-Drift bei Ligaturen</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>1:1 Typst Neusatz</strong></td>
+<td style="text-align: left;">Halbautomatisch / CIP</td>
+<td style="text-align: left;">Publikationsreif</td>
+<td style="text-align: left;">Ästhetik &amp; Zitierfähigkeit</td>
+<td style="text-align: left;">Manuelle Feineinstellung bei Tabellen</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>TEI-P5 XML</strong></td>
+<td style="text-align: left;">100 % automatisch</td>
+<td style="text-align: left;">Gut</td>
+<td style="text-align: left;">Interoperabilität</td>
+<td style="text-align: left;">Morphosyntaktische Tiefe</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>EPUB 3</strong></td>
+<td style="text-align: left;">100 % automatisch</td>
+<td style="text-align: left;">Befriedigend</td>
+<td style="text-align: left;">Mobiles Lesen</td>
+<td style="text-align: left;">Komplexe Grammatiktabellen</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-release-assoziation-kunftige-fortschritte">4. Release-Assoziation &amp; Künftige Fortschritte</h2>
+<ul>
+<li><strong>Release v1.4.0 (Minor Release)</strong>:</li>
+<li>Erstmalige Verankerung des strengen 1:1 Vektor-Neusatzes (<code>build_macdonell_full_1to1.py</code>) über das gesamte Werk (520 Seiten) als regulärer Pipeline-Bestandteil.</li>
+<li>Verbindliches <strong>TOC-Outline-Quality-Gate</strong>: Automatisierte Prüfung aller PDFs auf Lesezeichenbäume, Generierung/Injektion inklusive echter Page-Labels (i–xii, 1–508) und Bereitstellung editierbarer <code>.toc.txt</code>-Dateien zur manuellen Korrektur.</li>
+<li>Einführung des tabularen Clarendon-Punktrasters und historischer Mediäval-Kapitälchen.</li>
+<li>Etablierung des standardisierten Artefakt-Inventars und der CIP-Dokumentation.</li>
+<li><strong>Künftige Zyklen</strong>:</li>
+<li>Künftige Optimierungen an Bounding-Box-Ausrichtung, automatischen Tabellenlayouts und TEI-Anreicherungen werden kontinuierlich in dieser Matrix fortgeschrieben.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Zurück zum Seitenanfang
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
