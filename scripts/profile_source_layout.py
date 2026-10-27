@@ -201,14 +201,14 @@ def profile_pdf_layout(
     finally:
         doc.close()
 
-    # Decide macro layout
+    # Decide macro layout: multi-column grid takes precedence if detected on >= 25% of pages
     marginal_ratio = pages_with_marginalia / max(total_pages, 1)
     multicol_ratio = pages_with_multicolumn / max(total_pages, 1)
 
-    if marginal_ratio >= 0.08:
-        macro_layout = "marginal_sideheads"
-    elif multicol_ratio >= 0.25:
+    if multicol_ratio >= 0.25:
         macro_layout = "multi_column_grid"
+    elif marginal_ratio >= 0.08:
+        macro_layout = "marginal_sideheads"
     else:
         macro_layout = "single_column"
 

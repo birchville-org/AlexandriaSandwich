@@ -1653,7 +1653,14 @@ def build_typst_document(
     img_map = ensure_extracted_images(job_id, data_dir=data_dir, project_root=project_root)
     heuristics = meta.get("heuristics", {})
     mode = typeset_mode or heuristics.get("typeset_mode", "")
-    is_two_col_profile = heuristics.get("two_column", False) or mode == "dictionary_grid"
+    layout_profile = meta.get("layout_profile") or book_data.get("layout_profile")
+    macro_layout = layout_profile.get("macro_layout", "single_column") if layout_profile else "single_column"
+    is_two_col_profile = (
+        heuristics.get("two_column", False)
+        or heuristics.get("layout_mode") == "two_column"
+        or mode in ("dictionary_grid", "two_column")
+        or macro_layout == "multi_column_grid"
+    )
 
     title = meta.get("title", "Untitled Book")
     author = meta.get("author", "Alexandria Archive")
@@ -1717,7 +1724,15 @@ def build_typst_document(
         if valid_sh and first_body_idx < min(valid_sh):
             first_body_idx = min(valid_sh)
 
-    if is_sideheads and layout_profile and "calibrated_margins" in layout_profile:
+    if is_two_col_profile:
+        p_w = layout_profile["page_dimensions"]["width_pt"] if layout_profile and "page_dimensions" in layout_profile else (layout_calibration.get("width") if layout_calibration else 563.0)
+        p_h = layout_profile["page_dimensions"]["height_pt"] if layout_profile and "page_dimensions" in layout_profile else (layout_calibration.get("height") if layout_calibration else 739.2)
+        dim_args.append(f'  width: {p_w}pt,')
+        dim_args.append(f'  height: {p_h}pt,')
+        dim_args.append(f'  margin: (inside: 28pt, outside: 22pt, top: 40pt, bottom: 30pt),')
+        dim_args.append(f'  font_size: 8.8pt,')
+        dim_args.append(f'  leading: 0.32em,')
+    elif is_sideheads and layout_profile and "calibrated_margins" in layout_profile:
         cm = layout_profile["calibrated_margins"]
         dim_args.append(f'  width: {layout_profile["page_dimensions"]["width_pt"]}pt,')
         dim_args.append(f'  height: {layout_profile["page_dimensions"]["height_pt"]}pt,')
@@ -2006,128 +2021,140 @@ def build_typst_document(
         blocks_to_process = strip_running_headers(blocks, pr_label, current_ch_title, is_chapter_page, book_title=book_title_meta)
         body_blocks, fn_blocks = extract_page_footnotes(blocks_to_process)
 
-        b_idx = 0
-        while b_idx < len(body_blocks):
-            # Check for Calligraphy Glyphs Grid (label_beside or label_below)
-            glyph_style, glyph_pairs, consumed = detect_glyph_pairs(body_blocks, b_idx, p_num, img_map)
-            if consumed > 0:
-                flush_table()
-                if glyph_style == "label_beside":
-                    page_elements.append(format_glyph_grid_beside(glyph_pairs, p_num, img_map))
-                else:
-                    page_elements.append(format_glyph_grid_below(glyph_pairs, p_num, img_map))
-                b_idx += consumed
-                continue
+        def format_blocks_to_elements(blocks_list: List[Dict[str, Any]]) -> List[str]:
+            elems: List[str] = []
+            tbl_acc: List[str] = []
 
-            block = body_blocks[b_idx]
-            b_idx += 1
-            b_type = block.get("type", "p")
-            text = block.get("text", "").strip()
+            def flush_tbl():
+                if tbl_acc:
+                    t = format_markdown_table(tbl_acc)
+                    if t:
+                        elems.append(t)
+                    tbl_acc.clear()
 
-            # Check for Standalone or embedded images
-            m_img = re.search(r"!\[(.*?)\]\((img-.*?\.(?:jpe?g|png))\)", text)
-            if m_img:
-                img_id = m_img.group(2)
-                if (p_num, img_id) in img_map:
-                    flush_table()
-                    before_t = text[:m_img.start()].strip()
-                    after_t = text[m_img.end():].strip()
-                    if before_t:
-                        page_elements.append(format_block_as_typst(before_t))
-                    img_elem = format_standalone_image(img_id, p_num, img_map)
-                    if img_elem:
-                        page_elements.append(img_elem)
-                    if after_t:
-                        page_elements.append(format_block_as_typst(after_t))
+            b_idx = 0
+            while b_idx < len(blocks_list):
+                glyph_style, glyph_pairs, consumed = detect_glyph_pairs(blocks_list, b_idx, p_num, img_map)
+                if consumed > 0:
+                    flush_tbl()
+                    if glyph_style == "label_beside":
+                        elems.append(format_glyph_grid_beside(glyph_pairs, p_num, img_map))
+                    else:
+                        elems.append(format_glyph_grid_below(glyph_pairs, p_num, img_map))
+                    b_idx += consumed
                     continue
+
+                block = blocks_list[b_idx]
+                b_idx += 1
+                b_type = block.get("type", "p")
+                text = block.get("text", "").strip()
+
+                m_img = re.search(r"!\[(.*?)\]\((img-.*?\.(?:jpe?g|png))\)", text)
+                if m_img:
+                    img_id = m_img.group(2)
+                    if (p_num, img_id) in img_map:
+                        flush_tbl()
+                        before_t = text[:m_img.start()].strip()
+                        after_t = text[m_img.end():].strip()
+                        if before_t:
+                            elems.append(format_block_as_typst(before_t))
+                        img_elem = format_standalone_image(img_id, p_num, img_map)
+                        if img_elem:
+                            elems.append(img_elem)
+                        if after_t:
+                            elems.append(format_block_as_typst(after_t))
+                        continue
+                    else:
+                        text = re.sub(r"!\[.*?\]\(.*?\)", "", text).strip()
+                        if not text:
+                            continue
                 else:
                     text = re.sub(r"!\[.*?\]\(.*?\)", "", text).strip()
                     if not text:
                         continue
-            else:
-                text = re.sub(r"!\[.*?\]\(.*?\)", "", text).strip()
-                if not text:
+
+                if b_type == "table_row":
+                    tbl_acc.append(text)
                     continue
 
-            if b_type == "table_row":
-                has_table = True
-                table_acc.append(text)
-                continue
-            
-            flush_table()
+                flush_tbl()
 
-            # Check if block contains an embedded Markdown table
-            blk_lines = [l.strip() for l in text.splitlines() if l.strip()]
-            tbl_lines = [l for l in blk_lines if l.startswith("|")]
-            if len(tbl_lines) >= 2 and any("---" in l for l in tbl_lines):
-                has_table = True
-                tbl_typ = format_markdown_table(tbl_lines)
-                if tbl_typ:
-                    page_elements.append(tbl_typ)
-                continue
+                blk_lines = [l.strip() for l in text.splitlines() if l.strip()]
+                tbl_lines = [l for l in blk_lines if l.startswith("|")]
+                if len(tbl_lines) >= 2 and any("---" in l for l in tbl_lines):
+                    tbl_typ = format_markdown_table(tbl_lines)
+                    if tbl_typ:
+                        elems.append(tbl_typ)
+                    continue
 
-            if b_type == "sidehead":
-                esc_txt = format_inline_markdown(text).replace("\n", " \\ ")
-                page_elements.append(f"#sidehead(dx: {sh_dx}pt, width: {sh_width}pt)[{esc_txt}]")
-            elif b_type.startswith("h") and len(b_type) == 2 and b_type[1].isdigit():
-                level = int(b_type[1])
-                # Demote internal h1 to h2 so it does not collide with book chapter heading
-                if level == 1:
-                    level = 2
-                eqs = "=" * level
-                page_elements.append(f"{eqs} {format_inline_markdown(text)}")
-            else:
-                p_blocks.append(text)
-                page_elements.append(format_block_as_typst(text))
-
-        flush_table()
-        if fn_blocks:
-            page_elements.append(format_page_footnotes_as_typst(fn_blocks))
-
-        # Multi-column heuristic: detect dictionary, list, or vocabulary pages without table syntax
-        is_narrow_list = False
-        is_front_matter_page = idx <= 4 or any(
-            fm in str(page_elements).lower()
-            for fm in ("preface", "introduction", "vorwort", "inhalt", "table of contents", "title")
-        )
-        if not has_table and is_two_col_profile and not is_front_matter_page and len(page_elements) >= 3:
-            is_narrow_list = True
-
-        if is_narrow_list:
-            lead_headings = []
-            list_items = []
-            for elem in page_elements:
-                if not list_items and elem.startswith("="):
-                    lead_headings.append(elem)
+                if b_type == "sidehead":
+                    esc_txt = format_inline_markdown(text).replace("\n", " \\ ")
+                    elems.append(f"#sidehead(dx: {sh_dx}pt, width: {sh_width}pt)[{esc_txt}]")
+                elif b_type.startswith("h") and len(b_type) == 2 and b_type[1].isdigit():
+                    level = int(b_type[1])
+                    if is_two_col_profile:
+                        level = min(level + 1, 3)
+                    elif level == 1:
+                        level = 2
+                    eqs = "=" * level
+                    elems.append(f"{eqs} {format_inline_markdown(text)}")
                 else:
-                    list_items.append(elem)
+                    elems.append(format_block_as_typst(text))
 
-            if list_items:
-                half = (len(list_items) + 1) // 2
-                col1 = "\n\n".join(list_items[:half])
-                col2 = "\n\n".join(list_items[half:])
-                col_block = f"""#set text(size: 8.5pt)
-#set block(spacing: 0.25em)
-#set par(leading: 0.35em)
-#grid(
+            flush_tbl()
+            return elems
+
+        if is_two_col_profile:
+            p_box = page.get("bbox", [0, 0, 2350, 3100])
+            w_page = p_box[2] if len(p_box) >= 3 and p_box[2] > 0 else 2350.0
+            mid_x = w_page / 2.0
+
+            span_blocks = []
+            col1_blocks = []
+            col2_blocks = []
+
+            for b in body_blocks:
+                bbox = b.get("bbox", [0, 0, 0, 0])
+                b_type = b.get("type", "p")
+                if bbox[0] < mid_x * 0.75 and bbox[2] > mid_x * 1.25 and b_type in ("h1", "h2") and bbox[1] < 700:
+                    span_blocks.append(b)
+                elif (bbox[0] + bbox[2]) / 2.0 < mid_x:
+                    col1_blocks.append(b)
+                else:
+                    col2_blocks.append(b)
+
+            span_elems = []
+            if page_elements:
+                span_elems.extend(page_elements)
+            span_elems.extend(format_blocks_to_elements(span_blocks))
+            col1_elems = format_blocks_to_elements(col1_blocks)
+            col2_elems = format_blocks_to_elements(col2_blocks)
+
+            col1_str = "\n\n".join(col1_elems)
+            col2_str = "\n\n".join(col2_elems)
+
+            col_grid = f"""#grid(
   columns: (1fr, 1fr),
-  column-gutter: 0pt,
-  inset: (x, y) => if x == 0 {{ (right: 12pt) }} else {{ (left: 12pt) }},
+  column-gutter: 14pt,
   [
-{col1}
+{col1_str}
   ],
-  grid.vline(stroke: 0.35pt + luma(140)),
   [
-{col2}
+{col2_str}
   ]
 )"""
-                if lead_headings:
-                    content_body = "\n\n".join(lead_headings) + "\n\n" + col_block
-                else:
-                    content_body = col_block
+            if span_elems:
+                span_str = "\n\n".join(span_elems)
+                content_body = f"{span_str}\n\n#v(0.5em)\n\n{col_grid}"
             else:
-                content_body = "\n\n".join(page_elements)
+                content_body = col_grid
+
+            if fn_blocks:
+                content_body += "\n\n" + format_page_footnotes_as_typst(fn_blocks)
         else:
+            page_elements.extend(format_blocks_to_elements(body_blocks))
+            if fn_blocks:
+                page_elements.append(format_page_footnotes_as_typst(fn_blocks))
             content_body = "\n\n".join(page_elements)
 
         lines.append(f"// --- Original Page {p_num} (printed: {pr_label}) ---")
