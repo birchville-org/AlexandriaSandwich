@@ -99,3 +99,58 @@ Jede Änderung an Kernskripten (`preprocess.sh`, `assemble_sandwich.py`, `render
 Wenn alle Golden-Master-Artefakte fehlerfrei und ohne Qualitätseinbußen kompilieren:
 1. Das neue Werk `mein_buch` erneut durchlaufen lassen.
 2. Nach erfolgreicher Generierung wird `mein_buch` zum neuen festen Bestandteil der Referenz-Bibliothek.
+
+---
+
+## 3. Das Triage- & Ökonomie-Modell: Core-Pipeline vs. Editions-Satelliten
+
+Nicht jedes historische Werk kann oder soll vollautomatisch von der zentralen Engine bis zur druckreifen wissenschaftlichen Edition durchgerechnet werden. Das Einbetten buchspezifischer Spezialparser (z. B. für die 3.997 Sūtras von Böhtlingks Pāṇini oder die Metrik des Rigveda) in die Hauptpipeline führt zur **Monolith-Falle**: Die Engine wird überfrachtet, fragil und unwartbar.
+
+Für den produktiven Service auf **`alex.birchville.org`** gilt daher ein ökonomisch optimiertes **Triage- und Trichtermodell**:
+
+```text
+               Nutzer reicht Scan / IIIF-Manifest ein
+                                 │
+                                 ▼
+                     [ Automatische Pipeline ]
+                     Scan -> Masking -> OCR ->
+                     1:1 Sandwich-PDF + Rohtext
+                                 │
+                                 ▼
+                   Ergebnis entspricht Erwartung?
+                     ├── JA: Fertig (80–90 % aller Standardbücher)
+                     └── NEIN: Fall zur Begutachtung einreichen
+                                 │
+                                 ▼
+                     [ Philologische Triage ]
+                                 │
+             ┌───────────────────┴───────────────────┐
+             │                                       │
+    Pfad A: Generischer Bug                 Pfad B: Echter Spezialfall
+    (z. B. Spaltentrennung,                 (Kanonisches Monumentalwerk:
+     Margin-Farbe, Ligaturen)                Pāṇini, Wörterbücher, etc.)
+             │                                       │
+             ▼                                       ▼
+      Verbesserung der                        Ausgründung als
+      HAUPTPIPELINE                           EDITIONS-SATELLIT
+      (AlexandriaSandwich)                    (Eigenes Repo, z. B. boethlingk)
+             │                                       │
+             ▼                                       ▼
+      Alle zukünftigen Bücher                 Fokussierte Handarbeit,
+      profitieren automatisch                 QA-Viewer & TEI-P5-Modellierung
+```
+
+### Ökonomische Bewertung
+
+1. **Grenzkosten nahe null für Standardfälle:** 80–90 % aller Monographien und Dokumente laufen vollautomatisch ohne menschliche Intervention durch die Pipeline.
+2. **Schutz vor Fehlallokation von Entwicklerzeit (*YAGNI*):** Es werden keine spekulativen Parser für hypothetische Sonderfälle gebaut. Speziallogik entsteht nur, wenn ein echtes Werk mit realem Bedarf vorliegt.
+3. **Maximale Hebelwirkung bei Pipeline-Fixes (Pfad A):** Generische Verbesserungen werden in `AlexandriaSandwich/scripts/` gelöst und stehen allen nachfolgenden Werken zur Verfügung.
+4. **Wissenschaftliche Kuration als Satelliten-Projekt (Pfad B):** Komplexe Werke erhalten ein eigenes Git-Repository (wie [`boethlingk`](https://github.com/birchville-org/boethlingk)), nutzen die AlexandriaSandwich-Ergebnisse als digitale Primärebene und implementieren domänenspezifische Statusmaschinen, Ground-Truth-Matcher und 1:1-Faksimile-Neusätze autark.
+
+### Service-Level-Deklaration für `alex.birchville.org`
+
+Die Web-Oberfläche kommuniziert diese Grenze transparent:
+* **Standard-Verarbeitung:** Vollautomatische Erzeugung durchsuchbarer 1:1 Sandwich-PDFs und TEI-Texte für historische Druckwerke in lateinischen und indischen Standardschriften.
+* **Komplexe Sonderfälle:** Bei anspruchsvollen Monumentalwerken (mehrsprachiger philologischer Satz, mehrspaltige Wörterbücher mit tiefer Lemmastruktur, Vers- und Sūtra-Werke) reicht die generische Automatisierung naturgemäß nicht aus.
+* **Feedback-Schleife:** Entspricht das Resultat nicht den Erwartungen, wird der Fall mit dem Originalscan zur Begutachtung eingereicht. Wir prüfen, ob die Heuristik der Hauptpipeline erweitert werden kann (Pfad A) oder ob das Werk als kuratiertes Birchville-Editions-Projekt aufgesetzt werden soll (Pfad B).
+
