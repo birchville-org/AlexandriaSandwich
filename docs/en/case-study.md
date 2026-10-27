@@ -1,8 +1,15 @@
-# Case Study & Pipeline Architecture: Pāṇini's Grammar (Otto von Böhtlingk, 1887)
+# Case Study: Pāṇini's Grammar (Otto von Böhtlingk, 1887)
 
-> **Complete historical digitization, canonical alignment, and generation of searchable Sandwich material for 3,997 Sūtras across 478 book pages.**
+> **Pipeline validation of AlexandriaSandwich against Otto von Böhtlingk's three-script work (Devanāgarī, Antiqua, IAST) across 478 book pages.**
 > 
-> 🔗 **Project Repository:** [github.com/birchville-org/boethlingk](https://github.com/birchville-org/boethlingk)
+> 🔗 **Edition Repository & Downloads:** [github.com/birchville-org/boethlingk](https://github.com/birchville-org/boethlingk)  
+> 📖 **Edition Documentation & Artifacts:** [Pāṇini's Grammar (Böhtlingk 1887)](https://birchville-org.github.io/boethlingk/en/)
+
+---
+
+> ℹ️ **Architectural Separation:**  
+> AlexandriaSandwich provides the **generic processing engine** (IIIF scan ingestion, margin masking, multimodal AI OCR, sandwich PDF layer generation).  
+> The concrete philological edition, canonical sūtra alignment, 1:1 facsimile typesetting (STIX Two Text), and all downloadable release artifacts are maintained in the dedicated edition project **[boethlingk](https://github.com/birchville-org/boethlingk)**. The following case study documents the execution of this work through the AlexandriaSandwich pipeline.
 
 ---
 

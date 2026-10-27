@@ -1,8 +1,15 @@
-# Fallstudie & Verfahrensdokumentation: Pāṇinis Grammatik (Otto von Böhtlingk, 1887)
+# Fallstudie: Pāṇinis Grammatik (Otto von Böhtlingk, 1887)
 
-> **Vollständige historische Digitalisierung, kanonischer Text-Abgleich und Erzeugung von durchsuchbarem Sandwich-Material für 3.997 Sūtras auf 478 Buchseiten.**
+> **Verfahrens-Validierung der AlexandriaSandwich-Pipeline anhand von Otto von Böhtlingks Dreischrift-Werk (Devanāgarī, Antiqua, IAST) auf 478 Buchseiten.**
 > 
-> 🔗 **Projekt-Repository:** [github.com/birchville-org/boethlingk](https://github.com/birchville-org/boethlingk)
+> 🔗 **Editions-Repository & Downloads:** [github.com/birchville-org/boethlingk](https://github.com/birchville-org/boethlingk)  
+> 📖 **Editions-Dokumentation & Artefakte:** [Pāṇinis Grammatik (Böhtlingk 1887)](https://birchville-org.github.io/boethlingk/)
+
+---
+
+> ℹ️ **Rollenverteilung & Abgrenzung:**  
+> AlexandriaSandwich ist die **generische Verarbeitungs-Engine** (IIIF-Scan-Ingestion, Margin Masking, Multimodale OCR, Sandwich-PDF-Assemblierung).  
+> Die konkrete philologische Edition, das kanonische Sūtra-Alignment, der typografische 1:1-Faksimile-Neusatz (STIX Two Text) sowie alle downloadbaren Release-Artefakte befinden sich im dedizierten Editions-Projekt **[boethlingk](https://github.com/birchville-org/boethlingk)**. Die folgende Darstellung dokumentiert den Durchlauf dieses Werkes durch die AlexandriaSandwich-Pipeline.
 
 ---
 
