@@ -2,6 +2,24 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.8.0] - 2026-10-27
+
+### Added
+- **Adaptiver Neusatz-Solver & Paritäts-Gate:**
+  - Portierung der 6-stufigen Satzspiegel-Skalierung und Layout-Optimierung aus den Satelliten-Editionen in das Alexandria-Framework.
+  - Automatisierte Verifikation von 1:1-Seitenkongruenz, Textintegrität und Satzsymmetrie.
+- **STIX Two Text Typografie-Stack:**
+  - Standardmäßige Einbindung von STIX Two Text für native OpenType-IAST-Kapitälchen mit echten Versal-Diakritika.
+- **Triage-Funnel & Service-Ökonomie:**
+  - Formale Dokumentation des Ingestion- und Triage-Modells für neue Editionsanfragen.
+  - Backlog-Item 999.3 für modulares Packaging (`alexandria-core`) und standardisierte Satelliten-Anbindung.
+
+### Changed
+- **Dokumentations-Entflechtung:**
+  - Trennung zwischen generischer Pipeline-Architektur in AlexandriaSandwich und philologisch-spezifischem Editions-Delta in den Satelliten (wie `boethlingk`).
+- **Nüchterne Sprachnorm:**
+  - Umstellung aller Leitfäden und Dokumentationen auf sachlichen, präzisen Birchville-Standard.
+
 ## [1.7.0] - 2026-10-23
 
 ### Added

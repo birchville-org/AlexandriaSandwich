@@ -6,7 +6,7 @@
 
 [![GitHub Pages](https://img.shields.io/badge/docs-gh--pages-blue?logo=github)](https://birchville-org.github.io/AlexandriaSandwich/)
 ![Build Status](https://img.shields.io/badge/docker-multi--arch-blue)
-![Release](https://img.shields.io/badge/release-v1.7.0-blue)
+![Release](https://img.shields.io/badge/release-v1.8.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Python](https://img.shields.io/badge/python-3.12-yellow)
 
