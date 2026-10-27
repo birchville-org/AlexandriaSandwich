@@ -127,7 +127,7 @@ Für den produktiven Service auf **`alex.birchville.org`** gilt daher ein ökono
              ┌───────────────────┴───────────────────┐
              │                                       │
     Pfad A: Generischer Bug                 Pfad B: Echter Spezialfall
-    (z. B. Spaltentrennung,                 (Kanonisches Monumentalwerk:
+    (z. B. Spaltentrennung,                 (Kanonisches Referenzwerk:
      Margin-Farbe, Ligaturen)                Pāṇini, Wörterbücher, etc.)
              │                                       │
              ▼                                       ▼
@@ -136,7 +136,7 @@ Für den produktiven Service auf **`alex.birchville.org`** gilt daher ein ökono
       (AlexandriaSandwich)                    (Eigenes Repo, z. B. boethlingk)
              │                                       │
              ▼                                       ▼
-      Alle zukünftigen Bücher                 Fokussierte Handarbeit,
+      Alle zukünftigen Bücher                 Fokussierte Kuration,
       profitieren automatisch                 QA-Viewer & TEI-P5-Modellierung
 ```
 
@@ -151,6 +151,6 @@ Für den produktiven Service auf **`alex.birchville.org`** gilt daher ein ökono
 
 Die Web-Oberfläche kommuniziert diese Grenze transparent:
 * **Standard-Verarbeitung:** Vollautomatische Erzeugung durchsuchbarer 1:1 Sandwich-PDFs und TEI-Texte für historische Druckwerke in lateinischen und indischen Standardschriften.
-* **Komplexe Sonderfälle:** Bei anspruchsvollen Monumentalwerken (mehrsprachiger philologischer Satz, mehrspaltige Wörterbücher mit tiefer Lemmastruktur, Vers- und Sūtra-Werke) reicht die generische Automatisierung naturgemäß nicht aus.
+* **Komplexe Sonderfälle:** Bei anspruchsvollen philologischen Editionen (mehrsprachiger Satz, mehrspaltige Wörterbücher mit tiefer Lemmastruktur, Vers- und Sūtra-Werke) reicht die generische Automatisierung nicht aus.
 * **Feedback-Schleife:** Entspricht das Resultat nicht den Erwartungen, wird der Fall mit dem Originalscan zur Begutachtung eingereicht. Wir prüfen, ob die Heuristik der Hauptpipeline erweitert werden kann (Pfad A) oder ob das Werk als kuratiertes Birchville-Editions-Projekt aufgesetzt werden soll (Pfad B).
 
