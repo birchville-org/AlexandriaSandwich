@@ -92,36 +92,36 @@ Nicht alle Entscheidungen können vollautomatisch getroffen werden. Das Service-
 
 ---
 
-## 4. Benutzer-Onboarding, 2FA-Autorisierung & Vorformulierte Aufträge
+## 4. Benutzer-Onboarding, 2FA-Autorisierung & Portal-Nutzung
 
-Um GPU- und Serverressourcen zu schützen und Ausführungsprozesse verifizierbar zuzuordnen, ist das AlexandriaSandwich-Portal (`https://alex.birchville.org`) über den **Birchville Onboarding-Meccano** und Authelia (Zwei-Faktor-Authentifizierung) abgesichert.
+Um GPU- und Serverressourcen zu schützen und Ausführungsprozesse verifizierbar zuzuordnen, ist das gesamte Alexandria-Portal (`https://alex.birchville.org`) inklusive der Dienste AlexandriaSandwich und TOC-Injection Studio über den **Birchville Onboarding-Meccano** und Authelia (Zwei-Faktor-Authentifizierung) abgesichert.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                      4-STUFEN-ONBOARDING-MECCANO                       │
 ├──────────────────┬──────────────────┬──────────────────┬───────────────┤
-│ 1. Antrag        │ 2. Bereitstellung│ 3. 2FA & Login   │ 4. Ausführung │
+│ 1. Antrag        │ 2. Bereitstellung│ 3. 2FA & Login   │ 4. Portal     │
 ├──────────────────┼──────────────────┼──────────────────┼───────────────┤
-│ • Mail-Generator │ • CLI-Hash gener.│ • auth.birchville│ • Ein-Klick-  │
-│   auf Portal     │ • Authelia YAML  │ • TOTP QR-Scan   │   Auftrags-   │
-│ • Projekt/Werk   │ • Job-Zuweisung  │   (Bitwarden/    │   Auslösung   │
-│   spezifizieren  │ • Einladungsmail │   Aegis/YubiKey) │ • Download    │
+│ • Mail-Generator │ • CLI-Hash gener.│ • auth.birchville│ • Alexandria- │
+│   auf Portal     │ • Authelia YAML  │ • TOTP QR-Scan   │   Pipeline    │
+│ • Dienst-Wahl    │ • Job-Zuweisung  │   (Bitwarden/    │ • TOC-Studio  │
+│   (Alex / TOC)   │ • Einladungsmail │   Aegis/YubiKey) │ • Download    │
 └──────────────────┴──────────────────┴──────────────────┴───────────────┘
 ```
 
 ### Der 4-Stufen-Workflow für Benutzer
 
 1. **Antrag über den Onboarding-Meccano (`https://birchville.org/onboarding`)**:
-   Der Nutzer ruft die Onboarding-Seite auf. Ein interaktiver Assistent generiert eine formatierte E-Mail-Vorlage mit Angaben zu Name, Institution, gewünschtem Werk, Scan-Material und allfälligen Vorab-Auftrags-IDs, die direkt an die Administration gesendet wird.
+   Der Nutzer ruft die Onboarding-Seite auf. Ein schlanker Assistent generiert eine formatierte E-Mail-Vorlage zur Freischaltung des gewünschten Dienstes (AlexandriaSandwich oder TOC-Injection Studio), die direkt an die Administration gesendet wird.
 
 2. **Bereitstellung & Einladung durch die Administration**:
-   Der Administrator generiert über `scripts/birchville_onboard.py` das Authelia-Konto und weist den vorformulierten Auftrag zu. Der Nutzer erhält eine bilinguale Einladungs-E-Mail mit Initialkennwort und Auftrags-Direktlink.
+   Der Administrator generiert über `scripts/birchville_onboard.py` das Authelia-Konto und weist bei Bedarf vorformulierte Aufträge zu. Der Nutzer erhält eine bilinguale Einladungs-E-Mail mit Initialkennwort und Portal-Direktlink.
 
 3. **2-Faktor-Authentifizierung (2FA) auf `auth.birchville.org`**:
    Der Nutzer meldet sich mit seinem Initialpasswort an, verknüpft seine Authenticator-App (Aegis, Bitwarden, Google Authenticator oder YubiKey FIDO2) und wählt ein persönliches Passwort.
 
-4. **Auftrag prüfen & auslösen auf `alex.birchville.org`**:
-   Im geschützten Portal sieht der Nutzer seinen vorformulierten Auftrag unter **"Ihre vorformulierten Aufträge (Bereit zur Ausführung)"**. Alle Parameter (DPI, Modell, Despeckle-Modus, Editions-Formate) sind bereits optimal hinterlegt. Ein Klick auf **`▶ Jetzt auslösen`** startet die Digitalisierungsstraße. Nach Abschluss stehen Sandwich-PDF, Neusatz-PDF, TEI-P5 und Markdown zum Download bereit.
+4. **Portal-Nutzung auf `alex.birchville.org`**:
+   Im geschützten Portal nutzt der Nutzer die Digitalisierungsstraße für neue oder vorformulierte Aufträge oder öffnet das TOC-Injection Studio (`/toc`). Vorformulierte Aufträge können mit einem Klick auf **`▶ Jetzt auslösen`** gestartet werden. Nach Abschluss stehen Sandwich-PDF, Neusatz-PDF, TEI-P5 und Markdown zum Download bereit.
 
 ### Administrator-Werkzeuge (`scripts/birchville_onboard.py`)
 
