@@ -18,6 +18,50 @@
   </div>
 </div>
 
+<!-- Vorformulierung / Staged Banner (falls noch nicht ausgeführt) -->
+{% if info.is_staged %}
+<div class="card" style="border: 2px solid var(--gold); background: rgba(217, 119, 6, 0.08); margin-bottom: 1.5rem; padding: 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span class="badge badge-gold" style="font-size: 0.82rem; margin-bottom: 0.4rem;">📋 Vorformulierter Auftrag &middot; Bereit zur Ausführung</span>
+      <h2 style="font-size: 1.5rem; margin: 0.2rem 0 0.3rem 0;">{{ job_opts.job_title or job }}</h2>
+      <p style="color: var(--text-2); margin: 0; font-size: 0.95rem;">
+        Zugewiesen an: <strong>{{ job_opts.assigned_to or "Freigegeben" }}</strong> &middot;
+        Scanvorlagen: <strong>{{ info.input_pages|length }}</strong> Seite(n) &middot;
+        Neusatz-Variante: <strong>{{ job_opts.target_edition|default("original")|capitalize }}</strong>
+      </p>
+    </div>
+    <form method="post" action="/jobs/{{ job }}/trigger?redirect=/status?job={{ job }}">
+      <button type="submit" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.8rem 1.8rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <span>▶</span> Auftrag jetzt auslösen
+      </button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- Admin: Benutzer-Zuordnung Widget -->
+{% if current_user.is_admin %}
+<div style="background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem;">
+  <form method="post" action="/jobs/{{ job }}/assign" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+    <div style="font-weight: 700; font-size: 0.9rem; color: var(--gold-light); display: flex; align-items: center; gap: 0.35rem;">
+      <span>👤</span> Benutzer-Zuordnung:
+    </div>
+    <div style="flex: 1 1 240px;">
+      <input type="text" name="assigned_to" value="{{ job_opts.assigned_to|default('') }}" placeholder="Benutzername oder E-Mail (z. B. client@uni.de)" style="width: 100%; padding: 0.4rem 0.6rem; font-size: 0.88rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text-1);">
+    </div>
+    <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.8rem; font-size: 0.82rem;">
+      💾 Zuordnung speichern
+    </button>
+    {% if job_opts.assigned_to %}
+    <span class="badge badge-blue" style="font-size: 0.78rem;">Aktuell: {{ job_opts.assigned_to }}</span>
+    {% else %}
+    <span style="font-size: 0.78rem; color: var(--text-dim);">(Aktuell kein Benutzer zugewiesen / öffentlich)</span>
+    {% endif %}
+  </form>
+</div>
+{% endif %}
+
 <!-- Parameter-Konfiguration & Re-Run Card -->
 <div class="card" style="border-left: 4px solid var(--gold); margin-bottom: 2rem; background: var(--bg-card);">
   <div style="margin-bottom: 1.25rem;">

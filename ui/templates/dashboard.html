@@ -1,18 +1,113 @@
 {% extends "base.html" %}
 {% block title %}Job-Dashboard — AlexandriaSandwich{% endblock %}
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
   <div>
-    <span class="badge badge-gold" style="margin-bottom: 0.5rem;">Pipeline Monitoring</span>
+    <span class="badge badge-gold" style="margin-bottom: 0.5rem;">Pipeline Monitoring &amp; Auftragsverwaltung</span>
     <h1 style="font-size: 2.2rem; margin-bottom: 0.3rem;">OCR Job-Dashboard</h1>
-    <p style="color: var(--text-muted);">Übersicht aller verarbeiteten Bücher, Konfidenz-Audits und erzeugten PDF-Sandwiches.</p>
+    <p style="color: var(--text-muted);">Übersicht aller verarbeiteten Bücher, Konfidenz-Audits, vorformulierten Aufträge und PDF-Sandwiches.</p>
   </div>
   <div style="display: flex; gap: 0.75rem;">
     <a href="/upload" class="btn btn-primary">
-      <span>➕</span> Neuer Upload
+      <span>➕</span> Neuer Upload / Vorformulierung
     </a>
   </div>
 </div>
+
+<!-- User Session & Access Banner -->
+<div style="background: var(--bg-alt); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+  <div style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.95rem;">
+    <span style="font-size: 1.15rem;">👤</span>
+    <span>Angemeldet als <strong>{{ current_user.name }}</strong> (<code>{{ current_user.user or current_user.email or "Gast" }}</code>)</span>
+    {% if current_user.is_admin %}
+    <span class="badge badge-gold" style="font-size: 0.75rem;">Administrator (Vollzugriff)</span>
+    {% else %}
+    <span class="badge badge-blue" style="font-size: 0.75rem;">Zugewiesene Aufträge</span>
+    {% endif %}
+  </div>
+  <div style="font-size: 0.85rem; color: var(--text-muted);">
+    {% if current_user.is_admin %}
+    Alle Aufträge sichtbar &middot; Berechtigt zum Zuweisen &amp; Freischalten
+    {% else %}
+    Sie sehen Ihre vorformulierten &amp; persönlich zugewiesenen Digitalisierungsaufträge
+    {% endif %}
+  </div>
+</div>
+
+<!-- Vorformulierte Aufträge (Staged Jobs) -->
+{% if staged_jobs %}
+<div class="card" style="border: 2px solid var(--gold); background: rgba(217, 119, 6, 0.06); margin-bottom: 2rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+      <span class="badge badge-gold" style="margin-bottom: 0.25rem;">Bereit zur Ausführung</span>
+      <h2 style="font-size: 1.35rem; margin: 0.2rem 0 0;">📋 Vorformulierte Aufträge</h2>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0.2rem 0 0;">
+        Diese Aufträge wurden mit Scanvorlage und optimierten Satz-Parametern vorformuliert und warten auf Ihre Freigabe.
+      </p>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Auftrags-Kennung / Titel</th>
+          <th>Zugewiesen an</th>
+          <th>Seiten</th>
+          <th>Neusatz-Variante</th>
+          <th>Sprache / Filter</th>
+          <th>Erstellt</th>
+          <th style="text-align: right;">Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sj in staged_jobs %}
+        <tr>
+          <td>
+            <a href="/jobs/{{ sj.name }}" style="font-family: var(--font-heading); font-weight: 700; color: var(--gold-light); font-size: 1.05rem;">
+              {{ sj.job_title or sj.name }}
+            </a>
+            {% if sj.job_title and sj.job_title != sj.name %}
+            <div style="font-size: 0.78rem; color: var(--text-dim);">Job: <code>{{ sj.name }}</code></div>
+            {% endif %}
+          </td>
+          <td>
+            {% if sj.assigned_to %}
+            <span class="badge badge-blue" style="font-size: 0.8rem;">👤 {{ sj.assigned_to }}</span>
+            {% else %}
+            <span style="color: var(--text-dim); font-size: 0.85rem;">Freigegeben (Öffentlich)</span>
+            {% endif %}
+          </td>
+          <td><strong>{{ sj.input_pages }}</strong> Seite(n)</td>
+          <td>
+            <span class="badge badge-gold" style="font-size: 0.78rem;">
+              {{ sj.target_edition|default("Standard")|capitalize }}
+            </span>
+          </td>
+          <td style="font-size: 0.85rem; color: var(--text-2);">
+            {{ sj.lang|default("deu+eng") }} &middot; Conf ≥ {{ sj.threshold|default(100) }}%
+          </td>
+          <td style="color: var(--text-dim); font-size: 0.82rem;">{{ sj.modified|default("—") }}</td>
+          <td style="text-align: right;">
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem;">
+              <a href="/jobs/{{ sj.name }}" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.82rem;">
+                Prüfen
+              </a>
+              <form method="post" action="/jobs/{{ sj.name }}/trigger" style="display:inline;"
+                    onsubmit="return confirm('Vorformulierten Auftrag \'{{ sj.job_title or sj.name }}\' jetzt auslösen?');">
+                <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.35rem 0.85rem; font-size: 0.82rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                  ▶ Jetzt auslösen
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
 
 <!-- Quick Stats Bar -->
 {% set total_pages = jobs|map(attribute='pages_total')|select('defined')|sum %}
@@ -48,6 +143,7 @@
       <thead>
         <tr>
           <th>Job-Kennung</th>
+          <th>Zuordnung</th>
           <th>Status</th>
           <th>Seiten</th>
           <th>Pass / Fail</th>
@@ -65,8 +161,11 @@
           <td>
             <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
               <a href="/jobs/{{ j.name }}" style="font-family: var(--font-heading); font-weight: 700; color: var(--gold-light);">
-                {{ j.name }}
+                {{ j.job_title or j.name }}
               </a>
+              {% if j.job_title and j.job_title != j.name %}
+              <span style="font-size: 0.72rem; color: var(--text-dim);">(<code>{{ j.name }}</code>)</span>
+              {% endif %}
               {% if j.runs_count > 0 %}
               <a href="/jobs/{{ j.name }}#runsSection" class="badge badge-gold" style="font-size: 0.7rem; padding: 0.1rem 0.45rem;" title="{{ j.runs_count }} archivierte Vorläufe vorhanden">
                 {{ j.runs_count }} Vorläufe
@@ -75,9 +174,18 @@
             </div>
           </td>
           <td>
+            {% if j.assigned_to %}
+            <span class="badge badge-blue" style="font-size: 0.75rem;">👤 {{ j.assigned_to }}</span>
+            {% else %}
+            <span style="color: var(--text-dim); font-size: 0.78rem;">Öffentlich</span>
+            {% endif %}
+          </td>
+          <td>
             {% if j.status == "PASS" %}<span class="badge badge-pass">✓ PASS</span>
             {% elif j.status == "FAIL" %}<span class="badge badge-fail">✗ FAIL</span>
-            {% else %}<span class="badge badge-blue">—</span>{% endif %}
+            {% elif j.status == "VORBEREITET" or j.is_staged %}<span class="badge badge-gold">📋 VORBEREITET</span>
+            {% elif j.status == "IN_ARBEIT" %}<span class="badge badge-blue">⏳ IN ARBEIT</span>
+            {% else %}<span class="badge badge-blue">{{ j.status }}</span>{% endif %}
           </td>
           <td>{{ j.pages_total if j.pages_total else j.input_pages }}</td>
           <td><span style="color: #34d399;">{{ j.pass|default(0) }}</span> / <span style="color: #f87171;">{{ j.fail|default(0) }}</span></td>

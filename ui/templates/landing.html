@@ -379,24 +379,40 @@
     <!-- Service 2 Card -->
     <div class="case-card" style="border: 1px solid rgba(37, 99, 235, 0.4); background: linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);">
       <div>
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-          <span class="badge badge-blue">Service 2 &middot; Vollständige Pipeline</span>
-          <span style="font-size: 0.8rem; color: #93c5fd; font-weight: 700; background: rgba(59, 130, 246, 0.15); padding: 0.2rem 0.5rem; border-radius: 4px;">🧠 Hybrid-OCR</span>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <span class="badge badge-blue">Service 2 &middot; Geschützter Zugang</span>
+          <span style="font-size: 0.8rem; color: #93c5fd; font-weight: 700; background: rgba(59, 130, 246, 0.15); padding: 0.2rem 0.5rem; border-radius: 4px;">🔐 2FA &amp; Vorformulierung</span>
         </div>
-        <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">📤 Scan-Digitalisierung</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
-          Für historische Buchscans &amp; Faksimiles: Vollständige OCR-Pipeline mit Sanskrit/IAST-Synchronisation, 1:1 Sandwich-PDF, TEI-P5 und Typst-Neusatz.
+        <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">📤 Scan-Digitalisierung &amp; Neusatz</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.25rem;">
+          Für historische Buchscans &amp; Handschriften: Vollständige OCR-Pipeline mit Sanskrit/IAST-Synchronisation, 1:1 Sandwich-PDF, TEI-P5 und Typst-Neusatz.
         </p>
-        <ul style="list-style: none; padding: 0; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem; color: var(--text-main);">
+
+        <!-- Ablauf & Benutzer-Aktivierung -->
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; font-size: 0.88rem;">
+          <div style="font-weight: 700; color: #93c5fd; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+            <span>ℹ️</span> Ablauf für Auftragnehmer &amp; Benutzer:
+          </div>
+          <ol style="margin: 0; padding-left: 1.2rem; color: var(--text-2); display: flex; flex-direction: column; gap: 0.35rem; line-height: 1.45;">
+            <li><strong>Anfrage per E-Mail:</strong> Melden Sie sich vorab bei der Editionsleitung für Account-Freischaltung und Projekt-Besprechung.</li>
+            <li><strong>Auftragsvorformulierung:</strong> Ihr Auftrag wird mit Scanvorlage und optimierten Satz-Parametern vorformuliert und Ihrem Account zugewiesen.</li>
+            <li><strong>2FA-Login &amp; Start:</strong> Nach 2FA-Anmeldung lösen Sie Ihren vorbereiteten Auftrag im Portal mit einem Klick aus.</li>
+          </ol>
+        </div>
+
+        <ul style="list-style: none; padding: 0; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; color: var(--text-main);">
           <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>1:1 Sandwich-PDF</strong> (Originalscan + kalibrierter OCR-Layer)</li>
-          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>KI-Synchronisation</strong> via Mistral VLM für Devanagari &amp; IAST</li>
-          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>Typst Vektorsatz</strong>, TEI-P5 Langzeitarchivierung &amp; EPUB 3</li>
-          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>Transparenter Kostenausweis</strong> (Mistral-Tarif 0,004 $ / Seite)</li>
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>KI-Synchronisation</strong> via Mistral VLM für Devanāgarī &amp; IAST</li>
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>Typst Vektorsatz</strong> (Interlinear, Monolingual, Bilingual)</li>
+          <li style="display: flex; align-items: center; gap: 0.6rem;"><span>✓</span> <strong>Persönliche Zuordnung</strong> &amp; geschützte Auftragsausführung</li>
         </ul>
       </div>
-      <div>
-        <a href="/upload" class="btn btn-primary" style="width: 100%; text-align: center; justify-content: center; font-size: 1rem; padding: 0.8rem;">
-          <span>📤</span> Zum Scan-Portal öffnen
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="mailto:{{ admin_contact_email }}?subject=AlexandriaSandwich%20Digitalisierungsauftrag" class="btn btn-primary" style="flex: 1 1 200px; text-align: center; justify-content: center; font-size: 0.95rem; padding: 0.75rem 1rem; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+          <span>✉️</span> Zugang &amp; Auftrag anfragen
+        </a>
+        <a href="/login" class="btn btn-secondary" style="flex: 1 1 150px; text-align: center; justify-content: center; font-size: 0.95rem; padding: 0.75rem 1rem;">
+          <span>🔐</span> 2FA Login
         </a>
       </div>
     </div>

@@ -43,6 +43,8 @@ SHOW_PROJECT_LINKS = os.getenv("SHOW_PROJECT_LINKS", "false").lower() in {"1", "
 INGRESS_LABEL = os.getenv("INGRESS_LABEL", "Traefik v3 + Authelia 2FA" if AUTH_LOGIN_URL else "Lokal / Standalone")
 SITE_NAME = os.getenv("SITE_NAME", "AlexandriaSandwich")
 BRAND_LOGO = os.getenv("BRAND_LOGO", "/static/birchville_logo.png")
+ADMIN_CONTACT_EMAIL = os.getenv("ADMIN_CONTACT_EMAIL", "alex@birchville.org").strip()
+ADMIN_USERS = {u.strip().lower() for u in os.getenv("ADMIN_USERS", "marco,admin,administrator").split(",") if u.strip()}
 
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
@@ -56,6 +58,7 @@ templates.env.globals.update({
     "show_project_links": SHOW_PROJECT_LINKS,
     "ingress_label": INGRESS_LABEL,
     "brand_logo": BRAND_LOGO,
+    "admin_contact_email": ADMIN_CONTACT_EMAIL,
 })
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
@@ -132,6 +135,89 @@ def _check_csrf_origin(request: Request) -> None:
             allowed.update({"synology.local", "alex.local", "alex.birchville.org"})
         if origin_host and origin_host not in allowed:
             raise HTTPException(status_code=403, detail="Cross-Origin Request Blocked")
+
+
+# ── User Identity & Role-Based Access Control (Authelia 2FA) ───────────────────
+def _get_current_user(request: Request) -> dict[str, Any]:
+    """Extrahiert Benutzeridentität und Gruppen aus den von Authelia/Traefik übergebenen Headern."""
+    user = (
+        request.headers.get("remote-user")
+        or request.headers.get("x-forwarded-user")
+        or ""
+    ).strip()
+    email = (
+        request.headers.get("remote-email")
+        or request.headers.get("x-forwarded-email")
+        or ""
+    ).strip()
+    name = (
+        request.headers.get("remote-name")
+        or ""
+    ).strip()
+    groups_raw = (
+        request.headers.get("remote-groups")
+        or ""
+    ).strip()
+    groups = [g.strip().lower() for g in groups_raw.split(",") if g.strip()]
+
+    is_authenticated = bool(user or email)
+    is_admin = ("admins" in groups) or (user.lower() in ADMIN_USERS)
+
+    # Lokaler Entwicklungsmodus ohne aktives SSO
+    if not is_authenticated and not AUTH_LOGIN_URL:
+        user = "admin"
+        name = "Lokaler Administrator"
+        is_authenticated = True
+        is_admin = True
+
+    return {
+        "user": user,
+        "email": email,
+        "name": name or user or "Gast",
+        "groups": groups,
+        "is_admin": is_admin,
+        "is_authenticated": is_authenticated,
+    }
+
+
+def _check_job_access(job_data: dict[str, Any], current_user: dict[str, Any], action: str = "view") -> bool:
+    """Prüft Berechtigungen für einen Job (view/trigger/edit/delete/assign)."""
+    if current_user.get("is_admin"):
+        return True
+
+    assigned = (job_data.get("assigned_to") or "").strip().lower()
+    if not assigned:
+        # Nicht zugewiesene Jobs sind für authentifizierte Benutzer triggerbar, für alle sichtbar
+        if action in {"trigger", "edit", "delete", "assign"}:
+            return current_user.get("is_authenticated", False)
+        return True
+
+    u_user = current_user.get("user", "").strip().lower()
+    u_email = current_user.get("email", "").strip().lower()
+    return assigned in {u_user, u_email}
+
+
+def _get_job_options(job: str) -> dict[str, Any]:
+    """Liest die gespeicherten job_options.json eines Jobs aus Input- oder Output-Verzeichnis ein."""
+    candidates = [
+        INPUT_DIR / job / "job_options.json",
+        OUT_DIR / job / "job_options.json",
+    ]
+    for c in candidates:
+        if c.is_file():
+            try:
+                return json.loads(c.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+    return {}
+
+
+def _render_template(request: Request, name: str, context: dict[str, Any] | None = None) -> HTMLResponse:
+    """Rendert ein Jinja-Template mit automatischer Injektion von current_user und Systemparametern."""
+    ctx = dict(context or {})
+    ctx["current_user"] = _get_current_user(request)
+    ctx["admin_contact_email"] = ADMIN_CONTACT_EMAIL
+    return templates.TemplateResponse(request, name, ctx)
 
 
 # ── Job Execution Concurrency Lock ───────────────────────────────────────────
@@ -647,10 +733,23 @@ def _list_jobs():
             name = f.name.replace(".tei.xml", "")
             if name in jobs: jobs[name]["has_tei"] = True
 
-    # Ergänze Vorläufe und Artefakt-Status für jeden Job
+    # Ergänze Vorläufe, Artefakt-Status und Job-Optionen (Zuordnung, Vorformulierung) für jeden Job
     for name, entry in jobs.items():
         entry["runs_count"] = len(_list_job_runs(name))
         entry["has_artifacts"] = _get_job_artifacts(name)["has_any"]
+
+        opts = _get_job_options(name)
+        entry["assigned_to"] = opts.get("assigned_to", "")
+        entry["assigned_name"] = opts.get("assigned_name", "")
+        entry["job_title"] = opts.get("job_title", "")
+        entry["target_edition"] = opts.get("target_edition", "original")
+        entry["options"] = opts
+
+        # Vorformulierungs-Erkennung (Staged)
+        is_staged = bool(opts.get("is_staged")) or (entry.get("input_pages", 0) > 0 and not entry.get("has_report"))
+        entry["is_staged"] = is_staged
+        if is_staged and entry.get("status") in {"-", "FAIL", None}:
+            entry["status"] = opts.get("status") or "VORBEREITET"
 
     return sorted(jobs.values(), key=lambda j: j.get("modified", ""), reverse=True)
 
@@ -1153,7 +1252,7 @@ async def landing(request: Request):
     jobs = _list_jobs()
     total_pages = sum(j.get("pages_total", j.get("input_pages", 0)) for j in jobs)
     total_mistral = sum(j.get("mistral_ok", 0) for j in jobs)
-    return templates.TemplateResponse(request, "landing.html", {
+    return _render_template(request, "landing.html", {
         "jobs": jobs[:6],
         "total_jobs": len(jobs),
         "total_pages": total_pages,
@@ -1163,8 +1262,31 @@ async def landing(request: Request):
 
 @app.api_route("/dashboard", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def dashboard(request: Request):
-    jobs = _list_jobs()
-    return templates.TemplateResponse(request, "dashboard.html", {"jobs": jobs})
+    current_user = _get_current_user(request)
+    all_jobs = _list_jobs()
+
+    # Rollenbasierte Sichtbarkeit:
+    # Administratoren sehen alle Aufträge.
+    # Reguläre Benutzer sehen ihre zugewiesenen Aufträge sowie unzugewiesene Vorlagen.
+    if current_user.get("is_admin"):
+        visible_jobs = all_jobs
+    else:
+        u_user = current_user.get("user", "").strip().lower()
+        u_email = current_user.get("email", "").strip().lower()
+        visible_jobs = [
+            j for j in all_jobs
+            if not j.get("assigned_to") or j.get("assigned_to", "").strip().lower() in {u_user, u_email}
+        ]
+
+    staged_jobs = [j for j in visible_jobs if j.get("is_staged")]
+    completed_jobs = [j for j in visible_jobs if not j.get("is_staged")]
+
+    return _render_template(request, "dashboard.html", {
+        "jobs": visible_jobs,
+        "staged_jobs": staged_jobs,
+        "completed_jobs": completed_jobs,
+        "current_user": current_user,
+    })
 
 
 @app.api_route("/status", methods=["GET", "HEAD"], response_class=HTMLResponse)
@@ -1174,7 +1296,7 @@ async def status_page(request: Request):
     if requested_job and requested_job in data.get("all_jobs_progress", {}):
         data["featured_job"] = requested_job
         data["featured_progress"] = data["all_jobs_progress"][requested_job]
-    return templates.TemplateResponse(request, "status.html", {
+    return _render_template(request, "status.html", {
         "status_data": data
     })
 
@@ -1202,6 +1324,16 @@ async def login_redirect():
     if AUTH_LOGIN_URL:
         return RedirectResponse(url=AUTH_LOGIN_URL, status_code=302)
     return RedirectResponse(url="/upload", status_code=302)
+
+
+@app.api_route("/logout", methods=["GET", "HEAD"])
+async def logout_redirect():
+    if AUTH_LOGIN_URL:
+        logout_base = AUTH_LOGIN_URL.split("?")[0].rstrip("/")
+        if not logout_base.endswith("/logout"):
+            logout_base = logout_base + "/logout"
+        return RedirectResponse(url=f"{logout_base}?rd={PUBLIC_URL}/", status_code=302)
+    return RedirectResponse(url="/", status_code=302)
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
@@ -1357,7 +1489,7 @@ async def scan_portal_redirect():
 @app.api_route("/toc", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def toc_studio_page(request: Request):
     """Dedizierte Subpage: PDF TOC & Outline Studio (100% lokal, 0 Fremdkosten)."""
-    return templates.TemplateResponse(request, "toc_studio.html", {})
+    return _render_template(request, "toc_studio.html", {})
 
 
 @app.post("/toc/inspect")
@@ -1523,7 +1655,7 @@ async def toc_download_file(token: str, filename: str):
 async def upload_form(request: Request):
     jobs = _list_jobs()
     total_cost = sum(j.get("mistral_cost_usd", 0.0) for j in jobs)
-    return templates.TemplateResponse(request, "upload.html", {
+    return _render_template(request, "upload.html", {
         "result": None,
         "recent_jobs": jobs[:6],
         "total_mistral_cost": round(total_cost, 4),
@@ -1534,6 +1666,9 @@ async def upload_form(request: Request):
 async def upload_submit(
     request: Request,
     job: str = Form(...),
+    job_title: str = Form(""),
+    assigned_to: str = Form(""),
+    stage_only: bool = Form(False),
     lang: str = Form("deu+eng"),
     threshold: int = Form(100),
     limit: int = Form(0),
@@ -1555,9 +1690,22 @@ async def upload_submit(
     job_dir = INPUT_DIR / job
     job_dir.mkdir(parents=True, exist_ok=True)
 
+    current_user = _get_current_user(request)
+    eff_assigned = assigned_to.strip()
+    if not eff_assigned and not current_user.get("is_admin"):
+        eff_assigned = current_user.get("user") or current_user.get("email") or ""
+
+    if stage_only:
+        trigger = False
+
     # Save job configuration options
     job_options = {
         "job": job,
+        "job_title": job_title.strip() or job,
+        "assigned_to": eff_assigned,
+        "is_staged": stage_only or not trigger,
+        "status": "VORBEREITET" if (stage_only or not trigger) else "IN_ARBEIT",
+        "created_by": current_user.get("user", "admin"),
         "lang": lang,
         "threshold": threshold,
         "limit": limit,
@@ -1649,7 +1797,7 @@ async def upload_submit(
 
     jobs = _list_jobs()
     total_cost = sum(j.get("mistral_cost_usd", 0.0) for j in jobs)
-    return templates.TemplateResponse(request, "upload.html", {
+    return _render_template(request, "upload.html", {
         "result": result,
         "recent_jobs": jobs[:6],
         "total_mistral_cost": round(total_cost, 4),
@@ -1703,6 +1851,16 @@ async def job_status_api(job: str):
 async def trigger_job(request: Request, job: str):
     _check_csrf_origin(request)
     job = _validate_job(job)
+    current_user = _get_current_user(request)
+    saved_opts = _get_job_options(job)
+
+    if not _check_job_access(saved_opts, current_user, action="trigger"):
+        assigned = saved_opts.get("assigned_to") or "einem anderen Benutzer"
+        raise HTTPException(
+            status_code=403,
+            detail=f"Zugriff verweigert: Auftrag '{job}' ist {assigned} zugeordnet.",
+        )
+
     if not await _acquire_job_lock(job):
         raise HTTPException(
             status_code=409,
@@ -1735,14 +1893,39 @@ async def trigger_job(request: Request, job: str):
 
         if "lang" in raw_params:
             lang = _validate_lang(str(raw_params["lang"]))
+        elif saved_opts.get("lang"):
+            lang = _validate_lang(str(saved_opts["lang"]))
+
         if "threshold" in raw_params:
             threshold = _validate_threshold(raw_params["threshold"])
+        elif "threshold" in saved_opts:
+            threshold = _validate_threshold(saved_opts["threshold"])
+
         if "limit" in raw_params:
             limit = _validate_limit(raw_params["limit"])
+        elif "limit" in saved_opts:
+            limit = _validate_limit(saved_opts["limit"])
+
         if "no_mistral" in raw_params:
             no_mistral = str(raw_params["no_mistral"]).lower() in ("1", "true", "yes", "on")
+        elif "no_mistral" in saved_opts:
+            no_mistral = bool(saved_opts["no_mistral"])
+
         if "skip_preprocess" in raw_params:
             skip_preprocess = str(raw_params["skip_preprocess"]).lower() in ("1", "true", "yes", "on")
+
+        # Update job options with execution metadata
+        opt_path = (INPUT_DIR / job / "job_options.json") if (INPUT_DIR / job).is_dir() else (OUT_DIR / job / "job_options.json")
+        if saved_opts:
+            saved_opts["triggered_by"] = current_user.get("user") or "anonymous"
+            saved_opts["triggered_by_email"] = current_user.get("email") or ""
+            saved_opts["triggered_at"] = datetime.now(timezone.utc).isoformat()
+            saved_opts["status"] = "IN_ARBEIT"
+            saved_opts["is_staged"] = False
+            try:
+                opt_path.write_text(json.dumps(saved_opts, indent=2, ensure_ascii=False))
+            except Exception:
+                pass
 
         # Vor Re-Run: bisherigen Lauf automatisch archivieren, falls Artefakte vorhanden sind
         current_art = _get_job_artifacts(job)
@@ -1789,8 +1972,17 @@ async def trigger_job(request: Request, job: str):
 @app.get("/jobs/{job}", response_class=HTMLResponse)
 async def job_detail(job: str, request: Request):
     job = _validate_job(job)
+    current_user = _get_current_user(request)
+    job_opts = _get_job_options(job)
+    if not _check_job_access(job_opts, current_user, action="view"):
+        assigned = job_opts.get("assigned_to") or "einem anderen Benutzer"
+        raise HTTPException(
+            status_code=403,
+            detail=f"Zugriff verweigert: Auftrag '{job}' ist {assigned} zugeordnet.",
+        )
+
     info = {"name": job}
-    report_path = REPORTS_DIR / f"{job}.pipeline.json"
+    report_path = (OUT_DIR / job / f"{job}.pipeline.json") if (OUT_DIR / job / f"{job}.pipeline.json").exists() else (REPORTS_DIR / f"{job}.pipeline.json")
     info["report"] = json.loads(report_path.read_text()) if report_path.exists() else None
     in_dir = INPUT_DIR / job
     info["input_pages"] = sorted([p.name for p in in_dir.iterdir() if p.suffix.lower() in {".png", ".jpg", ".tif", ".jpeg"}]) if in_dir.is_dir() else []
@@ -1843,8 +2035,32 @@ async def job_detail(job: str, request: Request):
     # Artefakte und vorangegangene Läufe
     info["artifacts"] = _get_job_artifacts(job)
     info["runs"] = _list_job_runs(job)
+    info["options"] = job_opts
+    info["is_staged"] = bool(job_opts.get("is_staged")) or (len(info["input_pages"]) > 0 and not info["report"])
+    info["assigned_to"] = job_opts.get("assigned_to", "")
+    info["assigned_name"] = job_opts.get("assigned_name", "")
 
-    return templates.TemplateResponse(request, "job_detail.html", {"job": job, "info": info})
+    return _render_template(request, "job_detail.html", {"job": job, "info": info, "job_opts": job_opts})
+
+
+@app.post("/jobs/{job}/assign")
+async def assign_job(request: Request, job: str, assigned_to: str = Form(""), assigned_name: str = Form("")):
+    _check_csrf_origin(request)
+    job = _validate_job(job)
+    current_user = _get_current_user(request)
+    if not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Nur Administratoren können Aufträge zuweisen.")
+
+    opt_path = (INPUT_DIR / job / "job_options.json") if (INPUT_DIR / job).is_dir() else (OUT_DIR / job / "job_options.json")
+    opts = _get_job_options(job)
+    opts["job"] = job
+    opts["assigned_to"] = assigned_to.strip()
+    opts["assigned_name"] = assigned_name.strip()
+    opts["assigned_by"] = current_user.get("user")
+    opts["assigned_at"] = datetime.now(timezone.utc).isoformat()
+    opt_path.parent.mkdir(parents=True, exist_ok=True)
+    opt_path.write_text(json.dumps(opts, indent=2, ensure_ascii=False))
+    return RedirectResponse(url=f"/jobs/{job}", status_code=303)
 
 
 @app.get("/jobs/{job}/download-zip")
@@ -2142,17 +2358,17 @@ async def job_edit(job: str, request: Request):
     job = _validate_job(job)
     pdf = _get_sandwich_pdf(job)
     if pdf is None:
-        return templates.TemplateResponse(request, "editor.html", {
+        return _render_template(request, "editor.html", {
             "job": job, "error": "Kein Sandwich-PDF gefunden. Starte zuerst die Pipeline.", "pages": [], "corrections_template": {}, "info": None
         })
     if not _HAS_PATHB:
-        return templates.TemplateResponse(request, "editor.html", {
+        return _render_template(request, "editor.html", {
             "job": job, "error": f"PDF-Textlayer-Modul nicht verfügbar: {_PATHB_ERR}", "pages": [], "corrections_template": {}, "info": None
         })
     try:
         text = _pdftotext(pdf)
     except Exception as e:
-        return templates.TemplateResponse(request, "editor.html", {
+        return _render_template(request, "editor.html", {
             "job": job, "error": f"Text-Extraktion fehlgeschlagen: {e}", "pages": [], "corrections_template": {}, "info": None
         })
 
@@ -2171,7 +2387,7 @@ async def job_edit(job: str, request: Request):
                 all_tokens.add(t)
     corrections_template = {t: t for t in sorted(all_tokens)[:100]}
 
-    return templates.TemplateResponse(request, "editor.html", {
+    return _render_template(request, "editor.html", {
         "job": job, "pages": pages, "corrections_template": corrections_template,
         "error": None, "info": {"sandwich_pdf": str(pdf), "total_pages": len(pages)}
     })

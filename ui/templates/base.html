@@ -51,9 +51,18 @@
       <a href="/upload" class="btn btn-primary btn-sm" title="Buchscans hochladen & OCR starten">
         <span>📤</span> Scan-Upload
       </a>
+      {% if current_user and current_user.is_authenticated and (auth_login_url or current_user.user != "admin") %}
+      <span class="badge badge-gold" title="Angemeldet via Authelia 2FA: {{ current_user.email or current_user.user }}" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.65rem;">
+        <span>👤</span> <strong>{{ current_user.name }}</strong>{% if current_user.is_admin %} <span style="font-size: 0.72rem; opacity: 0.85;">(Admin)</span>{% endif %}
+      </span>
       {% if auth_login_url %}
-      <a href="/login" class="btn btn-secondary btn-sm" title="Mit SSO anmelden">
-        <span>🔐</span> Login
+      <a href="/logout" class="btn btn-secondary btn-sm" title="Von 2FA-Sitzung abmelden">
+        <span>↪</span> Logout
+      </a>
+      {% endif %}
+      {% elif auth_login_url %}
+      <a href="/login" class="btn btn-secondary btn-sm" title="Mit 2FA anmelden">
+        <span>🔐</span> 2FA Login
       </a>
       {% endif %}
       <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Zwischen heller und dunkler Ansicht wechseln" title="Zwischen heller und dunkler Ansicht wechseln">

@@ -31,6 +31,9 @@ from ui.main import (
     _check_csrf_origin,
     _extract_zip,
     parse_toc_content,
+    _get_current_user,
+    _check_job_access,
+    _get_job_options,
 )
 
 
@@ -193,6 +196,60 @@ class TestCsrfOriginCheck(unittest.TestCase):
         with self.assertRaises(HTTPException) as ctx:
             _check_csrf_origin(req)
         self.assertEqual(ctx.exception.status_code, 403)
+
+
+class TestUserAccessAndStaging(unittest.TestCase):
+    def test_current_user_from_headers(self):
+        req = MagicMock()
+        req.headers = {
+            "remote-user": "scholar_indology",
+            "remote-email": "scholar@university.edu",
+            "remote-name": "Dr. Indologist",
+            "remote-groups": "researchers,users",
+        }
+        user = _get_current_user(req)
+        self.assertEqual(user["user"], "scholar_indology")
+        self.assertEqual(user["email"], "scholar@university.edu")
+        self.assertEqual(user["name"], "Dr. Indologist")
+        self.assertTrue(user["is_authenticated"])
+        self.assertFalse(user["is_admin"])
+
+    def test_admin_user_detection(self):
+        req = MagicMock()
+        req.headers = {
+            "remote-user": "admin",
+            "remote-email": "admin@example.org",
+            "remote-groups": "admins,staff",
+        }
+        user = _get_current_user(req)
+        self.assertTrue(user["is_admin"])
+        self.assertTrue(user["is_authenticated"])
+
+    def test_job_access_control(self):
+        admin_user = {"user": "admin", "email": "admin@example.org", "is_admin": True, "is_authenticated": True}
+        client_a = {"user": "client_a", "email": "a@uni.de", "is_admin": False, "is_authenticated": True}
+        client_b = {"user": "client_b", "email": "b@uni.de", "is_admin": False, "is_authenticated": True}
+        anon_user = {"user": "", "email": "", "is_admin": False, "is_authenticated": False}
+
+        # 1. Job assigned to client_a
+        job_a = {"name": "tantrasara_kap3", "assigned_to": "client_a"}
+        self.assertTrue(_check_job_access(job_a, admin_user, action="view"))
+        self.assertTrue(_check_job_access(job_a, admin_user, action="trigger"))
+        self.assertTrue(_check_job_access(job_a, client_a, action="view"))
+        self.assertTrue(_check_job_access(job_a, client_a, action="trigger"))
+
+        # Client B cannot view or trigger Job A
+        self.assertFalse(_check_job_access(job_a, client_b, action="view"))
+        self.assertFalse(_check_job_access(job_a, client_b, action="trigger"))
+        self.assertFalse(_check_job_access(job_a, anon_user, action="view"))
+        self.assertFalse(_check_job_access(job_a, anon_user, action="trigger"))
+
+        # 2. Public / unassigned job
+        job_public = {"name": "open_grammar", "assigned_to": ""}
+        self.assertTrue(_check_job_access(job_public, client_b, action="view"))
+        self.assertTrue(_check_job_access(job_public, client_b, action="trigger"))
+        self.assertTrue(_check_job_access(job_public, anon_user, action="view"))
+        self.assertFalse(_check_job_access(job_public, anon_user, action="trigger"))
 
 
 if __name__ == "__main__":

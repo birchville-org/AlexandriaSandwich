@@ -181,8 +181,17 @@
     <h2 style="margin-top:2rem;">Schritt 2: Job konfigurieren</h2>
     <div class="grid">
       <div class="form-group">
-        <label for="job">Job-Name (Ordnername)</label>
+        <label for="job">Job-Kennung (Ordnername)</label>
         <input type="text" id="job" name="job" placeholder="z.B. boethlingk-1887" required>
+      </div>
+      <div class="form-group">
+        <label for="job_title">Titel / Werkbezeichnung (Optional)</label>
+        <input type="text" id="job_title" name="job_title" placeholder="z.B. Tantrasāra Kapitel 3 (Abhinavagupta)">
+      </div>
+      <div class="form-group">
+        <label for="assigned_to">Benutzer-Zuordnung (E-Mail oder Benutzername)</label>
+        <input type="text" id="assigned_to" name="assigned_to" placeholder="{% if current_user.is_admin %}z.B. user@uni-hamburg.de oder leer für alle{% else %}{{ current_user.user or current_user.email }}{% endif %}" value="{% if not current_user.is_admin %}{{ current_user.user or current_user.email }}{% endif %}">
+        <small class="text-muted">{% if current_user.is_admin %}Weist diesen Auftrag einem spezifischen Benutzer zu (nur dieser sieht &amp; triggert ihn).{% else %}Ihrem Account zugeordnet.{% endif %}</small>
       </div>
       <div class="form-group">
         <label for="lang">OCR-Sprache</label>
@@ -460,9 +469,21 @@
         </div>
       </div>
     </details>
-    <div class="form-group checkbox-group">
-      <input type="checkbox" id="trigger" name="trigger" value="true" checked>
-      <label for="trigger">Pipeline nach Upload automatisch starten</label>
+    <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; margin-top:1.25rem; margin-bottom:1.25rem;">
+      <div style="display:flex; flex-direction:column; gap:0.75rem;">
+        <div class="form-group checkbox-group" style="margin:0;">
+          <input type="checkbox" id="trigger" name="trigger" value="true" checked onchange="onTriggerToggle(this)">
+          <label for="trigger" style="font-weight:600; cursor:pointer;">
+            🚀 Pipeline nach Upload sofort ausführen (Live-Verarbeitung)
+          </label>
+        </div>
+        <div class="form-group checkbox-group" style="margin:0; padding-left:1.6rem;">
+          <input type="checkbox" id="stage_only" name="stage_only" value="true" onchange="onStageToggle(this)">
+          <label for="stage_only" style="cursor:pointer; color:var(--gold-light);">
+            📋 <strong>Als vorformulierten Auftrag hinterlegen:</strong> Lädt Scanvorlage hoch, speichert die gewählte Editions- &amp; Filter-Matrix und stellt den Auftrag bereit (Ausführung erfolgt manuell nach 2FA-Login).
+          </label>
+        </div>
+      </div>
     </div>
     <button type="submit" class="btn" id="submitBtn">📤 Buch hochladen &amp; OCR starten</button>
     <div id="uploadProgress" class="alert alert-info" style="display:none; margin-top:1rem;">
@@ -623,6 +644,26 @@ function updateStrategyHighlights() {
       badge.textContent = 'Modus: Individuell (' + t + ' %, Mistral aktiv)';
       badge.style.color = 'var(--text-muted)';
     }
+  }
+}
+
+function onStageToggle(cb) {
+  const triggerEl = document.getElementById('trigger');
+  const btn = document.getElementById('submitBtn');
+  if (cb.checked) {
+    if (triggerEl) triggerEl.checked = false;
+    if (btn) btn.innerHTML = '💾 Vorformulierten Auftrag speichern';
+  } else {
+    if (btn) btn.innerHTML = '📤 Buch hochladen &amp; OCR starten';
+  }
+}
+
+function onTriggerToggle(cb) {
+  const stageEl = document.getElementById('stage_only');
+  const btn = document.getElementById('submitBtn');
+  if (cb.checked) {
+    if (stageEl) stageEl.checked = false;
+    if (btn) btn.innerHTML = '📤 Buch hochladen &amp; OCR starten';
   }
 }
 
