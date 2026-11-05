@@ -1540,6 +1540,13 @@ async def upload_submit(
     dpi: int = Form(300),
     no_mistral: bool = Form(False),
     trigger: bool = Form(False),
+    target_edition: str = Form("all"),
+    despeckle_mode: str = Form("safe_philological"),
+    spread_mode: str = Form("auto"),
+    font_family: str = Form("stix"),
+    body_start_page: int = Form(1),
+    title_page_style: str = Form("birchville"),
+    colophon_blank: bool = Form(False),
     files: list[UploadFile] = File(...),
 ):
     _check_csrf_origin(request)
@@ -1547,6 +1554,29 @@ async def upload_submit(
     lang = _validate_lang(lang)
     job_dir = INPUT_DIR / job
     job_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save job configuration options
+    job_options = {
+        "job": job,
+        "lang": lang,
+        "threshold": threshold,
+        "limit": limit,
+        "dpi": dpi,
+        "no_mistral": no_mistral,
+        "target_edition": target_edition,
+        "despeckle_mode": despeckle_mode,
+        "spread_mode": spread_mode,
+        "font_family": font_family,
+        "body_start_page": body_start_page,
+        "title_page_style": title_page_style,
+        "colophon_blank": colophon_blank,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        (job_dir / "job_options.json").write_text(json.dumps(job_options, indent=2, ensure_ascii=False))
+    except Exception as e:
+        logging.warning("Could not write job_options.json: %s", e)
+
     saved = []
     notes = []
 

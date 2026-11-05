@@ -23,7 +23,7 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
-    - content.action.edit
+    - content.tooltips
 
 extra_css:
   - stylesheets/birchville.css
@@ -42,6 +42,7 @@ plugins:
           build: true
           nav_translations:
             Startseite: Home
+            Benutzerhandbuch: User Manual
             Installation: Installation
             Verfahren: Pipeline Architecture
             Pipeline-Artefakte & Qualitätsstand: Pipeline Artifacts & Quality Status
@@ -57,6 +58,7 @@ plugins:
 
 nav:
   - Startseite: index.md
+  - Benutzerhandbuch: BENUTZERHANDBUCH.md
   - Installation: INSTALLATION.md
   - Verfahren: WIKI_VERFAHREN.md
   - Pipeline-Artefakte & Qualitätsstand: PIPELINE_ARTIFACTS.md
@@ -71,6 +73,7 @@ nav:
   - Fallstudie (Bṛhadāraṇyaka I.4): case-study-bau.md
 
 markdown_extensions:
+  - abbr
   - admonition
   - pymdownx.details
   - pymdownx.superfences

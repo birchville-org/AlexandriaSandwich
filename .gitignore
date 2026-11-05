@@ -34,6 +34,8 @@ site/
 /benchmark_results*/
 
 # Work-specific & book-specific scratch scripts
+/build_tantrasara_*.py
+/scripts/clean_tantrasara.py
 /scripts/*macdonell*
 /scripts/run_mistral_*
 /scripts/*panini*
@@ -41,6 +43,15 @@ site/
 /scripts/compare_layout.py
 /scripts/enhance_volume1_pdf.py
 /scripts/generate_aligned_vol1.py
+/scripts/build_thieme_*.py
+/scripts/build_cardona_*.py
+/scripts/build_rv1_32_digital.py
+/scripts/build_akhyatacandrika_digital.py
+/scripts/find_continuations.py
+/scripts/generate_exact_digital_edition.py
+/scripts/generate_typst_edition.py
+/scripts/test_mw_neusatz.py
+/templates/mw0012.typ
 /data/toc_kiparsky_*
 
 # Agent review status & transient runbook signatures

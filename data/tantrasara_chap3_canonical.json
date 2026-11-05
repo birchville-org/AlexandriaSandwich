@@ -1,0 +1,633 @@
+{
+  "metadata": {
+    "title": "TANTRASĀRAḤ",
+    "author": "Śrīmad Abhinavagupta",
+    "series_ind": "kaśmīra-saṃskṛta-granthāvalī — granthāṅkaḥ 17",
+    "series_lat": "Kashmir Series of Texts and Studies · No. XVII",
+    "chapter_num": 3,
+    "chapter_title": "Śāmbhavopāya",
+    "paper": "a5",
+    "font_main": "STIX Two Text",
+    "font_deva": "Devanagari MT",
+    "start_page": 10,
+    "has_title_page": true,
+    "base_filename": "Tantrasara, Kap. 3"
+  },
+  "pages": {
+    "10": {
+      "lines_orig": [
+        "यदेतत् प्रकाशरूपं शिवतत्त्वम् उक्तम्, तत्र",
+        "अखण्डमण्डले यदा प्रवेष्टुं न शक्नोति, तदा",
+        "स्वातन्र्यशक्तिमेव अधिकां पश्यन् निर्विकल्प-",
+        "मेव भैरवसमावेशम् अनुभवति , अयं च",
+        "अस्य उपदेशः,– सर्वमिदं भावजातं बोधगगने",
+        "प्रतिबिम्बमात्रं प्रतिबिम्बलक्षणोपेतत्वात् , इदं",
+        "हि प्रतिबिम्बस्य लक्षणं – यत् भेदेन भासितम्",
+        "अशक्तम् अन्यव्योमिश्रत्वेनैव भाति तत् प्रति-",
+        "बिम्बम्, मुखरूपमिव दर्पणे, रस इव दन्तो-"
+      ],
+      "lines_translit": [
+        "yadetat prakāśarūpaṃ śivatattvam uktam, tatra",
+        "akhaṇḍamaṇḍale yadā praveṣṭuṃ na śaknoti, tadā",
+        "svātanryaśaktimeva adhikāṃ paśyan nirvikalpa-",
+        "meva bhairavasamāveśam anubhavati , ayaṃ ca",
+        "asya upadeśaḥ,– sarvamidaṃ bhāvajātaṃ bodhagagane",
+        "pratibimbamātraṃ pratibimbalakṣaṇopetatvāt , idaṃ",
+        "hi pratibimbasya lakṣaṇaṃ – yat bhedena bhāsitam",
+        "aśaktam anyavyomiśratvenaiva bhāti tat prati-",
+        "bimbam, mukharūpamiva darpaṇe, rasa iva danto-"
+      ],
+      "lines_trans": [
+        "Was dieses als Lichtnatur beschriebene Śiva-Prinzip betrifft – wenn man dort,",
+        "in diesen ungeteilten Kreis, nicht einzutreten vermag, dann erfährt man,",
+        "indem man vor allem die autonome Freiheit als vorrangig erblickt, unmittelbar",
+        "das gedankenfreie Einswerden mit Bhairava; und dies",
+        "ist seine Unterweisung: – Die gesamte Gesamtheit dieser Seienden ist im Raum des Gewahrseins",
+        "bloßes Spiegelbild, weil sie das Wesensmerkmal eines Spiegelbildes besitzt; dies",
+        "nämlich ist das Wesensmerkmal eines Spiegelbildes: – Was, unfähig, in Getrenntheit",
+        "zu erscheinen, nur in Vermischung mit einem anderen aufscheint, das ist ein",
+        "Spiegelbild, wie die Gestalt des Antlitzes im Spiegel, wie der Geschmack im Mund-"
+      ],
+      "footnotes": [
+        "१ अधिकामिति कल्पनामात्रेण, न हि वस्तुतो वस्तुनः स्वभावोऽतिरिच्यत इति भावः ।",
+        "२ यथोक्तम् ।",
+        "'हन्त मुखं प्रतिबिम्बति प्रतिबिम्बयतु तथा तदपि दर्पणः ।",
+        "दर्पणः पुनर्यस्मिन् प्रतिबिम्बति सोऽपि ज्ञातव्यः ॥'",
+        "इति महार्थमञ्जर्याम् । तथा",
+        "'सदृशं भाति नयनदर्पणाम्बरवारिषु ।",
+        "तथाहि निर्मले रूपे रूपमेवावभासते ॥",
+        "प्रच्छन्नरागिणी कान्तप्रतिबिम्बितसुन्दरम् ।",
+        "दर्पणं कुचकुम्भाभ्यां स्पृशन्त्यपि न तृप्यति ॥'"
+      ],
+      "footnotes_trans": [
+        "1 „Als vorrangig“ meint dies bloß begrifflich; denn in Wahrheit übersteigt nichts das eigene Wesen der Wirklichkeit – so der Sinn.",
+        "2 Wie gesagt wurde:",
+        "„Wohlan, das Gesicht spiegelt sich; ebenso mag auch der Spiegel dies widerspiegeln.",
+        "Worin sich aber wiederum der Spiegel spiegelt – auch dieser muss erkannt werden!“",
+        "So in der Mahārthamañjarī. Ebenso:",
+        "„Ähnlich erscheint es in Auge, Spiegel, Himmel und Wasser;",
+        "denn in einer makellosen Form leuchtet eben nur die Form auf.",
+        "Die heimlich Liebende berührt den Spiegel, der durch das Spiegelbild des Geliebten schön ist,",
+        "mit ihren krugförmigen Brüsten, wird jedoch niemals satt.“"
+      ]
+    },
+    "11": {
+      "lines_orig": [
+        "दके, गन्ध इव भूभागे, स्पर्श इव कर्पूरता-",
+        "म्बूलादौ, शब्द इव गगने, शीतस्पर्शादिरिव",
+        "आन्तरजलधारणादौ । न च बिम्बाद्भेदेन प्रतिबिम्ब-",
+        "स्यावभासनम्, बिम्बस्य अव्यवहितत्वात् । न च",
+        "असावेव, रूपभेदात् । न च विजातीयात् दर्पणादेः",
+        "अस्य उत्पत्तिः, तदुत्थापनेऽपि तदनुवृत्तेः, तद्भेदे",
+        "ऽपि तदभेदात् । न च दर्पणस्यैव तथा परिणामः,",
+        "एकरूपत्वेनानेकपरिणामायोगात्, तदपगमेऽपि",
+        "तदवस्थानात् । तस्मात् निर्मलत्वमात्रमस्य",
+        "तथाभावः, तदपि च संविन्निर्मलत्वे पर्यवस्यती-",
+        "त्युक्तं बहुशः । तदेवम् अशक्यविवेचनतया भा-"
+      ],
+      "lines_translit": [
+        "dake, gandha iva bhūbhāge, sparśa iva karpūratā-",
+        "mbūlādau, śabda iva gagane, śītasparśādiriva",
+        "āntarajaladhāraṇādau | na ca bimbādbhedena pratibimba-",
+        "syāvabhāsanam, bimbasya avyavahitatvāt | na ca",
+        "asāveva, rūpabhedāt | na ca vijātīyāt darpaṇādeḥ",
+        "asya utpattiḥ, tadutthāpane'pi tadanuvṛtteḥ, tadbhede",
+        "'pi tadabhedāt | na ca darpaṇasyaiva tathā pariṇāmaḥ,",
+        "ekarūpatvenānekapariṇāmāyogāt, tadapagame'pi",
+        "tadavasthānāt | tasmāt nirmalatvamātramasya",
+        "tathābhāvaḥ, tadapi ca saṃvinnirmalatve paryavasyatī-",
+        "tyuktaṃ bahuśaḥ | tadevam aśakyavivecanatayā bhā-"
+      ],
+      "lines_trans": [
+        "speichel, wie der Duft in einem Stück Erde, wie die Berührung bei Kampfer und Betel,",
+        "wie der Laut im Raum, wie die kühle Berührung",
+        "bei innerer Wassermeditation. Und das Spiegelbild erscheint keineswegs",
+        "getrennt vom Urbild, da das Urbild unvermittelt anwesend ist. Und es ist auch",
+        "nicht eben jenes Urbild selbst, wegen der Verschiedenheit der Erscheinung. Und es entsteht",
+        "auch nicht aus dem andersartigen Spiegel usw., da es bei dessen Fortnahme fortbesteht, und bei dessen",
+        "Zerbrechen unversehrt bleibt. Und es ist auch nicht eine derartige Wandlung des Spiegels selbst,",
+        "da bei einheitlicher Natur vielfache Wandlung unmöglich ist und es auch nach dessen Vergehen",
+        "unverändert verharrt. Daher ist sein Sosein bloß dessen Reinheit;",
+        "doch auch diese mündet letztlich in die Makellosigkeit des Bewusstseins ein –",
+        "so wurde oft dargelegt. Somit ist das Spiegelbild ein Gegenstand, der sich nicht absondern lässt"
+      ],
+      "footnotes": [
+        "३ बिम्बलक्षणं यथा",
+        "'अव्यामिश्रं स्वतंत्रं सन्नासमानं मुखं यथा ।'",
+        "पं० २ ख० पु० स्थूलशून्यादिस्पर्शो वा इति पाठः ।",
+        "पं० १० क० पु० बिम्बप्रतिबिम्बेति पाठः ।",
+        "पं० ११ ख० पु० परमेश्वरस्वरूपं नाना स्पष्टमिति पाठः ।"
+      ],
+      "footnotes_trans": [
+        "3 Das Wesensmerkmal des Urbilds lautet:",
+        "„Unvermischt, autonom und wahrhaft aufscheinend – wie etwa ein Gesicht.“",
+        "Z. 2: In Hdschr. kha lautet die Lesart: „oder die Berührung des groben Raumes usw.“",
+        "Z. 10: In Hdschr. ka lautet die Lesart: „Urbild und Spiegelbild (bimba-pratibimba)“.",
+        "Z. 11: In Hdschr. kha lautet die Lesart: „die Wesensgestalt des höchsten Herrn ist mannigfaltig offenbar“."
+      ]
+    },
+    "12": {
+      "lines_orig": [
+        "समानं वस्तु प्रतिबिम्बम् । तच्च विश्वं, यतः",
+        "संविदि भासते, न च ततो भिद्यते, न च",
+        "सा संवित्, न च तदुत्था, न च तत्परिणामः,",
+        "निर्मलत्वात्तु सा तत्तद्रूपतयोदेति । तच्च",
+        "निर्मलत्वं संविदो यत् तस्याः स्वातन्त्र्यम्,",
+        "इच्छाशक्तिः, सा च अनुत्तराद् रूपाद् अभिन्नैव",
+        "सती अनतिरिक्तमपि विश्वम् अतिरिक्तमिव दर्श-",
+        "यितुम् उन्मुखीभवन्ती 'इच्छा' इत्युच्यते,",
+        "तत्रैवं विमृशेत् – 'यथा मम संविदि",
+        "प्रतिबिम्बितं वस्तु न ततोऽतिरिक्तम्, तथा",
+        "सर्वोऽयं प्रकाशात्मा संवित्स्वभावः, तस्मिंश्च"
+      ],
+      "lines_translit": [
+        "samānaṃ vastu pratibimbam | tacca viśvaṃ, yataḥ",
+        "saṃvidi bhāsate, na ca tato bhidyate, na ca",
+        "sā saṃvit, na ca tadutthā, na ca tatpariṇāmaḥ,",
+        "nirmalatvāttu sā tattadrūpatayodeti | tacca",
+        "nirmalatvaṃ saṃvido yat tasyāḥ svātantryam,",
+        "icchāśaktiḥ, sā ca anuttarād rūpād abhinnaiva",
+        "satī anatiriktamapi viśvam atiriktamiva darśa-",
+        "yitum unmukhībhavantī 'icchā' ityucyate,",
+        "tatraivaṃ vimṛśet – 'yathā mama saṃvidi",
+        "pratibimbitaṃ vastu na tato'tiriktam, tathā",
+        "sarvo'yaṃ prakāśātmā saṃvitsvabhāvaḥ, tasmiṃśca"
+      ],
+      "lines_trans": [
+        "und so aufscheint. Und dieses ist das Universum; denn",
+        "es leuchtet im Bewusstsein auf, unterscheidet sich nicht von ihm, und ist doch",
+        "nicht jenes Bewusstsein selbst, stammt nicht daraus ab und ist keine Wandlung desselben;",
+        "infolge seiner Makellosigkeit jedoch tritt dieses in den jeweiligen Gestalten hervor. Und jene",
+        "Makellosigkeit des Bewusstseins ist seine unumschränkte Freiheit,",
+        "die Willenskraft; diese aber, die von der unübertrefflichen Gestalt ungetrennt ist,",
+        "wird, indem sie sich anschickt, das Universum, obschon nicht verschieden, als verschieden zu zeigen,",
+        "als „Wille“ bezeichnet.",
+        "Hierbei vergegenwärtige man sich folgendes: – „Wie in meinem Bewusstsein",
+        "der gespiegelte Gegenstand nicht verschieden davon ist, ebenso",
+        "besteht dieses Ganze wesenhaft aus Licht und Bewusstsein, und darin"
+      ],
+      "footnotes": [
+        "४ 'शक्तयोऽस्य जगत् सर्वम्' इत्युक्त्या शक्तीनां विश्वव्यवस्थापकत्वम् ।",
+        "५ इच्छाशक्तेर्लक्षणं यथा",
+        "'संघट्टेऽस्मिंश्चिदात्मत्वाद्यत्तत्प्रत्यवमर्शनम् ।",
+        "इच्छाशक्तिः.................. ॥'",
+        "पं० ६ ख० पु० वस्तुनो जडता इति पाठः ।"
+      ],
+      "footnotes_trans": [
+        "4 Gemäß dem Ausspruch „Seine Kräfte sind das gesamte Weltall“ stiften die Kräfte die Weltordnung.",
+        "5 Das Wesensmerkmal der Willenskraft lautet:",
+        "„Bei dieser Vereinigung ist das Gewahrwerden, das aus der Natur des Bewusstseins entspringt,",
+        "die Willenskraft...“",
+        "Z. 6: In Hdschr. kha lautet die Lesart: „Trägheit des Gegenstandes“."
+      ]
+    },
+    "13": {
+      "lines_orig": [
+        "विश्वमेतत् प्रतिबिम्बितम्' इति । अत्र",
+        "चासौ स्वातन्त्र्यविमर्शः – विश्वं हि संविदि",
+        "भासमानं संविन्मात्रम्, तथाहि–इच्छायामेव",
+        "अहंभावेन यदा विश्वम् अन्तः संकुचितम्",
+        "अभिन्नम् अवभासते, तदा ईशितव्येक्षणप्रवणम्",
+        "ईशनम् 'ईश्वरता', यदा तु इच्छाप्रसर-",
+        "प्रशमे तत्प्रसरणे वा यथारुचि स्वरूपे",
+        "अवस्थानम्, तदा 'ईशितव्यता' । एवम् इच्छा-",
+        "ज्ञाने अपि । तादृशेन च रूपेण प्रकाशमान-",
+        "स्तम्भस्वभावत्वात्, इष्यमाणं च न बाह्यवत्",
+        "स्फुटम्, स्फुटरूपत्वे तदेव निर्माणं स्यात्,",
+        "न इच्छा ईशनं वा, अतः अस्फुटत्वात् एव",
+        "श्रुतिमात्रं रलयोः, न व्यञ्जनवत् स्थितिः ।"
+      ],
+      "lines_translit": [
+        "viśvametat pratibimbitam' iti | atra",
+        "cāsau svātantryavimarśaḥ – viśvaṃ hi saṃvidi",
+        "bhāsamānaṃ saṃvinmātram, tathāhi–icchāyāmeva",
+        "ahaṃbhāvena yadā viśvam antaḥ saṃkucitam",
+        "abhinnam avabhāsate, tadā īśitavyekṣaṇapravaṇam",
+        "īśanam 'īśvaratā', yadā tu icchāprasara-",
+        "praśame tatprasaraṇe vā yathāruci svarūpe",
+        "avasthānam, tadā 'īśitavyatā' | evam icchā-",
+        "jñāne api | tādṛśena ca rūpeṇa prakāśamāna-",
+        "stambhasvabhāvatvāt, iṣyamāṇaṃ ca na bāhyavat",
+        "sphuṭam, sphuṭarūpatve tadeva nirmāṇaṃ syāt,",
+        "na icchā īśanaṃ vā, ataḥ asphuṭatvāt eva",
+        "śrutimātraṃ ralayoḥ, na vyañjanavat sthitiḥ |"
+      ],
+      "lines_trans": [
+        "ist dieses Universum widergespiegelt.“ Und hierbei",
+        "vollzieht sich jene Vergegenwärtigung der Freiheit: – Denn das im Bewusstsein",
+        "aufscheinende All ist reines Bewusstsein. Nämlich: Wenn im Willen selbst",
+        "durch das Ich-Bewusstsein das All im Inneren zusammengezogen",
+        "und ungetrennt aufscheint, dann ist das auf das zu Beherrschende gerichtete",
+        "Herrschen die „Souveränität“; wenn aber bei der Beruhigung",
+        "des Willensdrangs oder bei dessen Ausbreitung das Verharren im eigenen Wesen",
+        "nach Belieben geschieht, dann ist es „Beherrschtheit“. Ebenso verhält es sich bei Wille",
+        "und Erkenntnis. Und weil das, was in solcher Gestalt aufscheint, die Natur einer festen Säule hat,",
+        "ist das Gewollte nicht wie ein äußeres Objekt",
+        "deutlich ausgeprägt; wäre es deutlich, so wäre es bereits Schöpfung,",
+        "nicht aber Wille oder Herrschen; daher besteht wegen dieser Unausgeprägtheit",
+        "bei r und l bloß ein Hauchlaut, kein fester Stand wie bei Konsonanten."
+      ],
+      "footnotes": [
+        "६ यदुक्तम्",
+        "'स्वात्मप्रत्यवमर्शो यः प्रागभूदेकवीरकः ।",
+        "ज्ञातव्यविश्वोन्मेषात्मा ज्ञानशक्तिः प्रकीर्त्यते ॥'",
+        "७ क्रियाशक्त्यंशस्य ज्ञानशक्तिप्राधान्यात् इत्यर्थः ।",
+        "८ यदुक्तम्",
+        "'इच्छाशक्तिर्द्विरूपोक्ता क्षुभिताक्षुभिता च या ।",
+        "इष्यमाणं हि सा वस्तु द्वैरूप्येणावभासयेत् ॥'",
+        "९ स्तम्भः स्थैर्यमित्यर्थः ।    १० न साक्षाद्वर्णः ।"
+      ],
+      "footnotes_trans": [
+        "6 Wie gesagt wurde:",
+        "„Die Selbstrepräsentanz, die zuvor als der eine einzige Held bestand",
+        "und das Entfalten des gesamten zu Erkennenden ist – diese wird als Erkenntniskraft gepriesen.“",
+        "7 Das bedeutet: Weil der Anteil der Handlungskraft durch die Erkenntniskraft dominiert wird.",
+        "8 Wie gesagt wurde:",
+        "„Zweifach wird die Willenskraft genannt: erregt und unerregt;",
+        "den gewollten Gegenstand lässt sie nämlich in zweifacher Gestalt aufscheinen.“",
+        "9 „Säule“ bedeutet Festigkeit. — 10 Kein eigentlicher Buchstabe/Konsonant."
+      ]
+    },
+    "14": {
+      "lines_orig": [
+        "इच्छायाम् अभेदप्राधान्यात् ऋऌवर्णयोः",
+        "द्वित्वं नास्ति, भेदप्राधान्ये तु तदस्ति ।",
+        "ईकार-ऊकारयोस्तु ईशनेषितव्यतयोः परस्परं",
+        "संमेलने रूपद्वयम्, अनयोश्च मिथः संमेलने",
+        "चत्वारि रूपाणि – 'ए, ऐ, ओ, औ' इति ।",
+        "तेषु च पुनः संविन्मात्रांशविमर्शानुप्रवेशे",
+        "बिन्दुः, स्वातन्त्र्यशक्तिविमर्शानुप्रवेशे विसर्गः,",
+        "तदनुप्रवेशाभावे तु जडतैव । एवं स्वर-",
+        "वर्गः षोडशात्मा – संविन्मात्रम् अनुत्तरम्,",
+        "तन्निर्मलत्वम् आनन्दः, तद्विस्मयः इच्छा,",
+        "तदवस्थानम् ईशनम्, उभयसंमेलने ऋऌवर्णाः,"
+      ],
+      "lines_translit": [
+        "icchāyām abhedaprādhānyāt ṛḷvarṇayoḥ",
+        "dvitvaṃ nāsti, bhedaprādhānye tu tadasti |",
+        "īkāra-ūkārayostu īśaneṣitavyatayoḥ parasparaṃ",
+        "saṃmelane rūpadvayam, anayośca mithaḥ saṃmelane",
+        "catvāri rūpāṇi – 'e, ai, o, au' iti |",
+        "teṣu ca punaḥ saṃvinmātrāṃśavimarśānupraveśe",
+        "binduḥ, svātantryaśaktivimarśānupraveśe visargaḥ,",
+        "tadanupraveśābhāve tu jaḍataiva | evaṃ svara-",
+        "vargaḥ ṣoḍaśātmā – saṃvinmātram anuttaram,",
+        "tannirmalatvam ānandaḥ, tadvismayaḥ icchā,",
+        "tadavasthānam īśanam, ubhayasaṃmelane ṛḷvarṇāḥ,"
+      ],
+      "lines_trans": [
+        "Weil im Willen die Nicht-Getrenntheit vorherrscht, gibt es bei den Lauten ṛ und ḷ",
+        "keine Verdopplung; herrscht jedoch Getrenntheit vor, so existiert sie.",
+        "Bei den Lauten ī und ū aber entstehen durch wechselseitige Vereinigung",
+        "des Herrschens und Beherrschtwerdens zwei Gestalten; und bei deren gegenseitiger Vereinigung",
+        "vier Gestalten: – nämlich „e, ai, o, au“.",
+        "Und wenn bei diesen wiederum der Vergegenwärtigungsanteil des reinen Bewusstseins eintritt,",
+        "entsteht der Bindu; bei Eintritt der Vergegenwärtigung der autonomen Kraft entsteht der Visarga;",
+        "fehlt deren Eintritt jedoch, herrscht bloße Leblosigkeit. So umfasst die Klasse",
+        "der Vokale sechzehn Formen: – Reines Bewusstsein ist das Höchste (a),",
+        "dessen Reinheit ist die Wonne (ā), sein Staunen ist der Wille (i),",
+        "sein Beharren ist das Herrschen (ī); bei Vereinigung beider entstehen die Laute ṛ und ḷ,"
+      ],
+      "footnotes": [
+        "११ बीजयोनिरूपत्वादुभयत्वम् । अत एव नरसिंहवज्जात्यन्तरमिति महाभाष्यकारः ।",
+        "१२ तथा च मालिनीवार्तिके",
+        "'अनुत्तरात्समारभ्य ज्ञानशक्त्यन्तमीदृशम् । इच्छैव तु क्रियाशक्तिमीशनेन समास्थिता ॥",
+        "प्रकाशस्थितिलेशांशं गृह्णती गण्यतां गता । इच्छादि यच्च तत्पूर्वानुत्तरानन्दसंगतेः ॥",
+        "तदादिश्लेषयोगेन संध्यक्षरचतुष्टयम् । ततः स्वरूपसंवित्तिलाभाद्बिन्द्वादिका स्थितिः ।",
+        "ततः समग्रसंदर्भभरिताकाररूपिणी । विसर्गः किल शाक्तोऽसौ विक्षेप इति यः स्मृतः ॥",
+        "विसर्गस्यैव विश्लेषण इति सप्तदशी कला । क्वचिदष्टादशी सैव पुनः प्रक्षोभयोगतः ॥",
+        "अनुत्तरस्याकारस्य परभैरवरूपिणः । अकुलस्य परा येयं कौलिकी शक्तिरुत्तमा ॥",
+        "स एवायं विसर्गस्तु तस्माज्जातंमिदं जगत् । तस्य प्रक्षोभयोग्यत्वं प्रक्षोभकलनोदयः ॥'"
+      ],
+      "footnotes_trans": [
+        "11 Die Doppelnatur rührt daher, dass sie die Natur von Samen und Schoß besitzen. Deshalb sagt das Mahābhāṣya: „Wie Narasiṃha eine eigene Gattung.“",
+        "12 Und ebenso im Mālinīślokavārtika:",
+        "„Vom Höchsten (anuttara) anhebend bis zum Ende der Erkenntniskraft reicht dies. Der Wille aber tritt durch das Herrschen an die Handlungskraft heran;",
+        "indem sie einen winzigen Anteil des Lichtstandes ergreift, gelangt sie zur Zählung. Und was Wille usw. ist, entsteht durch Verbindung mit Anuttara und Ānanda;",
+        "durch deren Verschmelzung mit jenen entsteht die Vierheit der Diphthonge. Darauf folgt durch Erlangung des Selbstbewusstseins der Stand von Bindu usw.;",
+        "sodann die von der Fülle des Zusammenhangs erfüllte Gestalt: die Aussendung (visarga), die als Entäußerung der Śakti überliefert ist.",
+        "Die Entfaltung eben dieses Visarga gilt als siebzehnte Phase; bisweilen wird sie durch erneute Erregung gar zur achtzehnten.",
+        "Diese höchste kaulische Kraft des formlosen Anuttara, welcher die Natur des höchsten Bhairava hat –",
+        "eben sie ist dieser Visarga; aus ihm ist dieses Weltall geboren. Seine Erregbarkeit ist das Aufkeimen der schöpferischen Regung.“"
+      ]
+    },
+    "15": {
+      "lines_orig": [
+        "प्रसरणे एऐओऔवर्णाः, संविन्मात्रविमर्शः",
+        "बिन्दुः, स्वातन्त्र्यविमर्शः विसर्गः, तदिदं षो-",
+        "डशधा स्वातन्त्र्यं भैरवस्य । यदा तु इदन्ता-",
+        "संविदि स्वातन्त्र्यशक्तिं विमृशति, तदा",
+        "तद्विषयभेदात् पञ्चधा – धरामौख्यम्, जलमौ-",
+        "ख्यम्, वह्निमौख्यम्, वायुमौख्यम्, व्योममौख्य-",
+        "मिति । तच्च प्रत्येकं पञ्चधा – स्वातन्त्र्य-",
+        "विमर्शात्, संविद्विमर्शात्, ज्ञानविमर्शात्,",
+        "क्रियाविमर्शात्, जडविमर्शाच्चेति । एवं पञ्च-",
+        "विंशतिः स्पर्शाः । एवं तदन्तःकरणपञ्चके,",
+        "ज्ञानेन्द्रियपञ्चके, कर्मेन्द्रियपञ्चके, तन्मात्रप-"
+      ],
+      "lines_translit": [
+        "prasaraṇe eaioauvarṇāḥ, saṃvinmātravimarśaḥ",
+        "binduḥ, svātantryavimarśaḥ visargaḥ, tadidaṃ ṣo-",
+        "ḍaśadhā svātantryaṃ bhairavasya | yadā tu idantā-",
+        "saṃvidi svātantryaśaktiṃ vimṛśati, tadā",
+        "tadviṣayabhedāt pañcadhā – dharāmaukhyam, jalamau-",
+        "khyam, vahnimaukhyam, vāyumaukhyam, vyomamaukhya-",
+        "miti | tacca pratyekaṃ pañcadhā – svātantrya-",
+        "vimarśāt, saṃvidvimarśāt, jñānavimarśāt,",
+        "kriyāvimarśāt, jaḍavimarśācceti | evaṃ pañca-",
+        "viṃśatiḥ sparśāḥ | evaṃ tadantaḥkaraṇapañcake,",
+        "jñānendriyapañcake, karmendriyapañcake, tanmātrapa-"
+      ],
+      "lines_trans": [
+        "bei Ausbreitung die Laute e, ai, o, au; die Reflexion des reinen Bewusstseins ist",
+        "der Bindu, die Reflexion der Freiheit der Visarga; so stellt dies die sechzehnfache",
+        "Freiheit Bhairavas dar. Wenn man aber die Freiheitskraft im Bewusstsein",
+        "der Gegenständlichkeit reflektiert, dann gliedert sie sich nach Verschiedenheit",
+        "ihrer Objekte fünffach: – Vorrang der Erde, Vorrang des Wassers,",
+        "Vorrang des Feuers, Vorrang der Luft, Vorrang des Äthers.",
+        "Und dieses ist jeweils fünffach: – durch die Reflexion der Freiheit,",
+        "des Bewusstseins, der Erkenntnis,",
+        "des Handelns und der Trägheit. So ergeben sich fünfundzwanzig",
+        "Verschlusslaute. Ebenso ist die Reflexion in der Fünfheit der inneren Organe,",
+        "der Erkenntnissinne, der Handlungssinne, der feinstofflichen Elemente"
+      ],
+      "footnotes": [
+        "प्रक्षोभपूर्णताभावात्तदकुलक्रमोनता । इति षट्कस्वरूपात्मविमर्शान्दोलनोदितम् ॥",
+        "अनुत्तरस्वभावत्वादद्याद्यस्यैव विजृम्भितम् । स एव भगवानन्तर्लीनं प्रस्फुरदात्मकः ॥",
+        "अन्तःस्थसर्वभावौघपूर्णमध्यमशक्तिकः । स्वेच्छाक्षोभस्वभावोद्यज्जगदानन्दसुन्दरः ॥",
+        "नित्यं स्फुरति संपूर्णविसर्गरससुन्दरः । शिवशक्त्योः स संघट्टः स्नेह इत्यभिधीयते ॥",
+        "अत्रैव पूर्णवैसर्गपदे लब्धुं प्रवेशनम् । लेहनामन्थनेत्यादि संप्रदायमुपासते ॥",
+        "तथाहि मध्यमां नाडीमधिष्ठायाखिलं वपुः । प्राणयत्परमं तेजः प्रक्षुब्धामृतमान्यतः ॥",
+        "विसृष्टिरूपतां गच्छेद्व्याप्त्यानन्दचमत्क्रियाम् । अपूर्णा केवलं सा तु पूर्णा तु भगवन्मयी ॥",
+        "तेन वैसर्गिकी शक्तिरेकैवेयं विजृम्भते । विसर्ग एव प्रक्षोभः प्रयत्नद्विगुणत्वतः ॥",
+        "हकारो नाम विश्लेषां व्यञ्जनानां प्रसूतिकृत् । स एव च पुनर्बिन्दुयोगात् स्वामेव भूमिकाम् ।",
+        "अनुत्तरामाश्रयते सोहं-भाव इहेष्यते ॥' इति ।",
+        "१३ तथाहि ।    पं० ४ ख० पु० तदुक्तमिति पाठः ।"
+      ],
+      "footnotes_trans": [
+        "Weil keine volle Erregung vorliegt, ist die Abfolge des Akula herabgestuft. So entstand sie aus dem Schwingen des sechsfachen Wesens;",
+        "da er die Natur des Anuttara besitzt, ist dies von jeher seine eigene Entfaltung. Er selbst ist der Erhabene, dessen Inneres in blitzhaftem Aufleuchten ruht;",
+        "erfüllt von der mittleren Kraft der Flut aller inneren Seienden, schön durch die Wonne des Alls, die aus der Erregung seines Willens aufkeimt,",
+        "erstrahlt er ewiglich, schön durch die Essenz der vollkommenen Aussendung. Diese Einigung von Śiva und Śakti wird als Liebeszuneigung bezeichnet.",
+        "Um eben in diese vollkommene Stufe des Visarga Eingang zu finden, pflegt man die Einweihungstradition des Kostens, Aufwühlens usw.",
+        "Denn nachdem das höchste Licht die mittlere Ader besetzt hat, belebt es den gesamten Körper und bringt allenthalben erregten Nektar hervor;",
+        "es geht in die Form der Aussendung über, erfüllt vom Staunen allumfassender Wonne. Isoliert ist sie unvollkommen, vollendet aber göttlicher Natur.",
+        "Dadurch entfaltet sich diese einzige Schöpferkraft des Visarga. Der Visarga selbst ist die Erregung infolge der Verdopplung der Anstrengung;",
+        "der Laut ha nämlich bringt durch Entfaltung alle Konsonanten hervor; und eben dieser nimmt durch Verbindung mit dem Bindu wieder die eigene,",
+        "höchste Stufe ein; dies wird hier als das So-’ham-Bewusstsein verstanden!“",
+        "13 Nämlich. — Z. 4: In Hdschr. kha lautet die Lesart: „so wurde gesagt“."
+      ]
+    },
+    "16": {
+      "lines_orig": [
+        "ञ्चके, महाभूतपञ्चके च विमर्शनं कार्यम् ।",
+        "यदा तु इच्छाज्ञानक्रियाणां परस्परसंभेदेन",
+        "विमर्शः, तदा अन्तस्थाः, यदा तु अस्फुट-",
+        "क्रियाविमर्शः तदा ऊष्माणः, ते च षट्,",
+        "ततः क्षकारः प्राणशक्त्यात्मा, तदन्तं वर्ण-",
+        "चक्रम् । एतच्च वर्णचक्रं विश्ववैचित्र्य-",
+        "चित्रितं महाभैरवस्फाररूपम्, इत्येवं यः",
+        "पश्यति स एव महाभैरवः । अत्र च बहु-",
+        "प्रकारो विमर्शः – वर्गप्राधान्येन पञ्चाश-",
+        "द्वर्गः, त्रिकप्राधान्ये पञ्चत्रिंशद्वर्गः,"
+      ],
+      "lines_translit": [
+        "ñcake, mahābhūtapañcake ca vimarśanaṃ kāryam |",
+        "yadā tu icchājñānakriyāṇāṃ parasparasaṃbhedena",
+        "vimarśaḥ, tadā antasthāḥ, yadā tu asphuṭa-",
+        "kriyāvimarśaḥ tadā ūṣmāṇaḥ, te ca ṣaṭ,",
+        "tataḥ kṣakāraḥ prāṇaśaktyātmā, tadantaṃ varṇa-",
+        "cakram | etacca varṇacakraṃ viśvavaicitrya-",
+        "citritaṃ mahābhairavasphārarūpam, ityevaṃ yaḥ",
+        "paśyati sa eva mahābhairavaḥ | atra ca bahu-",
+        "prakāro vimarśaḥ – vargaprādhānyena pañcāśa-",
+        "dvargaḥ, trikaprādhānye pañcatriṃśadvargaḥ,"
+      ],
+      "lines_trans": [
+        "und der fünf groben Elemente zu vollziehen.",
+        "Wenn aber die Reflexion durch die wechselseitige Durchdringung",
+        "von Wollen, Erkennen und Handeln geschieht, entstehen die Halbvokale; wenn aber die Reflexion",
+        "auf ungeklärter Handlungskraft beruht, entstehen die Zischlaute; und dieser sind sechs;",
+        "hierauf der Buchstabe kṣa, der die Lebenskraft verkörpert; mit ihm schließt der Laut-",
+        "kreis ab. Und dieser Lautkreis, der durch die bunte Mannigfaltigkeit des Universums geschmückt ist,",
+        "ist die Entfaltungsgestalt des großen Bhairava; wer dies so",
+        "erblickt, der ist wahrlich der große Bhairava. Und hierbei gibt es vielfältige",
+        "Arten der Vergegenwärtigung: – nach dem Vorrang der Lautgruppen eine fünfzigfache",
+        "Gruppe, nach dem Vorrang der Triade eine fünfunddreißigfache Gruppe,"
+      ],
+      "footnotes": [
+        "'अकुलास्पदशक्त्यात्मा प्रथमो वर्ग उत्थितः । अनारूपितरूपाया इच्छायाश्च ततः परम् ॥",
+        "वह्लिक्षमाजुषस्तस्य ट-तार्घं च द्वयं ततः । पादिरुन्मेषतो जात इति स्पर्शाः प्रकीर्तिताः ॥",
+        "इच्छाशक्तिर्द्विधा या च क्षुभिताक्षुभितस्वतः । सा विजातीयशक्त्यंशः प्रोन्मुखे याति यत्र ताम् ॥",
+        "सैव शीघ्रतरोपात्तज्ञेया कालुष्यरूषिता । विजातीयोन्मुखत्वेन रत्वं लत्वं च गच्छति ॥",
+        "तद्वदुन्मेषशक्तिर्द्विरूपा वैजात्यशक्तिगा । वकारत्वं........सृष्टिसारप्रवर्तकम् ॥'",
+        "इति मालिनीवार्तिके एव ।",
+        "१४ अकारादि विसर्गान्तं शिवतत्त्वम्, कादि-ङान्तं धरादि-नभोन्तं",
+        "पं० १० क० पु० प्रसृताः, ककारादि इति, कवगीदि इति च पाठः ।"
+      ],
+      "footnotes_trans": [
+        "„Die erste Gruppe ging hervor als Wesen der im Akula gründenden Kraft; hierauf folgt jene des noch ungestalteten Willens;",
+        "sodann die beiden Gruppen ṭa und ta, die Feuer und Erde zugeordnet sind; die pa-Gruppe entstand aus dem Erwachen – so die Verschlusslaute.",
+        "Die Willenskraft, die von Natur aus zweifach ist – erregt und unerregt –, geht, wo sie sich einem andersartigen Kraftanteil zuwendet,",
+        "getrübt von Unreinheit und rasch ergriffenem Erkenntnisobjekt, durch Hinwendung zum Andersartigen in die Laute r und l über;",
+        "ebenso geht die zweifache Erweckungskraft durch Hinwendung zum Andersartigen in das v über... welches das Schöpfungswesen antreibt.“",
+        "So eben im Mālinīślokavārtika.",
+        "14 Von a bis Visarga reicht das Śiva-Prinzip; von ka bis ṅa reicht die Fünfheit der groben Elemente von Erde bis Äther;",
+        "Z. 10: In Hdschr. ka lauten die Lesarten: „ausgebreitet“, „vom Laut ka an“ sowie „die ka-Klasse usw.“."
+      ]
+    },
+    "17": {
+      "lines_orig": [
+        "अष्टकपरामर्शे चक्रेश्वरसहित्वेन नववर्गः,",
+        "एकैकपरामर्शप्राधान्ये पञ्चाशदात्मकता ।",
+        "तत्रापि संभवदङ्गाङ्गभेदपरामर्शने एकाशीति-",
+        "रूपत्वम् । वस्तुतस्तु षट् एव परामर्शाः, प्रस-"
+      ],
+      "lines_translit": [
+        "aṣṭakaparāmarśe cakreśvarasahitvena navavargaḥ,",
+        "ekaikaparāmarśaprādhānye pañcāśadātmakatā |",
+        "tatrāpi saṃbhavadaṅgāṅgabhedaparāmarśane ekāśīti-",
+        "rūpatvam | vastutastu ṣaṭ eva parāmarśāḥ, prasa-"
+      ],
+      "lines_trans": [
+        "bei Vergegenwärtigung der Achtheit zusammen mit dem Herrn des Kreises eine neunteilige Gruppe,",
+        "beim Vorrang jeder einzelnen Vergegenwärtigung die Fünfzigzahl.",
+        "Und auch dort, wenn man die Unterscheidung möglicher Glieder und Hauptteile reflektiert, eine einundachtzigfache",
+        "Gestalt. In Wahrheit jedoch gibt es nur sechs Vergegenwärtigungen, welche durch die"
+      ],
+      "footnotes": [
+        "भूतपञ्चकम्, चादि-ञान्तं गन्धादि-शब्दान्तं तन्मात्रपञ्चकम्, टादि-णान्तं पादादि-वागन्तकर्मेन्द्रियपञ्चकम्, तादि-नान्तं घ्राणादि-श्रोत्रान्तं बुद्धिकरणपञ्चकम्, पादि-मान्तं मनोऽहंकार-बुद्धि-प्रकृति-पुरुषाख्यं पञ्चकम्, वाद्यादिशब्दवाच्या यकारादयो वकारान्ता राग-विद्या-कला-मायाख्यानि तत्त्वानि धारणाख्यान्तराणि-धारयन्ति पृथग्भूततयाभिमानयन्तीति धारणाणि इति ।",
+        "१५ यदुक्तम्",
+        "'पूर्वं विसृज्य सकलं कर्तव्यं शून्यतानाले ।",
+        "चित्तविश्रान्तिसंज्ञोऽयमाणवः संप्रकीर्तितः ॥'",
+        "१६ क्षकारसाहित्येन इत्यर्थः ।",
+        "१७ भागा अर्धमात्रारूपाः ।",
+        "पं० ४ ख० पु० इयति इति पाठान्तरं च ।"
+      ],
+      "footnotes_trans": [
+        "von ca bis ña die fünf Feinstoffe von Geruch bis Ton, von ṭa bis ṇa die fünf Handlungsorgane, von ta bis na die fünf Sinnesorgane, von pa bis ma die Fünfheit Geist, Ich-Sinn, Intellekt, Urstoff und Geistseele; die Laute von ya bis va sind die Prinzipien Leidenschaft, reines Wissen, Teilkraft und Täuschung, die innere Stützen heißen – sie stützen, indem sie als getrennt erachten lassen.",
+        "15 Wie gesagt wurde:",
+        "„Zuerst hat man alles fahrenzulassen und im Rohr der Leere zu verweilen;",
+        "dieses, das als Ruhen des Geistes bezeichnet wird, gilt als der individuelle Weg.“",
+        "16 Das bedeutet: Zusammen mit dem Laut kṣa.",
+        "17 „Teile“ bedeutet Halbmoren-Formen.",
+        "Z. 4: In Hdschr. kha findet sich überdies die Lesart: „in diesem Maße“."
+      ]
+    },
+    "18": {
+      "lines_orig": [
+        "रणप्रतिसंचरणयोगेन द्वादश भवन्तः परमेश्व-",
+        "रस्य विश्वशक्तिपूर्णत्वं पुष्णन्ति । ता एव एताः",
+        "परामर्शरूपत्वात् शक्तयो भगवत्यः श्रीकौ-",
+        "लिका इति निरुक्ताः । एते च शक्तिरूपा एव",
+        "शुद्धाः परामर्शाः शुद्धविद्यायां परापररूपत्वेन",
+        "मायोन्मेषमात्रसंकोचात् विद्याविद्येश्वररूपतां",
+        "भजन्ते । मायायां पुनः स्फुटीभूतभेदविभागा",
+        "मायीयवर्णतां भजन्ते, ये पश्यन्तीमध्यमावै-",
+        "खरीषु व्यावहारिकत्वम् आसाद्य वहीरूपतत्त्व-",
+        "स्वभावतापत्तिपर्यन्ताः ते च मायीया अपि",
+        "शरीरंकल्पत्वेन यदा दृश्यन्ते, यदा च तेषाम्"
+      ],
+      "lines_translit": [
+        "raṇapratisaṃcaraṇayogena dvādaśa bhavantaḥ parameśva-",
+        "rasya viśvaśaktipūrṇatvaṃ puṣṇanti | tā eva etāḥ",
+        "parāmarśarūpatvāt śaktayo bhagavatyaḥ śrīkau-",
+        "likā iti niruktāḥ | ete ca śaktirūpā eva",
+        "śuddhāḥ parāmarśāḥ śuddhavidyāyāṃ parāpararūpatvena",
+        "māyonmeṣamātrasaṃkocāt vidyāvidyeśvararūpatāṃ",
+        "bhajante | māyāyāṃ punaḥ sphuṭībhūtabhedavibhāgā",
+        "māyīyavarṇatāṃ bhajante, ye paśyantīmadhyamāvai-",
+        "kharīṣu vyāvahārikatvam āsādya vahīrūpatattva-",
+        "svabhāvatāpattiparyantāḥ te ca māyīyā api",
+        "śarīraṃkalpatvena yadā dṛśyante, yadā ca teṣām"
+      ],
+      "lines_trans": [
+        "Vereinigung von Entfaltung und Rückkehr zu zwölf werdend die universelle Kraftfülle",
+        "des höchsten Herrn nähren. Eben diese,",
+        "weil sie Vergegenwärtigungen sind, werden als die erhabenen kaulischen Kräfte",
+        "bezeichnet. Und diese reinen Vergegenwärtigungen, die reine Kraftnatur besitzen,",
+        "nehmen in der reinen Erkenntnis eine transzendent-immanente Gestalt an",
+        "und empfangen durch bloßes Aufkeimen von Māyā die Gestalt von Vidyā- und Vidyeśvara-Gottheiten.",
+        "In der Māyā hingegen nehmen sie, da sich die Differenzierungen der Getrenntheit verdeutlicht haben,",
+        "die Natur täuschungsbehafteter Laute an, welche über die Stufen Paśyantī, Madhyamā",
+        "und Vaikharī zur alltäglichen Konvention gelangen und bis zur Natur äußerer Seinsprinzipien",
+        "führen; und wenn jene, wenngleich von Māyā behaftet, gleichsam",
+        "als leblose Körper erblickt werden, und wenn ihnen"
+      ],
+      "footnotes": [
+        "१८ यदा अनुत्तर आनन्देच्छादिरूपेण प्रसृतस्तदा षट्, पुनर्यदासौ इच्छादिषु प्रतिसंचरंस्तदा एकारादयः षट्, अतः षण्ढस्वरवर्जं द्वादश इति ।",
+        "१९ कलयन्ति क्रमन्ते इति कालिकाः । यदुक्तम्",
+        "'परामर्शात्मकत्वेन विसर्गाक्षेपयोगतः ।",
+        "इयत्ताकलनाज्ज्ञानात् ताः प्रोक्ताः कालिकाः क्वचित् ॥'",
+        "इति ।",
+        "२० मायीया वर्णा जीवरहितं शरीरमिव, तेषां तु परामर्शो जीव इवास्ति अन्यथा तेऽकिंचित्करा इति भावः ।",
+        "पं० ६ क० पु० विद्येश्वरतारूपा मन्त्ररूपतामिति पाठः । ख० पु० विद्याविद्येश्वरबीजरूपा मन्त्ररूपतामिति पाठान्तरं च ।",
+        "पं० ९ ख० पु० व्यवहारकारित्वमिति पाठः ।"
+      ],
+      "footnotes_trans": [
+        "18 Wenn sich der Anuttara in Gestalt von Ānanda, Icchā usw. entfaltet, sind es sechs; kehrt er zurück, sind es e usw. – mithin zwölf ohne die Zwittervokale.",
+        "19 Sie bemessen und schreiten voran, daher Kālīs. Wie gesagt wurde:",
+        "„Weil sie das Wesen der Vergegenwärtigung haben und durch das Hervorbringen des Visarga wirken,",
+        "sowie durch das Ermessen des Maßes und durch Erkenntnis, werden sie bisweilen Kālikās genannt.“",
+        "So steht es geschrieben.",
+        "20 Die māyā-haften Laute gleichen einem leblosen Leib; ihre Vergegenwärtigung aber gleicht der Seele, andernfalls wären sie wirkungslos – so der Sinn.",
+        "Z. 6: In Hdschr. ka lautet die Lesart: „Gestalt der Vidyeśvaras bzw. Mantras“; in Hdschr. kha: „Samenform von Vidyā und Vidyeśvara bzw. Mantras“.",
+        "Z. 9: In Hdschr. kha lautet die Lesart: „das Bewirken alltäglichen Handelns“."
+      ]
+    },
+    "19": {
+      "lines_orig": [
+        "उक्तनयैरेतैः जीवितस्थानीयैः शुद्धैः परामर्शैः",
+        "प्रत्युज्जीवनं क्रियते तदा ते सवीर्या भवन्ति,",
+        "ते च तादृशा भोगमोक्षप्रदाः, इत्येवं सकल-",
+        "परामर्शविश्रान्तिमात्ररूपं प्रतिबिम्बितसमस्त-",
+        "तत्त्वभूतभुवनभेदम् आत्मानं पश्यतो निर्वि-",
+        "कल्पतया शांभवेन समावेशेन जीवन्मुक्तता ।",
+        "अत्रापि पूर्ववत् न मन्त्रादियन्त्रणा काचिदिति ।"
+      ],
+      "lines_translit": [
+        "uktanayairetaiḥ jīvitasthānīyaiḥ śuddhaiḥ parāmarśaiḥ",
+        "pratyujjīvanaṃ kriyate tadā te savīryā bhavanti,",
+        "te ca tādṛśā bhogamokṣapradāḥ, ityevaṃ sakala-",
+        "parāmarśaviśrāntimātrarūpaṃ pratibimbitasamasta-",
+        "tattvabhūtabhuvanabhedam ātmānaṃ paśyato nirvi-",
+        "kalpatayā śāṃbhavena samāveśena jīvanmuktatā |",
+        "atrāpi pūrvavat na mantrādiyantraṇā kāciditi |"
+      ],
+      "lines_trans": [
+        "nach den dargelegten Methoden durch diese reinsten Vergegenwärtigungen, welche die Stelle des Lebensprinzips einnehmen,",
+        "neue Belebung geschenkt wird, dann erlangen sie wirkmächtige Kraft,",
+        "und so beschaffen spenden sie Genuss und Erlösung. Wer nun auf solche Weise das Selbst,",
+        "welches reines Einmünden aller Vergegenwärtigungen ist und worin alle Unterschiede der Prinzipien,",
+        "Elemente und Welten gespiegelt sind, unverstellt erblickt, für den tritt durch gedankenfreie",
+        "Vereinigung mit Śambhu Erlösung bei Lebzeiten ein.",
+        "Auch hierbei besteht wie zuvor keinerlei Zwang zu Mantras oder anderen Mitteln."
+      ],
+      "footnotes": [
+        "* अत्रेयं छाया",
+        "'संवेदननिर्मलदर्पणेऽस्मिन् सकलं स्फुरन्निजसारम् ।",
+        "आमर्शनरससरहस्यविमृष्टरूपं स्वयं भाति ॥'",
+        "पं० १० ख० पु० निजविमर्शनसारमूर्त्या इति पाठः, ग० पु० विमर्शनसारयुक्तया इति, सारयोगादिति च पाठान्तरम् ।"
+      ],
+      "footnotes_trans": [
+        "* Hierzu die Sanskrit-Übertragung (chāyā):",
+        "„In diesem makellosen Spiegel des Bewusstseins leuchtet das Ganze auf, sein eigenes Wesen entfaltend,",
+        "und seine durch das Geheimnis der Vergegenwärtigung erforschte Gestalt strahlt von selbst.“",
+        "Z. 10: In Hdschr. kha lautet die Lesart: „durch die Gestalt des Wesens der eigenen Reflexion“, in Hdschr. ga: „verbunden mit dem Reflexionswesen“."
+      ],
+      "verses": [
+        [
+          "antarvibhāti sakalaṃ jagadātmanīha",
+          "Im Inneren leuchtet hier das gesamte Weltall im eigenen Selbst auf,",
+          "yadvadvicitraracanā mukurāntarāle .",
+          "so wie ein vielgestaltiges Bild im Inneren eines Spiegels.",
+          "bodhaḥ paraṃ nijavimarśarasānuvṛttyā",
+          "Doch das reine Erkennen vergegenwärtigt das All durch Hingabe an die Essenz der eigenen Reflexion –",
+          "viśvaṃ parāmṛśati no mukurastathā tu //",
+          "ein Spiegel hingegen vermag dies keineswegs!"
+        ],
+        [
+          "*saṃveaṇa nimmala dappaṇammi",
+          "Im makellosen Spiegel des reinen Bewusstseins",
+          "saalaṃ phuratta niasāraṃ .",
+          "leuchtet all dies, das eigene Wesen enthüllend, auf;",
+          "āmamisaṇa rasa sarahasa",
+          "vom Saft der Selbsterkenntnis innig durchdrungen,",
+          "vimaṭṭharūaṃ saīṃ bhāi //",
+          "erstrahlt seine erforschte Gestalt ganz aus sich selbst!"
+        ]
+      ]
+    },
+    "20": {
+      "lines_orig": [],
+      "lines_translit": [],
+      "lines_trans": [],
+      "footnotes": [
+        "* इति श्रुत्वा विमलमेनं निजात्मानं समस्तवस्तुमयम् ।",
+        "यो योजयति स परभैरवो भूत्वा परनिर्वृत्तिं लभते ॥'",
+        "पं० ५ ख० ग० पु० परोपायप्रकाशनमिति पाठः ।"
+      ],
+      "footnotes_trans": [
+        "* Sanskrit-Chāyā: „Dies vernommen habend, wer dieses makellose eigene Selbst, das aus allen Dingen besteht,",
+        "ausrichtet, der wird zum höchsten Bhairava und erlangt die höchste Seligkeit.“",
+        "Z. 5: In Hdschrr. kha und ga lautet die Lesart: „Darlegung der höchsten Mittel (paropāya-prakāśanam)“."
+      ],
+      "verses": [
+        [
+          "*ia suṇaa vimalameṇaṃ",
+          "Dies vernommen habend, richte man dieses makellose",
+          "nia appāṇaṃ samatthavatthamaam .",
+          "eigene Selbst, das aus allen Dingen besteht, aus:",
+          "jo joaya so parabherai",
+          "wer dies vollzieht, der wird zum höchsten Bhairava",
+          "bovva paraṇivvaī lahai //",
+          "und erlangt die höchste Erlösung!"
+        ]
+      ],
+      "colophon": [
+        "iti śrīmadabhinavaguptācāryaviracite tantrasāre śāmbhavopāya- \\\nprakāśanaṃ nāma tṛtīyamāhnikam // 3 //",
+        "So lautet im vom ehrwürdigen Meister Abhinavagupta verfassten Tantrasāra das dritte Kapitel, genannt: \\\n„Die Erleuchtung des Mittels Śivas (Śāmbhavopāya)“. // 3 //"
+      ]
+    }
+  }
+}

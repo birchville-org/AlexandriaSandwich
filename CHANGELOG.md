@@ -2,6 +2,29 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.9.0] - 2026-11-05
+
+### Added
+- **Multi-Edition-Generator & Kanonischer Datenstandard (`scripts/build_multi_edition.py`):**
+  - Parallele, deterministische Erzeugung von 4 Neusatz-Varianten (Monolingual Original, Interlinear Devanāgarī+IAST, reine Transliteration, bilinguale zeilenweise Übersetzung) mit 1:1 Seiten- und Zeilentreue.
+- **Distance-Transform Despeckling (`scripts/image_restoration.py`):**
+  - Schonende Scan-Restaurierung, die Staub im Weißraum beseitigt, jedoch kleinste diakritische Punkte (Anusvāra, Visarga, Virāma, Akzente) nahe der Textlinie vollständig schützt.
+- **Philologische Normalisierungs-Engine (`scripts/indic_normalizer.py`):**
+  - Bidirektionale Konvertierung indischer Ziffern, standardisierte Transliteration nach IAST und automatisierte Auflösung textkritischer Manuskript-Siglen (`पं०` -> `paṃ.`, `ख० पु०` -> `kha. pu.`).
+- **Typst Interlinear-Architektur (`templates/interlinear_edition.typ`):**
+  - Robuste `#block` + `#stack`-Hierarchie für interlineare Sprachpaare mit kontrollierter vertikaler Abstandshierarchie (Intra-Paar ~2,6 pt, Inter-Paar ~7,2 pt).
+  - Standardisiertes Wappen-Titelblatt (Birchville Scholarly Synthesis) und federnde Fußnoten-Verankerung (`#v(1fr, weak: true)`).
+- **Zweisprachiges Benutzerhandbuch & Glossar:**
+  - Bereitstellung des Handbuchs in Deutsch und Englisch (`docs/de/BENUTZERHANDBUCH.md`, `docs/en/BENUTZERHANDBUCH.md`).
+  - Aktivierung nativer MkDocs-Tooltips (`content.tooltips`, `abbr`) zur interaktiven Erklärung technischer Fachbegriffe per Hover.
+
+### Changed
+- **Service-Portal & UI-Parameter (`ui/templates/upload.html`, `ui/main.py`):**
+  - Erweiterung des Upload-Formulars um eine aufklappbare Neusatz- und Editions-Konfiguration (Zielformate, Despeckle-Modus, Doppelseiten-Splitting, Font-Stacks, Startseiten-Offset, Titelblatt-Stil).
+  - Atomare Serialisierung der Optionen in `job_options.json` im Job-Verzeichnis.
+- **PDF-Metadaten & Navigation (`scripts/postprocess_pdf_metadata.py`):**
+  - Erweiterte Injektion logischer PDF Page Labels (`Titel`, `10`..`20`) und Gliederungsmarken via PyMuPDF.
+
 ## [1.8.0] - 2026-10-27
 
 ### Added

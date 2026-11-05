@@ -373,6 +373,93 @@
         </div>
       </div>
     </details>
+
+    <!-- 🏛️ Erweiterte Editions-, Scan- & Neusatz-Optionen (Wissenschaftlicher Standard) -->
+    <details class="decision-guide" style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:0.8rem 1.2rem; margin-top:1rem; margin-bottom:1.5rem;" open>
+      <summary style="cursor:pointer; font-weight:700; color:var(--text-1); display:flex; align-items:center; gap:0.5rem; user-select:none; font-size:1.02rem;">
+        <span>🏛️ <strong>Editions-Matrix &amp; Neusatz-Optionen (Birchville Standard)</strong></span>
+        <span class="badge badge-amber" style="font-size:0.75rem; margin-left:auto;">Wahlmöglichkeiten</span>
+      </summary>
+      <div style="margin-top:1rem; font-size:0.9rem; line-height:1.5; color:var(--text-1);">
+        <p class="text-muted" style="margin-bottom:1rem; font-size:0.88rem;">
+          Wählen Sie Zielformate, Restaurierungsgrad und typografische Parameter für den wissenschaftlichen Neusatz:
+        </p>
+        
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+          <!-- Editionsformat -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="target_edition" style="font-weight:600;">Ziel-Edition / Ausgabemodus</label>
+            <select id="target_edition" name="target_edition" style="width:100%; padding:0.45rem;">
+              <option value="all" selected>Vollständige Matrix (Sandwich + 4 Neusatz-Editionen)</option>
+              <option value="bilingual">Bilinguale Studienausgabe (IAST + zeilenweise Übersetzung)</option>
+              <option value="interlinear">Interlinear-Neusatz (Devanāgarī + IAST zeilengetreu)</option>
+              <option value="transliteration">Reine Transliteration (IAST wissenschaftlich gesetzt)</option>
+              <option value="original">Monolingualer Neusatz (Reine Originalschrift Devanāgarī)</option>
+              <option value="sandwich">Nur 1:1 Faksimile (Sandwich-PDF mit Suchschicht)</option>
+            </select>
+            <small class="text-muted">Erzeugt deterministisch 1:1 seiten- und zeilentreue Vektor-PDFs.</small>
+          </div>
+
+          <!-- Scan-Bereinigung & Despeckling -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="despeckle_mode" style="font-weight:600;">Scan-Restaurierung &amp; Despeckling</label>
+            <select id="despeckle_mode" name="despeckle_mode" style="width:100%; padding:0.45rem;">
+              <option value="safe_philological" selected>Philologisch schonend (Schützt Diakritika &amp; Punkte)</option>
+              <option value="aggressive">Aggressiv (Grobe Bibliothekskopien mit Schmutzrand)</option>
+              <option value="off">Kein Despeckling (Originalscan unverändert belassen)</option>
+            </select>
+            <small class="text-muted">Distance-Transform verhindert das Löschen von Anusvāras und Akzenten.</small>
+          </div>
+
+          <!-- Seiten-Layout & Spreads -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="spread_mode" style="font-weight:600;">Doppelseiten-Splitting</label>
+            <select id="spread_mode" name="spread_mode" style="width:100%; padding:0.45rem;">
+              <option value="auto" selected>Automatisch erkennen (Landscape-Spreads trennen)</option>
+              <option value="split_spreads">Immer trennen (2 Buchseiten pro Scan)</option>
+              <option value="single_page">Bereits Einzelseiten (Nicht trennen)</option>
+            </select>
+            <small class="text-muted">Trennt Buchscans exakt am Falz in Verso und Recto.</small>
+          </div>
+
+          <!-- Schriftfamilie -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="font_family" style="font-weight:600;">Typografischer Font-Stack</label>
+            <select id="font_family" name="font_family" style="width:100%; padding:0.45rem;">
+              <option value="stix" selected>STIX Two Text (Indologie, IAST, vollständige Diakritika)</option>
+              <option value="libertine">Linux Libertine O (Europäische Geisteswissenschaften)</option>
+              <option value="deva_mt">Devanagari MT / Kohinoor (Traditioneller Bleisatz)</option>
+            </select>
+            <small class="text-muted">OpenType-Vektorfonts für gestochen scharfen Buchdruck.</small>
+          </div>
+
+          <!-- Start-Seitenzahl für PDF Labels -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="body_start_page" style="font-weight:600;">Buchkörper Startseite (PDF Labels)</label>
+            <input type="number" id="body_start_page" name="body_start_page" value="1" min="1" style="width:100%; padding:0.45rem;">
+            <small class="text-muted">Für Zitationsexzerpte (z.B. Start bei S. 10 für Kapitel 3).</small>
+          </div>
+
+          <!-- Titelblatt-Stil -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="title_page_style" style="font-weight:600;">Titelblatt &amp; Titelei</label>
+            <select id="title_page_style" name="title_page_style" style="width:100%; padding:0.45rem;">
+              <option value="birchville" selected>Birchville Scholarly Synthesis (Wappen &amp; Reihe)</option>
+              <option value="minimal">Minimalistisch (Nur Werk- und Autorangabe)</option>
+              <option value="none">Kein Titelblatt (Direkter Textbeginn)</option>
+            </select>
+            <small class="text-muted">Generiert ein standardisiertes Editions-Deckblatt.</small>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:0.6rem; margin-top:1rem; padding-top:0.8rem; border-top:1px solid var(--border);">
+          <input type="checkbox" id="colophon_blank" name="colophon_blank" value="true">
+          <label for="colophon_blank" style="font-size:0.88rem; margin:0; cursor:pointer;">
+            <strong>Kolophon-Restfläche säubern:</strong> Unbedruckten Bereich der letzten Seite nach dem Abschlusskolophon weiß blenden.
+          </label>
+        </div>
+      </div>
+    </details>
     <div class="form-group checkbox-group">
       <input type="checkbox" id="trigger" name="trigger" value="true" checked>
       <label for="trigger">Pipeline nach Upload automatisch starten</label>

@@ -20,6 +20,16 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional, Sequence
 
+try:
+    from scripts.build_perfect_sandwich import find_skew_projection, restore_text_image, is_color_image
+except ImportError:
+    try:
+        from build_perfect_sandwich import find_skew_projection, restore_text_image, is_color_image
+    except ImportError:
+        find_skew_projection = None
+        restore_text_image = None
+        is_color_image = None
+
 
 IMAGE_GLOBS = ("*.png", "*.jpg", "*.jpeg", "*.tif", "*.tiff", "*.webp", "*.bmp")
 
@@ -180,6 +190,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         default=None,
         help="Keep intermediate img2pdf base PDF at this path",
     )
+    parser.add_argument("--clean", action="store_true", help="Apply adaptive illumination modeling and shadow removal")
+    parser.add_argument("--deskew", action="store_true", help="Apply projection profile variance deskewing")
+    parser.add_argument("--in-white", type=int, default=225, help="White point clipping threshold (default: 225)")
+    parser.add_argument("--in-black", type=int, default=65, help="Black point clipping threshold (default: 65)")
     parser.add_argument("--json", action="store_true", help="Print JSON summary on stdout")
     args = parser.parse_args(argv)
 
@@ -208,6 +222,28 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         base_pdf = args.keep_base_pdf or (tmp_path / "base.pdf")
         if args.keep_base_pdf:
             base_pdf.parent.mkdir(parents=True, exist_ok=True)
+
+        if args.clean or args.deskew:
+            print(f"preprocess: cleaning/deskewing {len(images)} images...", file=sys.stderr)
+            clean_dir = tmp_path / "cleaned"
+            clean_dir.mkdir(parents=True, exist_ok=True)
+            clean_images = []
+            for idx, img_path in enumerate(images):
+                is_even = (idx % 2 == 0 and idx > 0)
+                from PIL import Image
+                im = Image.open(img_path)
+                if not (is_color_image and is_color_image(im)):
+                    im = im.convert("L")
+                    if args.deskew and find_skew_projection:
+                        ang = find_skew_projection(im)
+                        if abs(ang) >= 0.02:
+                            im = im.rotate(ang, resample=Image.Resampling.BICUBIC, fillcolor=255)
+                    if args.clean and restore_text_image:
+                        im = restore_text_image(im, is_even_page=is_even, in_white=args.in_white, in_black=args.in_black)
+                out_p = clean_dir / f"clean_{idx:04d}.png"
+                im.save(out_p)
+                clean_images.append(out_p)
+            images = clean_images
 
         print(f"img2pdf: {len(images)} page(s) @ {args.dpi} dpi → {base_pdf}", file=sys.stderr)
         build_base_pdf(images, base_pdf, args.dpi)
