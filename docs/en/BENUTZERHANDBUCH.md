@@ -92,7 +92,61 @@ Decisions that cannot or should not be made purely by automated heuristics are p
 
 ---
 
-## 4. Command Line Usage (CLI)
+## 4. User Onboarding, 2FA Authorization & Staged Jobs
+
+To safeguard GPU compute resources and ensure verifiable job assignment, the AlexandriaSandwich service portal (`https://alex.birchville.org`) is secured via the **Birchville Onboarding Meccano** and Authelia (Two-Factor Authentication).
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                      4-STAGE ONBOARDING MECCANO                        │
+├──────────────────┬──────────────────┬──────────────────┬───────────────┤
+│ 1. Request       │ 2. Provisioning  │ 3. 2FA & Login   │ 4. Execution  │
+├──────────────────┼──────────────────┼──────────────────┼───────────────┤
+│ • Interactive    │ • CLI hash gener.│ • auth.birchville│ • One-click   │
+│   mail builder   │ • Authelia YAML  │ • TOTP QR scan   │   execution   │
+│ • Project/corpus │ • Job assignment │   (Bitwarden/    │   of staged   │
+│   specification  │ • Invitation mail│   Aegis/YubiKey) │   jobs        │
+└──────────────────┴──────────────────┴──────────────────┴───────────────┘
+```
+
+### The 4-Stage Workflow for Users
+
+1. **Request via Onboarding Meccano (`https://birchville.org/onboarding`)**:
+   The user accesses the onboarding page on Birchville. An interactive assistant composes a formatted email template specifying name, affiliation, requested work, scan materials, and optional pre-arranged job IDs, which is sent to the administration.
+
+2. **Provisioning & Invitation by Administration**:
+   The administrator provisions the Authelia account using `scripts/birchville_onboard.py` and assigns the pre-formulated job. The user receives a bilingual invitation email containing temporary credentials and a direct job link.
+
+3. **2-Factor Authentication (2FA) at `auth.birchville.org`**:
+   The user signs in with initial credentials, links an authenticator app (Aegis, Bitwarden, Google Authenticator, or YubiKey FIDO2), and selects a personal password.
+
+4. **Review & Trigger Job at `alex.birchville.org`**:
+   Inside the protected portal, the user's pre-formulated job appears under **"Your Staged Jobs (Ready to Execute)"**. All parameters (DPI, model, despeckling, edition formats) have already been tuned by the editor. Clicking **`▶ Launch Now`** starts the pipeline. Once finished, sandwich PDF, typeset PDF, TEI-P5, and Markdown are available for instant download.
+
+### Administrator CLI Tools (`scripts/birchville_onboard.py`)
+
+Administrators can automate credential hashing, invitation drafting, and job staging:
+
+```bash
+# 1. Provision user, generate Argon2id hash, and print invitation mail
+python3 scripts/birchville_onboard.py create \
+  --username scholar1 \
+  --display-name "Dr. Maria Scholar" \
+  --email "scholar@example.org" \
+  --job boethlingk_sample
+
+# 2. Assign an existing job to a user as staged
+python3 scripts/birchville_onboard.py stage \
+  --job tantrasara_kap3 \
+  --user scholar1
+
+# 3. List all jobs and their staging status
+python3 scripts/birchville_onboard.py list
+```
+
+---
+
+## 5. Command Line Usage (CLI)
 
 ### Build Multi-Edition from Canonical JSON
 ```bash

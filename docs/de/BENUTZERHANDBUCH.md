@@ -92,7 +92,61 @@ Nicht alle Entscheidungen können vollautomatisch getroffen werden. Das Service-
 
 ---
 
-## 4. Nutzung über die Kommandozeile (CLI)
+## 4. Benutzer-Onboarding, 2FA-Autorisierung & Vorformulierte Aufträge
+
+Um GPU- und Serverressourcen zu schützen und Ausführungsprozesse verifizierbar zuzuordnen, ist das AlexandriaSandwich-Portal (`https://alex.birchville.org`) über den **Birchville Onboarding-Meccano** und Authelia (Zwei-Faktor-Authentifizierung) abgesichert.
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                      4-STUFEN-ONBOARDING-MECCANO                       │
+├──────────────────┬──────────────────┬──────────────────┬───────────────┤
+│ 1. Antrag        │ 2. Bereitstellung│ 3. 2FA & Login   │ 4. Ausführung │
+├──────────────────┼──────────────────┼──────────────────┼───────────────┤
+│ • Mail-Generator │ • CLI-Hash gener.│ • auth.birchville│ • Ein-Klick-  │
+│   auf Portal     │ • Authelia YAML  │ • TOTP QR-Scan   │   Auftrags-   │
+│ • Projekt/Werk   │ • Job-Zuweisung  │   (Bitwarden/    │   Auslösung   │
+│   spezifizieren  │ • Einladungsmail │   Aegis/YubiKey) │ • Download    │
+└──────────────────┴──────────────────┴──────────────────┴───────────────┘
+```
+
+### Der 4-Stufen-Workflow für Benutzer
+
+1. **Antrag über den Onboarding-Meccano (`https://birchville.org/onboarding`)**:
+   Der Nutzer ruft die Onboarding-Seite auf. Ein interaktiver Assistent generiert eine formatierte E-Mail-Vorlage mit Angaben zu Name, Institution, gewünschtem Werk, Scan-Material und allfälligen Vorab-Auftrags-IDs, die direkt an die Administration gesendet wird.
+
+2. **Bereitstellung & Einladung durch die Administration**:
+   Der Administrator generiert über `scripts/birchville_onboard.py` das Authelia-Konto und weist den vorformulierten Auftrag zu. Der Nutzer erhält eine bilinguale Einladungs-E-Mail mit Initialkennwort und Auftrags-Direktlink.
+
+3. **2-Faktor-Authentifizierung (2FA) auf `auth.birchville.org`**:
+   Der Nutzer meldet sich mit seinem Initialpasswort an, verknüpft seine Authenticator-App (Aegis, Bitwarden, Google Authenticator oder YubiKey FIDO2) und wählt ein persönliches Passwort.
+
+4. **Auftrag prüfen & auslösen auf `alex.birchville.org`**:
+   Im geschützten Portal sieht der Nutzer seinen vorformulierten Auftrag unter **"Ihre vorformulierten Aufträge (Bereit zur Ausführung)"**. Alle Parameter (DPI, Modell, Despeckle-Modus, Editions-Formate) sind bereits optimal hinterlegt. Ein Klick auf **`▶ Jetzt auslösen`** startet die Digitalisierungsstraße. Nach Abschluss stehen Sandwich-PDF, Neusatz-PDF, TEI-P5 und Markdown zum Download bereit.
+
+### Administrator-Werkzeuge (`scripts/birchville_onboard.py`)
+
+Für Administratoren automatisiert das Tool die Kontenerstellung und das Auftrags-Staging:
+
+```bash
+# 1. Benutzer anlegen, Argon2id-Hash erzeugen und Einladungsmail drucken
+python3 scripts/birchville_onboard.py create \
+  --username scholar1 \
+  --display-name "Dr. Maria Muster" \
+  --email "maria.muster@example.org" \
+  --job boethlingk_sample
+
+# 2. Bestehenden Auftrag einem Benutzer als vorformuliert zuweisen
+python3 scripts/birchville_onboard.py stage \
+  --job tantrasara_kap3 \
+  --user scholar1
+
+# 3. Alle Aufträge und Staging-Status auflisten
+python3 scripts/birchville_onboard.py list
+```
+
+---
+
+## 5. Nutzung über die Kommandozeile (CLI)
 
 ### Multi-Edition aus kanonischem JSON erzeugen
 ```bash
