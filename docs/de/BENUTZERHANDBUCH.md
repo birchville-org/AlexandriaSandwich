@@ -94,11 +94,11 @@ Nicht alle Entscheidungen können vollautomatisch getroffen werden. Das Service-
 
 ## 4. Benutzer-Onboarding, 2FA-Autorisierung & Portal-Nutzung
 
-Um GPU- und Serverressourcen zu schützen und Ausführungsprozesse verifizierbar zuzuordnen, ist das gesamte Alexandria-Portal (`https://alex.birchville.org`) inklusive der Dienste AlexandriaSandwich und TOC-Injection Studio über den **Birchville Onboarding-Meccano** und Authelia (Zwei-Faktor-Authentifizierung) abgesichert.
+Um GPU- und Serverressourcen zu schützen und Ausführungsprozesse verifizierbar zuzuordnen, ist das gesamte Alexandria-Portal (`https://alex.birchville.org`) inklusive der Dienste AlexandriaSandwich und TOC-Injection Studio über den **Birchville Onboarding-Prozess** und Authelia (Zwei-Faktor-Authentifizierung) abgesichert.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                      4-STUFEN-ONBOARDING-MECCANO                       │
+│                      4-STUFEN-ONBOARDING-PROZESS                       │
 ├──────────────────┬──────────────────┬──────────────────┬───────────────┤
 │ 1. Antrag        │ 2. Bereitstellung│ 3. 2FA & Login   │ 4. Portal     │
 ├──────────────────┼──────────────────┼──────────────────┼───────────────┤
@@ -111,7 +111,7 @@ Um GPU- und Serverressourcen zu schützen und Ausführungsprozesse verifizierbar
 
 ### Der 4-Stufen-Workflow für Benutzer
 
-1. **Antrag über den Onboarding-Meccano (`https://birchville.org/onboarding`)**:
+1. **Antrag über die Onboarding-Seite (`https://birchville.org/onboarding`)**:
    Der Nutzer ruft die Onboarding-Seite auf. Ein schlanker Assistent generiert eine formatierte E-Mail-Vorlage zur Freischaltung des gewünschten Dienstes (AlexandriaSandwich oder TOC-Injection Studio), die direkt an die Administration gesendet wird.
 
 2. **Bereitstellung & Einladung durch die Administration**:

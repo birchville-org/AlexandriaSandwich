@@ -94,11 +94,11 @@ Decisions that cannot or should not be made purely by automated heuristics are p
 
 ## 4. User Onboarding, 2FA Authorization & Portal Usage
 
-To safeguard GPU compute resources and ensure verifiable job assignment, the entire Alexandria service portal (`https://alex.birchville.org`) including the AlexandriaSandwich and TOC-Injection Studio services is secured via the **Birchville Onboarding Meccano** and Authelia (Two-Factor Authentication).
+To safeguard GPU compute resources and ensure verifiable job assignment, the entire Alexandria service portal (`https://alex.birchville.org`) including the AlexandriaSandwich and TOC-Injection Studio services is secured via the **Birchville Onboarding Process** and Authelia (Two-Factor Authentication).
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                      4-STAGE ONBOARDING MECCANO                        │
+│                      4-STAGE ONBOARDING PROCESS                        │
 ├──────────────────┬──────────────────┬──────────────────┬───────────────┤
 │ 1. Request       │ 2. Provisioning  │ 3. 2FA & Login   │ 4. Portal     │
 ├──────────────────┼──────────────────┼──────────────────┼───────────────┤
@@ -111,7 +111,7 @@ To safeguard GPU compute resources and ensure verifiable job assignment, the ent
 
 ### The 4-Stage Workflow for Users
 
-1. **Request via Onboarding Meccano (`https://birchville.org/onboarding`)**:
+1. **Request via Onboarding Page (`https://birchville.org/onboarding`)**:
    The user accesses the onboarding page. A streamlined assistant generates a formatted email template requesting access for the desired service (AlexandriaSandwich or TOC-Injection Studio), which is sent directly to the administration.
 
 2. **Provisioning & Invitation by Administration**:
