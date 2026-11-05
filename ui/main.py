@@ -1249,6 +1249,22 @@ def _safe_path(base: Path, user_path: Path | str) -> Path:
 
 @app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def landing(request: Request):
+    user = _get_current_user(request)
+    if user.get("is_authenticated"):
+        return RedirectResponse(url="/dashboard", status_code=302)
+    jobs = _list_jobs()
+    total_pages = sum(j.get("pages_total", j.get("input_pages", 0)) for j in jobs)
+    total_mistral = sum(j.get("mistral_ok", 0) for j in jobs)
+    return _render_template(request, "landing.html", {
+        "jobs": jobs[:6],
+        "total_jobs": len(jobs),
+        "total_pages": total_pages,
+        "total_mistral": total_mistral
+    })
+
+
+@app.api_route("/landing", methods=["GET", "HEAD"], response_class=HTMLResponse)
+async def landing_direct(request: Request):
     jobs = _list_jobs()
     total_pages = sum(j.get("pages_total", j.get("input_pages", 0)) for j in jobs)
     total_mistral = sum(j.get("mistral_ok", 0) for j in jobs)
