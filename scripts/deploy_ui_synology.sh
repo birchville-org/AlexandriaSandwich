@@ -6,11 +6,13 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REMOTE="${AS_SYNOLOGY_HOST:-${USER}@synology.local}"
 APP="/volume1/docker/alexandria"
 
-echo "1) Sync templates, static & main.py to synology.local ($APP/ui/)"
-tar -C "$ROOT/ui" -cf - templates/ static/ main.py | ssh "$REMOTE" "tar -C $APP/ui -xf -"
+export COPYFILE_DISABLE=1
 
-echo "2) Sync scripts to synology.local ($APP/scripts/)"
-tar -C "$ROOT" -cf - scripts/ | ssh "$REMOTE" "tar -C $APP -xf -"
+echo "1) Sync templates, static & main.py to synology.local ($APP/ui/)"
+tar --exclude='._*' -C "$ROOT/ui" -cf - templates/ static/ main.py | ssh "$REMOTE" "tar -C $APP/ui -xf -"
+
+echo "2) Sync scripts & templates to synology.local ($APP/)"
+tar --exclude='._*' -C "$ROOT" -cf - scripts/ templates/ | ssh "$REMOTE" "tar -C $APP -xf -"
 
 echo "3) Sync docker-compose.synology.yml to ($APP/docker-compose.yml)"
 cat "$ROOT/deploy/docker-compose.synology.yml" | ssh "$REMOTE" "cat > $APP/docker-compose.yml"

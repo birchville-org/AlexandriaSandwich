@@ -1348,13 +1348,13 @@ def parse_toc_content(raw: str) -> list[list[Any]]:
     return entries
 
 
-@app.get("/scan", response_class=HTMLResponse)
+@app.api_route("/scan", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def scan_portal_redirect():
     """Weiterleitung auf das Scan-Portal."""
     return RedirectResponse(url="/upload", status_code=302)
 
 
-@app.get("/toc", response_class=HTMLResponse)
+@app.api_route("/toc", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def toc_studio_page(request: Request):
     """Dedizierte Subpage: PDF TOC & Outline Studio (100% lokal, 0 Fremdkosten)."""
     return templates.TemplateResponse(request, "toc_studio.html", {})
