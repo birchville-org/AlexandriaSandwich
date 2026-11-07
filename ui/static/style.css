@@ -485,6 +485,49 @@ tr:hover td {
   border: 1px solid var(--blue);
   color: var(--blue-light);
 }
+.alert-warning {
+  background: rgba(180, 83, 9, 0.08);
+  border: 1px solid var(--brand-1);
+  color: #78350f;
+}
+.dark .alert-warning {
+  background: rgba(234, 179, 8, 0.12);
+  border-color: var(--brand-1);
+  color: #fef08a;
+}
+.notice-box-warning {
+  margin-top: auto;
+  padding: 0.75rem 0.95rem;
+  background: rgba(180, 83, 9, 0.08);
+  border: 1px solid rgba(180, 83, 9, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #78350f;
+}
+.notice-box-warning strong {
+  color: #92400e;
+  font-weight: 700;
+}
+.notice-box-warning code {
+  background: rgba(180, 83, 9, 0.12);
+  color: #78350f;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.78rem;
+}
+.dark .notice-box-warning {
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(234, 179, 8, 0.3);
+  color: #fef08a;
+}
+.dark .notice-box-warning strong {
+  color: #facc15;
+}
+.dark .notice-box-warning code {
+  background: rgba(234, 179, 8, 0.18);
+  color: #fef08a;
+}
 
 code, pre {
   font-family: var(--font-mono);
