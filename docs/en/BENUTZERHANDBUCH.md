@@ -114,11 +114,11 @@ To safeguard GPU compute resources and ensure verifiable job assignment, the ent
 1. **Request via Onboarding Page (`https://birchville.org/onboarding`)**:
    The user accesses the onboarding page. A streamlined assistant generates a formatted email template requesting access for the desired service (AlexandriaSandwich or TOC-Injection Studio), which is sent directly to the administration.
 
-2. **Provisioning & Invitation by Administration**:
-   The administrator provisions the Authelia account using `scripts/birchville_onboard.py` and optionally assigns pre-formulated jobs. The user receives a bilingual invitation email containing temporary credentials and portal links.
+2. **Provisioning & Identity Management by Administration**:
+   The administrator provisions the user in the identity directory (**LLDAP** via `https://id.birchville.org` or on the local network via `http://synology.local:17170`) specifying username and email, and assigns target groups (`alexandria-users`, `users`). The user receives an activation link to set their personal password (or an invitation via `scripts/birchville_onboard.py`).
 
 3. **2-Factor Authentication (2FA) at `auth.birchville.org`**:
-   The user signs in with initial credentials, links an authenticator app (Aegis, Bitwarden, Google Authenticator, or YubiKey FIDO2), and selects a personal password.
+   The user signs in with credentials, links an authenticator app (Aegis, Bitwarden, Google Authenticator, or YubiKey FIDO2), and is instantly authorized for the requested services.
 
 4. **Portal Access at `alex.birchville.org`**:
    Inside the protected portal, the user accesses the book digitization pipeline for new or pre-formulated jobs, or launches the TOC-Injection Studio (`/toc`). Pre-formulated jobs can be triggered with one click on **`▶ Launch Now`**. Once finished, sandwich PDF, typeset PDF, TEI-P5, and Markdown are available for instant download.

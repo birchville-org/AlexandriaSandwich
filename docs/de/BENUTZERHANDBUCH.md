@@ -114,11 +114,11 @@ Um GPU- und Serverressourcen zu schützen und Ausführungsprozesse verifizierbar
 1. **Antrag über die Onboarding-Seite (`https://birchville.org/onboarding`)**:
    Der Nutzer ruft die Onboarding-Seite auf. Ein schlanker Assistent generiert eine formatierte E-Mail-Vorlage zur Freischaltung des gewünschten Dienstes (AlexandriaSandwich oder TOC-Injection Studio), die direkt an die Administration gesendet wird.
 
-2. **Bereitstellung & Einladung durch die Administration**:
-   Der Administrator generiert über `scripts/birchville_onboard.py` das Authelia-Konto und weist bei Bedarf vorformulierte Aufträge zu. Der Nutzer erhält eine bilinguale Einladungs-E-Mail mit Initialkennwort und Portal-Direktlink.
+2. **Bereitstellung & Identitätsverwaltung durch die Administration**:
+   Der Administrator legt den Nutzer in der Identity DB (**LLDAP** unter `https://id.birchville.org` bzw. im lokalen Netzwerk unter `http://synology.local:17170`) mit Benutzername und E-Mail an und weist ihn den Gruppen (`alexandria-users`, `users`) zu. Der Nutzer erhält eine Aktivierungs-E-Mail zur Kennwort-Festlegung (oder eine bilinguale Einladung via `scripts/birchville_onboard.py`).
 
 3. **2-Faktor-Authentifizierung (2FA) auf `auth.birchville.org`**:
-   Der Nutzer meldet sich mit seinem Initialpasswort an, verknüpft seine Authenticator-App (Aegis, Bitwarden, Google Authenticator oder YubiKey FIDO2) und wählt ein persönliches Passwort.
+   Der Nutzer meldet sich mit seinem Kennwort an, verknüpft seine Authenticator-App (Aegis, Bitwarden, Google Authenticator oder YubiKey FIDO2) und ist sofort für die berechtigten Portale freigeschaltet.
 
 4. **Portal-Nutzung auf `alex.birchville.org`**:
    Im geschützten Portal nutzt der Nutzer die Digitalisierungsstraße für neue oder vorformulierte Aufträge oder öffnet das TOC-Injection Studio (`/toc`). Vorformulierte Aufträge können mit einem Klick auf **`▶ Jetzt auslösen`** gestartet werden. Nach Abschluss stehen Sandwich-PDF, Neusatz-PDF, TEI-P5 und Markdown zum Download bereit.
