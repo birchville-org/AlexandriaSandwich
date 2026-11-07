@@ -21,6 +21,8 @@ services:
       - ./data/output:/data/output
       - ./ui:/app
       - ./scripts:/app/scripts
+    extra_hosts:
+      - "alex.local:${ALEX_LOCAL_IP:-127.0.0.1}"
     networks:
       - proxy-net
     labels:
