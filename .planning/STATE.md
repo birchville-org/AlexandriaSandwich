@@ -1,13 +1,14 @@
-status: complete
-milestone: 4
-milestone_name: "Evolutionäre Engine-Härtung & Job-Zentriertes Layout (M4)"
+status: planning
+milestone: 5
+milestone_name: "Interaktive Stufen-Pipeline & Checkpoint-Orchestrierung (M5)"
 completed_phases: 6
 completed_plans: 20
-total_plans: 20
-percent: 100.0
-current_focus: "Milestone 4 abgeschlossen; Bereit für Backlog / nächste Buchkorpora"
-last_updated: "2026-10-12"
+total_plans: 23
+percent: 86.9
+current_focus: "Phase 7 in Planung: Optionale n8n-Stufenorchestrierung mit Wait-Nodes & UI-Zwischeninspektion"
+last_updated: "2026-11-07"
 recent_activity:
+  - "2026-11-07 | PLAN | Phase 7 (M5): Interaktive Stufen-Pipeline, Checkpointing & n8n-Wait-Node-Schleifen in ROADMAP.md aufgenommen"
   - "2026-10-12 | COMPLETE | Plan 06-03: Automatisierte Golden-Master-Regressionssuite (scripts/test_golden_regression.sh)"
   - "2026-10-12 | COMPLETE | Plan 06-02: Deklarative Dokument-Profile (job.config.json & schemas/job.config.schema.json)"
   - "2026-10-12 | COMPLETE | Plan 06-01: Pipeline, Tools & UI auf job-zentriertes Layout (data/output/<job>/) umgestellt"

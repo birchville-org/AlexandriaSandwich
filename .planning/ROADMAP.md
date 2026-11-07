@@ -10,6 +10,7 @@
 | **4** | Web UI & Visual Verification (M2) | 2 | 2 | Complete |
 | **5** | Multi-Format Digital Outputs (TEI-P5 & Clean Text PDF) (M3) | 4 | 4 | Complete |
 | **6** | Evolutionäre Engine-Härtung & Job-Zentriertes Layout (M4) | 3 | 3 | Complete |
+| **7** | Interaktive Stufen-Pipeline & Checkpoint-Orchestrierung (M5) | 0 | 3 | In Planning |
 
 ---
 
@@ -73,6 +74,16 @@
 - [x] **Plan 06-01:** Umstellung von `run_pipeline.sh`, Hilfsskripten und `ui/main.py` auf das job-zentrierte Layout (`data/output/<job>/`) mit nahtloser Rückwärtskompatibilität
 - [x] **Plan 06-02:** Deklarative Job-Profile (`job.config.json`) zur Trennung buchspezifischer Metadaten/Parameter von der Engine
 - [x] **Plan 06-03:** Automatisierte Golden-Master-Regressionssuite über Standard-Referenzjobs (`test_golden_regression.sh`)
+</details>
+
+<details open>
+<summary><b>Phase 7: Interaktive Stufen-Pipeline & Checkpoint-Orchestrierung (M5)</b> In Planning</summary>
+
+**Goal:** Optionale Aufteilung der AlexandriaSandwich-Pipeline in interaktive Einzelschritte via n8n (`Wait`-Nodes) und Web-UI-Inspektion, inklusive parametergesteuerter Wiederholung einzelner Stufen ohne Datenverlust.
+
+- [ ] **Plan 07-01:** Stage-Modularisierung des Pipeline-Harness (`run_pipeline.sh --stage <preprocess|ocr|consolidate|export|assembly>` und `data/processing/<job>/stage_*/` Checkpointing)
+- [ ] **Plan 07-02:** n8n Workflow-Erweiterung mit `Wait`-Nodes, Callback-Webhooks und bedingten Re-entrant-Schleifen (`Switch`/`IF`) für Parameter-Korrekturen
+- [ ] **Plan 07-03:** Web-UI-Integration im Service-Portal (`/jobs/{job}/stages`): Visuelle Inspektion von Zwischenartefakten, Freigabe-Buttons und dynamische Parameteranpassung für Re-Runs
 </details>
 
 ## Backlog

@@ -100,3 +100,29 @@ ssh <deploy-user>@alex.local "docker compose -f /opt/alexandria/deploy/docker-co
 ```bash
 ssh <deploy-user>@alex.local "docker compose -f /opt/alexandria/deploy/docker-compose.n8n.yml restart n8n"
 ```
+
+---
+
+## 6. Roadmap: Interactive Stage Pipeline & Checkpoint Orchestration (M5)
+
+For challenging historical editions, the pipeline will optionally transition from purely synchronous full-runs to an interactive, stage-wise orchestration via n8n:
+
+```text
+Stage 1: Preprocessing ──► [Wait Node] ──► Inspect Artifacts (Web UI)
+                               │
+            ┌──────────────────┴──────────────────┐
+            ▼                                     ▼
+     [Approve: Next]                [Adjust Parameters & Re-Run Stage 1]
+            │
+            ▼
+Stage 2: OCR & Quality Gate ──► [Wait Node] ──► Inspect Confidence
+            │
+            ▼
+Stage 3: Assembly (Sandwich + Typst) ──► Completion
+```
+
+### Architectural Pillars:
+1. **Stage Modularization**: Execution of isolated stages via `run_pipeline.sh --stage <preprocess|ocr|consolidate|export|assembly>`.
+2. **Artifact Checkpointing**: Storing deterministic intermediate outputs under `data/processing/<job>/stage_<N>/`.
+3. **Human-in-the-Loop (`Wait` Nodes)**: n8n pauses after each stage, generating a resume webhook for the service portal.
+4. **Conditional Re-entrant Loops**: Adjust parameters (e.g., contrast, threshold, despeckle mode) and repeat the stage without discarding prior work.
