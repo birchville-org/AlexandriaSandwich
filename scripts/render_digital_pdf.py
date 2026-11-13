@@ -1334,37 +1334,40 @@ def extract_page_footnotes(blocks: List[Dict[str, Any]]) -> Tuple[List[Dict[str,
 
 
 def format_page_footnotes_as_typst(fn_blocks: List[Dict[str, Any]]) -> str:
-    """Format footnote blocks with a horizontal separator line, footnote typography, and grid alignment."""
-    entries: List[List[str]] = []
+    """Format footnote blocks with high-precision typography: hairline separator, hanging indent,
+    flush text column alignment, and un-nested superscript markers.
+    """
+    entries: List[Tuple[str, str]] = []
+    table = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
     for b in fn_blocks:
         t = b.get("text", "").strip()
-        m = re.match(r"^([१-९\d]{1,2}[\.\)]|\([१-९\d]{1,2}\))\s*(.*)$", t, re.DOTALL)
+        m = re.match(r"^([¹²³⁴⁵⁶⁷⁸⁹⁰]+|[१-९\d]{1,3}[\.\)]?|\([१-९\d]{1,3}\))\s*(.*)$", t, re.DOTALL)
         if m:
-            entries.append([m.group(1), m.group(2)])
+            clean_m = m.group(1).translate(table).rstrip(".)] ")
+            entries.append((clean_m, m.group(2).strip()))
         elif entries:
-            entries[-1][1] += " " + t
+            prev_m, prev_b = entries[-1]
+            entries[-1] = (prev_m, prev_b + " " + t)
         else:
-            entries.append(["", t])
+            entries.append(("", t))
 
-    grid_items = []
+    items = []
     for lbl, body in entries:
-        lbl_typ = format_inline_markdown(lbl)
+        lbl_typ = format_inline_markdown(lbl) if lbl else ""
         body_typ = format_inline_markdown(body).replace("\n", " ")
-        grid_items.append(f"    [{lbl_typ}], [{body_typ}]")
+        if lbl_typ:
+            items.append(f"#par[#box(width: 8.5pt)[#text(size: 8.5pt)[#super[{lbl_typ}]]]{body_typ}]")
+        else:
+            items.append(f"#par[{body_typ}]")
 
-    cells_str = ",\n".join(grid_items)
-    return f"""#v(0.6em)
-#line(length: 28%, stroke: 0.5pt + luma(40))
-#v(0.35em)
-#block(spacing: 0.45em)[
-  #set text(size: 11.5pt)
-  #set par(justify: true, leading: 0.50em, first-line-indent: 0pt)
-  #grid(
-    columns: (2.0em, 1fr),
-    column-gutter: 0.35em,
-    row-gutter: 0.45em,
-{cells_str}
-  )
+    cells_str = "\n\n  ".join(items)
+    return f"""#v(14pt)
+#line(length: 25%, stroke: 0.4pt)
+#v(-7pt)
+#block[
+  #set text(size: 7.9pt)
+  #set par(justify: true, hanging-indent: 8.5pt, leading: 0.46em, spacing: 4.5pt)
+  {cells_str}
 ]"""
 
 
@@ -2346,6 +2349,25 @@ def render_pdf(
             log("Note: No TOC file or inject script found; outline injection skipped.")
     except Exception as e:
         log(f"Note: TOC outline injection skipped: {e}")
+
+    # 5c. Ensure native PDF page labels match book pagination
+    try:
+        import pymupdf
+        tmp_lbl = None
+        first_p = book_data["pages"][0].get("page_num") if book_data.get("pages") else None
+        if isinstance(first_p, int) and first_p > 1:
+            with pymupdf.open(str(output_file)) as mupdf_doc:
+                curr_labels = mupdf_doc.get_page_labels()
+                first_label = curr_labels[0].get("firstpagenum") if curr_labels else 1
+                if len(mupdf_doc) > 0 and first_label != first_p:
+                    mupdf_doc.set_page_labels([{"startpage": 0, "prefix": "", "style": "D", "firstpagenum": first_p}])
+                    tmp_lbl = output_file.with_suffix(".tmp_lbl.pdf")
+                    mupdf_doc.save(str(tmp_lbl), garbage=4, deflate=True)
+            if tmp_lbl and tmp_lbl.exists():
+                tmp_lbl.replace(output_file)
+                log(f"Set native PDF page labels starting at {first_p}")
+    except Exception as e:
+        log(f"Note: native page labels check skipped: {e}")
 
     # 6. Automated Optical & Vector Layout Audit
     audit_res = None

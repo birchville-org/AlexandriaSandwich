@@ -172,7 +172,17 @@ def _parse_markdown_lines(lines: List[str], sideheads: Optional[List[Dict[str, A
                     break
                 i += 1
                 p_lines.append(next_l)
-            blocks.append({"type": "p", "text": " ".join(p_lines), "bbox": [0, 0, 0, 0]})
+            # Join p_lines with soft-hyphen de-hyphenation awareness
+            p_text = ""
+            for pl in p_lines:
+                pl_s = pl.strip()
+                if not p_text:
+                    p_text = pl_s
+                elif p_text.endswith("-") and len(p_text) > 1 and p_text[-2].isalpha() and pl_s and pl_s[0].isalpha():
+                    p_text = p_text[:-1] + pl_s
+                else:
+                    p_text += " " + pl_s
+            blocks.append({"type": "p", "text": p_text, "bbox": [0, 0, 0, 0]})
         i += 1
     return blocks
 
@@ -180,6 +190,8 @@ def _parse_markdown_lines(lines: List[str], sideheads: Optional[List[Dict[str, A
 def parse_markdown_page(md_path: Path, sideheads: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Parse a single page markdown file (e.g. from Mistral OCR) with layout sidehead awareness."""
     text = md_path.read_text(encoding="utf-8")
+    # De-hyphenate soft line-break hyphens from printed page
+    text = re.sub(r"([A-Za-z\u00C0-\u024F\u1E00-\u1EFF]+)-\n\s*([A-Za-z\u00C0-\u024F\u1E00-\u1EFF]+)", r"\1\2", text)
     lines = text.splitlines()
     blocks = _parse_markdown_lines(lines, sideheads=sideheads)
 
@@ -233,6 +245,8 @@ def parse_mistral_json_page(
             content = (b.get("content") or "").strip()
             if not content:
                 continue
+            # De-hyphenate soft line-break hyphens from scan
+            content = re.sub(r"([A-Za-z\u00C0-\u024F\u1E00-\u1EFF]+)-\n\s*([A-Za-z\u00C0-\u024F\u1E00-\u1EFF]+)", r"\1\2", content)
 
             b_type = (b.get("type") or "text").lower()
             x0 = int(round(b.get("top_left_x", 0)))

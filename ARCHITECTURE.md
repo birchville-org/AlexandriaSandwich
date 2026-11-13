@@ -63,11 +63,12 @@ AlexandriaSandwich löst das historische Dilemma zwischen archivalischer Beweisk
 1. **Zweig 1: Faksimile-Ebene (`*.perfect_sandwich.pdf`):**
    * Das historische Druckbild wird durch **Content-Aware Margin Masking** von störenden Buchfalzen, Schatten und Scannerkanten außerhalb des Textbereichs bereinigt und auf Reinweiß nivelliert.
    * Der unsichtbare Textlayer liegt auf pixelgenauen Bounding-Boxen der Originalzeilen (Mode 3).
-   * Dient als bereinigte Referenzbasis für die automatische Vermessung via `profile_source_layout.py`.
+   * Dient als bereinigte Referenzbasis für die automatische Vermessung via `profile_source_layout.py` und CV-Anreicherung via `profile_scan_layout.py`.
 2. **Zweig 2: Semantische Vektor-Neuedition (`*.digital.pdf` & `*.typeset_edition.pdf`):**
-   * Kalibriert Typst-Satzspiegel, Durchschuss, Kolumnentitel und Paginierung direkt aus den Messwerten des bereinigten Faksimiles.
-   * Semantisches Alignment gegen kanonische Ground-Truth-Datenbanken (z. B. `dhatupatha_canonical.json`, `sutras.json`) oder strukturierte `book.json` ASTs.
-   * Typografische Standards: zentrierte Haupttitel, Einrückung bei Absatzbeginn (`1.5em`), symmetrische Kopfzeilen mit Original-Paginierung (Devanāgarī/Arabisch) und automatische Fußnotenabtrennung am Seitenende.
+   * Kalibriert Typst-Satzspiegel, Durchschuss, Kolumnentitel und Paginierung direkt aus den Messwerten des bereinigten Faksimiles (`layout.profile.json`).
+   * Semantisches Alignment gegen kanonische Ground-Truth-Datenbanken (z. B. `dhatupatha_canonical.json`, `sutras.json`) oder de-hyphenierte `book.json` ASTs (`consolidate_book.py`).
+   * Typografische Standards: zentrierte Haupttitel, Einrückung bei Absatzbeginn, symmetrische Kopfzeilen mit nativen PDF-Page-Labels und präziser Fußnoten-Mikrotypografie (25 % Haarlinie mit `#v(-7pt)`-Kompensation, normalisierte Hochzahlen, bündige Textspalte).
+   * Automatisiertes Pre-Flight-Quality-Gate via `verify_typographic_diff.py` (Rot/Cyan-Anaglyphen-Diff-Overlays und Toleranzprüfung).
 
 ---
 

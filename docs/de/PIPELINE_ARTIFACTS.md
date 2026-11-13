@@ -107,19 +107,20 @@ graph TD
 
 ### 2.5 Digitaler Neusatz & Vektor-Editionen (Typst)
 
-#### `layout.profile.json` (`profile_source_layout.py`)
+#### `layout.profile.json` (`profile_source_layout.py` & `profile_scan_layout.py`)
 - **Pfad**: `data/output/<job>/layout.profile.json`
-- **Zweck**: Automatisierte geometrische Vermessung des Quell-Faksimiles (`perfect_sandwich.pdf`). Ermittelt Satzspiegel, Randabstände (Kopf, Fuß, Innen, Außen), Durchschuss, Makro-Layout (einspaltig, zweispaltig, Marginalspalten) sowie Paginierungs- und Kolumnentitel-Positionen.
+- **Zweck**: Zweistufige geometrische Vermessung des Quell-Faksimiles (`perfect_sandwich.pdf`). `profile_source_layout.py` ermittelt das primäre Struktur-Schema (Satzspiegel, Randabstände, Durchschuss, Makro-Layout, Marginalien/Sideheads). Anschließend reichert `profile_scan_layout.py` die Datei zerstörungsfrei per Computer Vision um exakte Scan-Metriken (`scan_cv_profile` und `footnotes`: Haarlinien-Geometrie, Fußnoten-Abstände und Grundlinien) an.
 - **Qualitätsstand**: Vollautomatisch; liefert die kalibrierten Geometrieparameter für den Neusatz.
 
 #### `<job>.digital.typ` & `<job>.digital.pdf` (`render_digital_pdf.py`)
 - **Pfad**: `data/output/<job>/<job>.digital.pdf`
-- **Zweck**: Vollständiger digitaler Neusatz als Vektordokument (kein Rasterscan). Verlustfrei skalierbar, barrierefrei und mit echten Schriften gerendert (Libertinus Serif, Noto Sans Devanagari).
+- **Zweck**: Vollständiger digitaler Neusatz als Vektordokument (kein Rasterscan). Verlustfrei skalierbar, barrierefrei und mit echten Schriften gerendert (`STIX Two Text`, `Libertinus Serif`, `Noto Sans Devanagari`).
 - **Typografische Standards**:
+  - *De-Hyphenation*: `consolidate_book.py` löst Scan-Trennstriche am Zeilenende vor der Typst-Übergabe automatisch auf.
   - *Satzspiegel & Durchschuss*: Wird automatisch aus `layout.profile.json` und `.perfect_sandwich.pdf` abgeleitet.
-  - *Titel & Absätze*: Dokumententitel zentriert auf Satzspiegelmitte; strukturierter Erstzeileneinzug (`1.5em`) für Textabsätze.
-  - *Kopfzeile & Paginierung*: Symmetrischer Drei-Spalten-Kolumnentitel mit konsistenter Devanāgarī- oder arabischer Seitenzählung.
-  - *Fußnoten-Apparat*: Automatische Abtrennung und Formatierung von Anmerkungen am Seitenende mit horizontaler Trennlinie und verkleinertem Schriftgrad.
+  - *Titel & Absätze*: Dokumententitel zentriert auf Satzspiegelmitte; strukturierter Erstzeileneinzug für Textabsätze.
+  - *Kopfzeile & Paginierung*: Symmetrischer Kolumnentitel mit nativen PDF-Page-Labels (`set_page_labels`) entsprechend der historischen Paginierung.
+  - *Fußnoten-Mikrotypografie*: 25 % Haarlinie (0.4 pt) mit negativer Blockkompensation (`#v(-7pt)`), Normalisierung von Unicode-Hochzahlen (Vermeidung von Doppel-Superscript), fester Ziffernbox (`8.5 pt`) und bündiger Textspalte (`hanging-indent: 8.5pt`, `leading: 0.46em`, `spacing: 4.5pt`).
 - **Modi**:
   - *1:1 Seitenkongruenz (`--preserve-pages`)*: Jede Buchseite beginnt auf einer neuen digitalen Seite mit identischen Kolumnentiteln und adaptiver Skalierung (`page_content`), sodass die Paginierung exakt dem historischen Original entspricht.
   - *Scholarly Reflow*: Fließender Neusatz mit harmonischen Buchumbüchen nach klassischem typografischem Satzspiegel.
@@ -160,6 +161,11 @@ graph TD
 - **Pfad**: `data/output/<job>/comparison_samples/page_XXXX_comparison.png`
 - **Zweck**: Visuelle Side-by-Side-Gegenüberstellung des bereinigten Faksimiles (links) und des digitalen Neusatzes (rechts) zur schnellen visuellen Begutachtung von Satzspiegel, Umbrüchen und Paginierung.
 - **Qualitätsstand**: Wird standardmäßig im Pipeline-Lauf erzeugt.
+
+#### `diff_audit/` (`verify_typographic_diff.py`)
+- **Pfad**: `data/output/<job>/diff_audit/audit_typographic_diff.json`, `diff_overlay_page_XXX.png`
+- **Zweck**: Automatisiertes Pre-Flight-Quality-Gate für den typografischen Neusatz. Erzeugt Rot/Cyan-Anaglyphen-Diff-Overlays (Scan = Rot, Neusatz = Cyan) bei dynamischer DPI-Skalierung und prüft Grundlinien von Seitenzahlen (|Δy| <= 1.5 pt), Haarlinien (|Δy| <= 3.0 pt, 15 %–38 % Breite mit Weißraumprüfung) sowie die Fußnotenziffer-Skalierung (>= 60 % Versalhöhe).
+- **Qualitätsstand**: Läuft automatisch nach `render_digital_pdf.py` als Phase 10b in `run_pipeline.sh`.
 
 ---
 

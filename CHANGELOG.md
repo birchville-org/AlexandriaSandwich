@@ -2,6 +2,27 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.10.0] - 2026-11-13
+
+### Added
+- **6-Stufen-Neusatz-Standard & CV Layout-Profiling (`scripts/profile_scan_layout.py`, `.agents/rules/digital_typesetting.md`):**
+  - Zweistufiges Layout-Profiling in `scripts/run_pipeline.sh`: `profile_source_layout.py` erstellt das primäre Struktur-Schema (`layout.profile.json`), anschließend reichert `profile_scan_layout.py` die Datei zerstörungsfrei per Computer Vision um Haarlinien-Geometrie, Fußnotenabstände und Grundlinien (`scan_cv_profile`) an.
+- **Rot/Cyan-Diff-Overlay Quality-Gate (`scripts/verify_typographic_diff.py`):**
+  - Automatisiertes Pre-Flight-Quality-Gate in Phase 10b von `run_pipeline.sh` mit dynamischer DPI-Skalierung, isolierter Haarlinien-Erkennung (15 %–38 % Breite mit Weißraumprüfung) und Toleranzprüfung für Seitenzahlen (|Δy| <= 1.5 pt), Haarlinien (|Δy| <= 3.0 pt) und Fußnotenziffer-Skalierung (>= 60 % Versalhöhe).
+- **Onboarding & Portal-Schutz (`scripts/birchville_onboard.py`, Authelia/LLDAP):**
+  - CLI für Birchville-Onboarding und Schutz des Service-Portals via Authelia 2FA sowie LLDAP-Dokumentation.
+- **Zweisprachige Methodendokumentation (`docs/de/PIPELINE_ARTIFACTS.md`, `docs/en/PIPELINE_ARTIFACTS.md`, `ARCHITECTURE.md`):**
+  - Dokumentation der zweistufigen Layout-Profilierung, Fußnoten-Mikrotypografie, De-Hyphenation und des `diff_audit`-Quality-Gates.
+
+### Changed
+- **Fußnoten-Mikrotypografie & Native Paginierung (`scripts/render_digital_pdf.py`):**
+  - Kalibrierte Typst-Fußnotenformatierung mit 25 % Haarlinie (0.4 pt), `#v(-7pt)`-Blockkompensation, Normalisierung von Unicode-Hochzahlen gegen Doppel-Superscript, `8.5 pt` Ziffernbox und bündiger Textspalte (`hanging-indent: 8.5pt`, `leading: 0.46em`, `spacing: 4.5pt`).
+  - Automatische Sicherstellung nativer PDF Page Labels (`set_page_labels`) nach der Typst-Kompilierung.
+- **De-Hyphenation im AST-Konsolidierer (`scripts/consolidate_book.py`):**
+  - Automatische Auflösung von Scan-Trennstrichen am Zeilenende sowohl in Markdown- als auch in Mistral-OCR-JSON-Eingaben.
+- **UI & Deployment (`ui/`, `deploy/`):**
+  - Kontrastkorrekturen auf dem Status-Dashboard sowie `alex.local`-Namensauflösung im Synology-Docker-Container.
+
 ## [1.9.0] - 2026-11-05
 
 ### Added

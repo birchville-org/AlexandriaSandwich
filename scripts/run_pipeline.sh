@@ -339,7 +339,9 @@ CONSOLIDATE="${SCRIPT_DIR}/consolidate_book.py"
 ALIGN_SCRIPT="${SCRIPT_DIR}/align_mistral_pdf.py"
 PERFECT_SANDWICH_SCRIPT="${SCRIPT_DIR}/build_perfect_sandwich.py"
 PROFILE_LAYOUT_SCRIPT="${SCRIPT_DIR}/profile_source_layout.py"
+PROFILE_SCAN_SCRIPT="${SCRIPT_DIR}/profile_scan_layout.py"
 RENDER_DIGITAL="${SCRIPT_DIR}/render_digital_pdf.py"
+VERIFY_DIFF_SCRIPT="${SCRIPT_DIR}/verify_typographic_diff.py"
 BUILD_TYPESET="${SCRIPT_DIR}/build_typeset_edition.py"
 EXPORT_TEI="${SCRIPT_DIR}/export_tei.py"
 EXPORT_EPUB="${SCRIPT_DIR}/export_epub.py"
@@ -353,6 +355,7 @@ ALIGNED_PDF="${JOB_OUT}/${JOB_NAME}.aligned.pdf"
 PERFECT_SANDWICH_OUT="${JOB_OUT}/${JOB_NAME}.perfect_sandwich.pdf"
 LAYOUT_PROFILE_OUT="${JOB_OUT}/layout.profile.json"
 DIGITAL_PDF_OUT="${JOB_OUT}/${JOB_NAME}.digital.pdf"
+DIFF_AUDIT_OUT="${JOB_OUT}/diff_audit"
 TYPESET_PDF_OUT="${JOB_OUT}/${JOB_NAME}.typeset_edition.pdf"
 EPUB_OUT="${JOB_OUT}/${JOB_NAME}.epub"
 mkdir -p "$BOOK_DIR"
@@ -423,16 +426,30 @@ for cand_pdf in "${PERFECT_SANDWICH_OUT:-}" "${ALIGNED_PDF:-}" "${PDF_OUT:-}" "$
   fi
 done
 
-if [[ -f "$PROFILE_LAYOUT_SCRIPT" && -n "$PROFILE_SOURCE_PDF" && -f "$PROFILE_SOURCE_PDF" ]]; then
-  log "profile source layout ($PROFILE_SOURCE_PDF) -> $LAYOUT_PROFILE_OUT"
-  set +e
-  python3 "$PROFILE_LAYOUT_SCRIPT" --pdf "$PROFILE_SOURCE_PDF" --output "$LAYOUT_PROFILE_OUT"
-  prof_rc=$?
-  set -e
-  if [[ "$prof_rc" -eq 0 && -f "$LAYOUT_PROFILE_OUT" ]]; then
-    log "source layout profile ok: $LAYOUT_PROFILE_OUT"
-  else
-    log "warn: profile_source_layout failed (rc=$prof_rc)"
+if [[ -n "$PROFILE_SOURCE_PDF" && -f "$PROFILE_SOURCE_PDF" ]]; then
+  if [[ -f "$PROFILE_LAYOUT_SCRIPT" ]]; then
+    log "profile source layout ($PROFILE_SOURCE_PDF) -> $LAYOUT_PROFILE_OUT"
+    set +e
+    python3 "$PROFILE_LAYOUT_SCRIPT" --pdf "$PROFILE_SOURCE_PDF" --output "$LAYOUT_PROFILE_OUT"
+    prof_rc=$?
+    set -e
+    if [[ "$prof_rc" -eq 0 && -f "$LAYOUT_PROFILE_OUT" ]]; then
+      log "source layout profile ok: $LAYOUT_PROFILE_OUT"
+    else
+      log "warn: profile_source_layout failed (rc=$prof_rc)"
+    fi
+  fi
+  if [[ -f "$PROFILE_SCAN_SCRIPT" ]]; then
+    log "enrich layout profile with CV scan metrics ($PROFILE_SOURCE_PDF) -> $LAYOUT_PROFILE_OUT"
+    set +e
+    python3 "$PROFILE_SCAN_SCRIPT" "$PROFILE_SOURCE_PDF" --output "$LAYOUT_PROFILE_OUT"
+    scan_prof_rc=$?
+    set -e
+    if [[ "$scan_prof_rc" -eq 0 && -f "$LAYOUT_PROFILE_OUT" ]]; then
+      log "scan CV layout enrichment ok: $LAYOUT_PROFILE_OUT"
+    else
+      log "warn: profile_scan_layout failed (rc=$scan_prof_rc)"
+    fi
   fi
 fi
 
@@ -452,6 +469,20 @@ if [[ -f "$RENDER_DIGITAL" && -f "${BOOK_DIR}/book.json" ]]; then
   if [[ "$render_rc" -ne 0 ]]; then
     log "warn: render_digital_pdf failed (rc=$render_rc)"
     DIGITAL_PDF_OUT=""
+  else
+    # 10b) Pre-flight Typographic Diff Verification (Scan vs Digital Neusatz)
+    if [[ -f "$VERIFY_DIFF_SCRIPT" && -f "$DIGITAL_PDF_OUT" && -n "$PROFILE_SOURCE_PDF" && -f "$PROFILE_SOURCE_PDF" ]]; then
+      log "verify typographic diff & alignment (scan vs digital) -> $DIFF_AUDIT_OUT"
+      set +e
+      python3 "$VERIFY_DIFF_SCRIPT" "$PROFILE_SOURCE_PDF" "$DIGITAL_PDF_OUT" --output-dir "$DIFF_AUDIT_OUT"
+      vdiff_rc=$?
+      set -e
+      if [[ "$vdiff_rc" -eq 0 ]]; then
+        log "typographic diff verification passed: $DIFF_AUDIT_OUT/audit_typographic_diff.json"
+      else
+        log "notice: verify_typographic_diff finished with rc=$vdiff_rc (check $DIFF_AUDIT_OUT)"
+      fi
+    fi
   fi
 else
   DIGITAL_PDF_OUT=""

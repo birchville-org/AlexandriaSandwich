@@ -107,19 +107,20 @@ graph TD
 
 ### 2.5 Digital Vector Typeset Editions (Typst)
 
-#### `layout.profile.json` (`profile_source_layout.py`)
+#### `layout.profile.json` (`profile_source_layout.py` & `profile_scan_layout.py`)
 - **Path**: `data/output/<job>/layout.profile.json`
-- **Purpose**: Automated geometric profiling of the source facsimile (`perfect_sandwich.pdf`). Measures text column dimensions (Satzspiegel), page margins (top, bottom, inner, outer), leading/line spacing, macro layout structure (single-column, two-column, marginal sideheads), and header/folio coordinates.
+- **Purpose**: Two-stage automated geometric profiling of the source facsimile (`perfect_sandwich.pdf`). `profile_source_layout.py` extracts the primary structural schema (Satzspiegel, margins, leading, macro layout, marginalia/sideheads). Subsequently, `profile_scan_layout.py` non-destructively enriches the file via Computer Vision with exact scan metrics (`scan_cv_profile` and `footnotes`: hairline geometry, footnote gaps, and baselines).
 - **Quality Status**: Fully automated; feeds calibrated geometric parameters into the typesetting renderer.
 
 #### `<job>.digital.typ` & `<job>.digital.pdf` (`render_digital_pdf.py`)
 - **Path**: `data/output/<job>/<job>.digital.pdf`
-- **Purpose**: Pure vector-based digital re-typesetting (not a raster image). Infinitely scalable, accessible, and rendered using authentic typefaces (Libertinus Serif, Noto Sans Devanagari).
+- **Purpose**: Pure vector-based digital re-typesetting (not a raster image). Infinitely scalable, accessible, and rendered using authentic typefaces (`STIX Two Text`, `Libertinus Serif`, `Noto Sans Devanagari`).
 - **Typographic Standards**:
+  - *De-Hyphenation*: `consolidate_book.py` resolves line-break scan hyphens automatically prior to typesetting.
   - *Satzspiegel & Spacing*: Calibrated automatically from `layout.profile.json` and `.perfect_sandwich.pdf`.
-  - *Title & Paragraphs*: Centered title block; structured first-line indentation (`1.5em`) on body text.
-  - *Header & Folio*: Symmetrical three-column running headers with consistent Devanāgarī or Arabic page numbering.
-  - *Footnote Separation*: Automated extraction and bottom-of-page formatting with hairline divider rules and reduced point sizes.
+  - *Title & Paragraphs*: Centered title block; structured first-line indentation on body text.
+  - *Header & Folio*: Symmetrical running headers with native PDF page labels (`set_page_labels`) matching historical pagination.
+  - *Footnote Microtypography*: 25% hairline (0.4 pt) with negative block compensation (`#v(-7pt)`), Unicode superscript normalization (preventing double-superscripting), fixed marker box (`8.5 pt`), and flush text column (`hanging-indent: 8.5pt`, `leading: 0.46em`, `spacing: 4.5pt`).
 - **Modes**:
   - *1:1 Original Page Correspondence (`--preserve-pages`)*: Every page starts on a new digital page matching original page numbers and headers, scaled adaptively via `page_content` to guarantee exact page parity.
   - *Scholarly Reflow*: Continuous re-typesetting with natural book breaks according to classical typographic proportions.
@@ -160,6 +161,11 @@ graph TD
 - **Path**: `data/output/<job>/comparison_samples/page_XXXX_comparison.png`
 - **Purpose**: Visual side-by-side verification images showing cleaned facsimile (left) versus digital typesetting (right) for instant inspection of Satzspiegel, line breaks, and page boundaries.
 - **Quality Status**: Generated automatically in every standard pipeline run.
+
+#### `diff_audit/` (`verify_typographic_diff.py`)
+- **Path**: `data/output/<job>/diff_audit/audit_typographic_diff.json`, `diff_overlay_page_XXX.png`
+- **Purpose**: Automated pre-flight quality gate for digital typesetting. Generates Red/Cyan anaglyph diff overlays (Scan = Red, Digital = Cyan) with dynamic DPI scaling and enforces baseline tolerances for page numbers (|Δy| <= 1.5 pt), hairlines (|Δy| <= 3.0 pt, 15%–38% width with vertical whitespace verification), and footnote marker scaling (>= 60% cap height).
+- **Quality Status**: Executed automatically after `render_digital_pdf.py` as Stage 10b in `run_pipeline.sh`.
 
 ---
 
