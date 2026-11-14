@@ -1,0 +1,1216 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Automatisierte Buch-Digitalisierung mit Hybrid-OCR, TEI-P5, Sandwich-PDF & Typst Neusatz.">
+      
+      
+        <meta name="author" content="AlexandriaSandwich Team">
+      
+      
+        <link rel="canonical" href="https://birchville-org.github.io/AlexandriaSandwich/BENUTZERHANDBUCH/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../INSTALLATION/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="de">
+        
+          <link rel="alternate" href="../en/BENUTZERHANDBUCH/" hreflang="en">
+        
+      
+      
+      <link rel="icon" href="../assets/birchville_logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Benutzerhandbuch - AlexandriaSandwich</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/birchville.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://birchville-org.github.io/AlexandriaSandwich/assets/og-icon.png">
+  <meta property="og:image:width" content="128">
+  <meta property="og:image:height" content="128">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:image" content="https://birchville-org.github.io/AlexandriaSandwich/assets/og-icon.png">
+  <link rel="apple-touch-icon" href="https://birchville-org.github.io/AlexandriaSandwich/assets/og-icon.png">
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#benutzerhandbuch-fahigkeiten-workflows-parameter" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href=".." title="AlexandriaSandwich" class="md-header__button md-logo" aria-label="AlexandriaSandwich" data-md-component="logo">
+      
+  <img src="../assets/birchville_logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AlexandriaSandwich
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Benutzerhandbuch
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Sprache wechseln">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="de" class="md-select__link">
+              Deutsch
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../en/BENUTZERHANDBUCH/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/birchville-org/AlexandriaSandwich" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    birchville-org/AlexandriaSandwich
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AlexandriaSandwich" class="md-nav__button md-logo" aria-label="AlexandriaSandwich" data-md-component="logo">
+      
+  <img src="../assets/birchville_logo.png" alt="logo">
+
+    </a>
+    AlexandriaSandwich
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/birchville-org/AlexandriaSandwich" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    birchville-org/AlexandriaSandwich
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startseite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benutzerhandbuch
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benutzerhandbuch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-das-gesamtspektrum-der-erworbenen-fahigkeiten" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Das Gesamtspektrum der erworbenen Fähigkeiten
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Das Gesamtspektrum der erworbenen Fähigkeiten">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-scan-restaurierung-bildbearbeitung" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Scan-Restaurierung &amp; Bildbearbeitung
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-hybride-ocr-token-geometrie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Hybride OCR &amp; Token-Geometrie
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-digitaler-neusatz-typst-architektur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Digitaler Neusatz &amp; Typst-Architektur
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-archiv-leseformate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Archiv- &amp; Leseformate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-die-editions-matrix-vier-synchrone-ausgabeformen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Die Editions-Matrix: Vier synchrone Ausgabeformen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-parameter-katalog-fur-den-nutzer-service-portal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Parameter-Katalog für den Nutzer (Service-Portal)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-benutzer-onboarding-2fa-autorisierung-portal-nutzung" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Benutzer-Onboarding, 2FA-Autorisierung &amp; Portal-Nutzung
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Benutzer-Onboarding, 2FA-Autorisierung &amp; Portal-Nutzung">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#der-4-stufen-workflow-fur-benutzer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Der 4-Stufen-Workflow für Benutzer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#administrator-werkzeuge-scriptsbirchville_onboardpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Administrator-Werkzeuge (scripts/birchville_onboard.py)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-nutzung-uber-die-kommandozeile-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Nutzung über die Kommandozeile (CLI)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Nutzung über die Kommandozeile (CLI)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-edition-aus-kanonischem-json-erzeugen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Edition aus kanonischem JSON erzeugen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diakritika-schonendes-scan-cleaning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diakritika-schonendes Scan-Cleaning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#indische-normalisierung-transliteration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Indische Normalisierung &amp; Transliteration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pdf-seitenzahlen-labels-nachtraglich-setzen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PDF-Seitenzahlen &amp; Labels nachträglich setzen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALLATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../WIKI_VERFAHREN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verfahren
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PIPELINE_ARTIFACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline-Artefakte & Qualitätsstand
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EVOLUTION_WORKFLOW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evolutionäre Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TARGET_FORMATS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zielformate & Dualität
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CORRECTION_PATHS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Korrekturpfade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEPLOY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../STORAGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Speicherstruktur
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../N8N/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    n8n Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Böhtlingk 1887)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study-dhatupatha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Dhātu-Pāṭha)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../case-study-bau/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fallstudie (Bṛhadāraṇyaka I.4)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="benutzerhandbuch-fahigkeiten-workflows-parameter">Benutzerhandbuch: Fähigkeiten, Workflows &amp; Parameter</h1>
+<p>Das <strong>AlexandriaSandwich-System</strong> ist eine spezialisierte Digitalisierungs- und Editionspipeline für historische Bücher, wissenschaftliche Editionen und Handschriften. Es verbindet vier Schritte zu einem durchgängigen Arbeitsablauf:</p>
+<ol>
+<li><strong>Scan-Restaurierung</strong>: Beseitigt Vergilbung, Schattenwurf und Scan-Rauschen, ohne feine Schriftlinien oder diakritische Punkte zu beschädigen.</li>
+<li><strong>Hybride KI-Texterkennung (<abbr title="Optical Character Recognition: Automatische optische Zeichenerkennung zur Umwandlung von Bildtext in maschinenlesbaren Text.">OCR</abbr>)</strong>: Kombiniert pixelgenaue lokale Koordinaten mit modernen multimodalen Bild-Sprach-Modellen (Vision-Language Models / <abbr title="Vision-Language Model: Ein multimodales KI-Modell, das Bildinhalte (Scans) und Sprache gleichzeitig versteht und dadurch selbst schwierigste historische Schriften fehlerfrei liest.">VLM</abbr> wie Mistral <abbr title="Optical Character Recognition: Automatische optische Zeichenerkennung zur Umwandlung von Bildtext in maschinenlesbaren Text.">OCR</abbr>) für fehlerfreie Transkription selbst komplexer Schriften (z. B. <abbr title="Die traditionelle indische Silbenschrift für Sanskrit, Hindi und Marathi.">Devanāgarī</abbr>, <abbr title="International Alphabet of Sanskrit Transliteration: Das akademische Standard-Umschriftsystem für indische Schriften in lateinischen Buchstaben mit Diakritika.">IAST</abbr>-Diakritika, Fraktur, Polytonisches Griechisch).</li>
+<li><strong>1:1 <abbr title="Ein PDF, das den sichtbaren Scan als Bildseite zeigt, dahinter jedoch eine unsichtbare, exakt ausgerichtete Textebene für Volltextsuche und Textmarkierung enthält.">Sandwich-PDF</abbr></strong>: Erzeugt ein durchsuchbares Faksimile, bei dem eine unsichtbare Vektor-Textebene exakt hinter dem bereinigten Originalscan liegt.</li>
+<li><strong>Digitaler Neusatz (<abbr title="Ein modernes, extrem schnelles Satzsystem (Alternative zu LaTeX) für hochwertige wissenschaftliche Vektor-Druckausgaben.">Typst</abbr>)</strong>: Generiert gestochen scharfe Vektor-Ausgaben mit exakter Seiten- und Zeilentreue zur historischen Erstausgabe.</li>
+</ol>
+<details class="info">
+<summary>Glossar: Zentrale Fachbegriffe auf einen Blick (Klicken zum Aufklappen)</summary>
+<ul>
+<li><strong><abbr title="Vision-Language Model: Ein multimodales KI-Modell, das Bildinhalte (Scans) und Sprache gleichzeitig versteht und dadurch selbst schwierigste historische Schriften fehlerfrei liest.">VLM</abbr> (Vision-Language Model)</strong>: Ein multimodales KI-Modell, das Bildinhalte (Scans) und Sprache gleichzeitig versteht und dadurch selbst schwierigste historische Schriften, Zeilenumbrüche und Tabellenstrukturen fehlerfrei liest.</li>
+<li><strong><abbr title="Optical Character Recognition: Automatische optische Zeichenerkennung zur Umwandlung von Bildtext in maschinenlesbaren Text.">OCR</abbr> (Optical Character Recognition)</strong>: Automatische optische Zeichenerkennung zur Umwandlung von Bildtext in maschinenlesbaren Volltext.</li>
+<li><strong><abbr title="Ein PDF, das den sichtbaren Scan als Bildseite zeigt, dahinter jedoch eine unsichtbare, exakt ausgerichtete Textebene für Volltextsuche und Textmarkierung enthält.">Sandwich-PDF</abbr></strong>: Ein PDF-Dokument, das den sichtbaren Scan als Bildseite zeigt, dahinter jedoch eine unsichtbare, passgenau ausgerichtete Textebene für Volltextsuche und Textmarkierung enthält.</li>
+<li><strong><abbr title="Ein modernes, extrem schnelles Satzsystem (Alternative zu LaTeX) für hochwertige wissenschaftliche Vektor-Druckausgaben.">Typst</abbr></strong>: Ein modernes, schnelles Satzsystem (zeitgemäße Alternative zu LaTeX) für hochwertige wissenschaftliche Buch- und Druckausgaben.</li>
+<li><strong><abbr title="International Alphabet of Sanskrit Transliteration: Das akademische Standard-Umschriftsystem für indische Schriften in lateinischen Buchstaben mit Diakritika.">IAST</abbr> (International Alphabet of Sanskrit Transliteration)</strong>: Das akademische Standard-Umschriftsystem für indische Schriften in lateinischen Buchstaben mit diakritischen Zeichen (z. B. <em>ś</em>, <em>ṣ</em>, <em>ṛ</em>, <em>ṃ</em>, <em>ḥ</em>).</li>
+<li><strong><abbr title="Die traditionelle indische Silbenschrift für Sanskrit, Hindi und Marathi.">Devanāgarī</abbr></strong>: Die traditionelle indische Schrift für Sanskrit, Hindi und Marathi.</li>
+<li><strong><abbr title="Automatisches Geraderichten schräg eingescannter Buchseiten.">Deskewing</abbr></strong>: Automatisches Geraderichten schräg eingescannter Buchseiten anhand von Projektionsprofilen.</li>
+<li><strong><abbr title="Entfernung isolierter Staub- und Scan-Punkte im Weißraum unter Erhalt diakritischer Zeichen.">Despeckling</abbr></strong>: Entfernen isolierter Staub- und Scan-Flecken im Weißraum unter partiellem Schutz diakritischer Punkte nahe den Schriftzeilen.</li>
+<li><strong><abbr title="Text Encoding Initiative: Internationaler XML-Standard für die digitale Langzeitarchivierung geisteswissenschaftlicher Texte.">TEI-P5</abbr> XML</strong>: Standard der <em>Text Encoding Initiative</em> zur digitalen Langzeitarchivierung geisteswissenschaftlicher Texte.</li>
+<li><strong><abbr title="Standard-Dateiformat für digitale Bücher mit anpassbarem Fließtext (Reflowable) und eingebetteten Schriften.">EPUB 3</abbr></strong>: Standardformat für digitale Bücher mit dynamisch anpassbarem Fließtext (<em>Reflowable</em>) und eingebetteten Schriften.</li>
+</ul>
+</details>
+<hr />
+<h2 id="1-das-gesamtspektrum-der-erworbenen-fahigkeiten">1. Das Gesamtspektrum der erworbenen Fähigkeiten</h2>
+<p>Über zahlreiche Fallstudien und Quellengattungen hinweg (Böhtlingk 1887 <em>Pāṇini</em>, Cardona 1976 <em>Recent Research in Pāṇinian Studies</em>, Thieme 1952 <em>Bráhman</em>, Abhinavagupta 1918 <em>Tantrasāra</em>, William James <em>Principles of Psychology</em>) wurden spezialisierte Module entwickelt:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌────────────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                   ALEXANDRIASANDWICH FÄHIGKEITSMATRIX                  │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├─────────────────────────┬────────────────────────┬─────────────────────┤
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│ 1. Bild &amp; Faksimile     │ 2. Text &amp; Geometrie    │ 3. Digitaler Satz   │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├─────────────────────────┼────────────────────────┼─────────────────────┤
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│ • Verso/Recto Deskew    │ • Tesseract BBoxes     │ • Typst Vektor-PDF  │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│ • Illumination-Subtract │ • Mistral VLM Token-AI │ • 1:1 Seitentreue   │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│ • Distance Despeckle    │ • Fuzzy Token-Anchor   │ • Interlinear-Stack │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│ • Margin Border Wipe    │ • Indic Normalizer     │ • Logische Labels   │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│ • Colophon Blanking     │ • Apparatus Expansion  │ • EPUB 3 &amp; TEI-P5   │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>└─────────────────────────┴────────────────────────┴─────────────────────┘
+</code></pre></div>
+<h3 id="a-scan-restaurierung-bildbearbeitung">A. Scan-Restaurierung &amp; Bildbearbeitung</h3>
+<ul>
+<li><strong>Unabhängiges Rotations-<abbr title="Automatisches Geraderichten schräg eingescannter Buchseiten.">Deskewing</abbr></strong>: Automatische Ermittlung des Drehwinkels für linke (Verso) und rechte Seiten (Recto) via Projektionsprofil.</li>
+<li><strong>Adaptive Hintergrund-Normalisierung</strong>: Division durch morphologische Schließungsmasken entfernt Vergilbung, Schattenwurf und Durchscheinen (<em>Bleed-Through</em>), ohne dünne Haarstriche zu beschädigen.</li>
+<li><strong>Diakritika-schonendes Distance-Transform <abbr title="Entfernung isolierter Staub- und Scan-Punkte im Weißraum unter Erhalt diakritischer Zeichen.">Despeckling</abbr></strong>: Zweizonen-Filterung: Während die Seitenränder vollständig geweißt werden, prüft das System innerhalb des Satzspiegels die Distanz zur nächsten echten Textzeile. Punkte (Anusvāra, Visarga, Candrabindu, Akzente) nahe der Grundlinie bleiben zu 100 % erhalten; isolierter Staub im Zwischenraum wird getilgt.</li>
+<li><strong>Kolophon-Bereinigung</strong>: Automatisches oder manuelles Weißblenden unbedruckter Restflächen am Kapitelende.</li>
+</ul>
+<h3 id="b-hybride-ocr-token-geometrie">B. Hybride <abbr title="Optical Character Recognition: Automatische optische Zeichenerkennung zur Umwandlung von Bildtext in maschinenlesbaren Text.">OCR</abbr> &amp; Token-Geometrie</h3>
+<ul>
+<li><strong>Lokale Geometrie (Tesseract)</strong>: Schnelle pixelgenaue Wort-Bounding-Boxes für die unsichtbare Suchschicht.</li>
+<li><strong>Multimodales <abbr title="Vision-Language Model: Ein multimodales KI-Modell, das Bildinhalte (Scans) und Sprache gleichzeitig versteht und dadurch selbst schwierigste historische Schriften fehlerfrei liest.">VLM</abbr> (Mistral <abbr title="Optical Character Recognition: Automatische optische Zeichenerkennung zur Umwandlung von Bildtext in maschinenlesbaren Text.">OCR</abbr>)</strong>: Höchste Erkennungsgenauigkeit für anspruchsvolle Schriften (<abbr title="Die traditionelle indische Silbenschrift für Sanskrit, Hindi und Marathi.">Devanāgarī</abbr>, Polytonisches Griechisch, Fraktur, komplexe Ligaturen).</li>
+<li><strong>Fuzzy Token-Anchor Alignment</strong>: Dynamische Abstimmung zwischen <abbr title="Vision-Language Model: Ein multimodales KI-Modell, das Bildinhalte (Scans) und Sprache gleichzeitig versteht und dadurch selbst schwierigste historische Schriften fehlerfrei liest.">VLM</abbr>-Volltext und Scan-Koordinaten verhindert Phantom-Suchtreffer im Weißraum.</li>
+</ul>
+<h3 id="c-digitaler-neusatz-typst-architektur">C. Digitaler Neusatz &amp; <abbr title="Ein modernes, extrem schnelles Satzsystem (Alternative zu LaTeX) für hochwertige wissenschaftliche Vektor-Druckausgaben.">Typst</abbr>-Architektur</h3>
+<ul>
+<li><strong>1:1 Seiten- und Zeilentreue</strong>: Jeder Zeilenumbruch und jeder Seitenwechsel entspricht exakt der historischen Vorlage.</li>
+<li><strong>Das Interlinear-<code>#stack</code>-System</strong>: Eine feste typografische Hierarchie stellt sicher, dass der Abstand zwischen zusammengehörigen Sprachzeilen (Intra-Paar: ca. 2,6 pt) stets deutlich kleiner ist als der Abstand zur nächsten Einheit (Inter-Paar: ca. 7,2 pt).</li>
+<li><strong>Federnde Fußnoten-Verankerung</strong>: Fußnoten werden via <code>#v(1fr, weak: true)</code> bündig an den unteren Satzspiegelrand gesetzt, getrennt durch eine 30%-Haarlinie.</li>
+<li><strong>Birchville Scholarly Synthesis Standard</strong>: Einheitliche Titelblätter mit Reihenwappen, Kolumnentitel mit Wechsel zwischen geraden und ungeraden Seiten.</li>
+</ul>
+<h3 id="d-archiv-leseformate">D. Archiv- &amp; Leseformate</h3>
+<ul>
+<li><strong>1:1 <abbr title="Ein PDF, das den sichtbaren Scan als Bildseite zeigt, dahinter jedoch eine unsichtbare, exakt ausgerichtete Textebene für Volltextsuche und Textmarkierung enthält.">Sandwich-PDF</abbr></strong>: Originalscan mit unsichtbarer, perfekt ausgerichteter Vektor-Textebene.</li>
+<li><strong><abbr title="Standard-Dateiformat für digitale Bücher mit anpassbarem Fließtext (Reflowable) und eingebetteten Schriften.">EPUB 3</abbr></strong>: Reflowable eBook mit eingebetteten Schriften (<em>STIX Two Text</em>, <em>Devanagari MT</em>).</li>
+<li><strong><abbr title="Text Encoding Initiative: Internationaler XML-Standard für die digitale Langzeitarchivierung geisteswissenschaftlicher Texte.">TEI-P5</abbr> XML</strong>: Standardisierte Langzeitarchivierung nach Richtlinien der Digital Humanities.</li>
+<li><strong>Strukturiertes <abbr title="Abstract Syntax Tree: Strukturierte, hierarchische Baumdarstellung des Buchinhalts (Seiten, Absätze, Zeilen, Wörter).">AST</abbr></strong>: <code>book.json</code> (maschinenlesbare Hierarchie mit BBoxes) und <code>book.md</code> (Markdown-Extrakt).</li>
+</ul>
+<hr />
+<h2 id="2-die-editions-matrix-vier-synchrone-ausgabeformen">2. Die Editions-Matrix: Vier synchrone Ausgabeformen</h2>
+<p>Aus einem kanonischen Datensatz generiert die Pipeline vier synchrone Ausgaben:</p>
+<ol>
+<li><strong>Monolingual Original (<code>original</code>)</strong>: Reiner Neusatz der Originalschrift (z. B. <abbr title="Die traditionelle indische Silbenschrift für Sanskrit, Hindi und Marathi.">Devanāgarī</abbr>).</li>
+<li><strong>Interlinear Umschrift (<code>interlinear</code>)</strong>: Originalschrift oben, wissenschaftliche Transliteration (<abbr title="International Alphabet of Sanskrit Transliteration: Das akademische Standard-Umschriftsystem für indische Schriften in lateinischen Buchstaben mit Diakritika.">IAST</abbr>) direkt darunter.</li>
+<li><strong>Monolingual Umschrift (<code>transliteration</code>)</strong>: Reines <abbr title="International Alphabet of Sanskrit Transliteration: Das akademische Standard-Umschriftsystem für indische Schriften in lateinischen Buchstaben mit Diakritika.">IAST</abbr> mit vergrößertem Schriftgrad für optimale Lesbarkeit.</li>
+<li><strong>Interlinear Übersetzung (<code>bilingual</code>)</strong>: <abbr title="International Alphabet of Sanskrit Transliteration: Das akademische Standard-Umschriftsystem für indische Schriften in lateinischen Buchstaben mit Diakritika.">IAST</abbr> oben, zeilenweise deutsche oder englische Übersetzung in kursiver Schieferoptik darunter.</li>
+</ol>
+<hr />
+<h2 id="3-parameter-katalog-fur-den-nutzer-service-portal">3. Parameter-Katalog für den Nutzer (Service-Portal)</h2>
+<p>Nicht alle Entscheidungen können vollautomatisch getroffen werden. Das Service-Portal stellt daher folgende Wahlmöglichkeiten bereit:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Werte / Optionen</th>
+<th style="text-align: left;">Standard</th>
+<th style="text-align: left;">Beschreibung &amp; Empfehlung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong><code>author</code></strong></td>
+<td style="text-align: left;">Freitext (z. B. <code>Otto Böhtlingk</code>)</td>
+<td style="text-align: left;"><code>""</code></td>
+<td style="text-align: left;">Autor/Herausgeber für Titelblatt, PDF-Metadaten, <abbr title="Text Encoding Initiative: Internationaler XML-Standard für die digitale Langzeitarchivierung geisteswissenschaftlicher Texte.">TEI-P5</abbr> und <abbr title="Standard-Dateiformat für digitale Bücher mit anpassbarem Fließtext (Reflowable) und eingebetteten Schriften.">EPUB 3</abbr>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>typeset_mode</code></strong></td>
+<td style="text-align: left;"><code>reconstructed_1to1</code>, <code>scholarly_reflow</code>, <code>dictionary_grid</code>, <code>paginated</code></td>
+<td style="text-align: left;"><code>reconstructed_1to1</code></td>
+<td style="text-align: left;">Steuert 1:1 seitenkonkordanten Neusatz (<code>--preserve-pages</code>) vs. wissenschaftlichen Fließsatz oder Wörterbuch-Raster.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>paper</code></strong></td>
+<td style="text-align: left;"><code>""</code> (Auto), <code>iso-b5</code>, <code>a4</code>, <code>a5</code></td>
+<td style="text-align: left;"><code>""</code> (Auto)</td>
+<td style="text-align: left;">Übernimmt standardmäßig die exakte Scan-Geometrie oder erzwingt ein normiertes Druckformat.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>no_unpaper</code></strong></td>
+<td style="text-align: left;"><code>true</code>, <code>false</code></td>
+<td style="text-align: left;"><code>false</code></td>
+<td style="text-align: left;">Deaktiviert <code>unpaper</code>-Beschnitt (<code>--no-unpaper</code>), um empfindliche Marginalien und Randnotizen zu schützen.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>skip_preprocess</code></strong></td>
+<td style="text-align: left;"><code>true</code>, <code>false</code></td>
+<td style="text-align: left;"><code>false</code></td>
+<td style="text-align: left;">Überspringt die Bildvorverarbeitung (<code>--skip-preprocess</code>) bei bereits sauber entzerrten Scans oder schnellen Re-Runs.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>target_edition</code></strong></td>
+<td style="text-align: left;"><code>all</code>, <code>sandwich</code>, <code>original</code>, <code>interlinear</code>, <code>transliteration</code>, <code>bilingual</code></td>
+<td style="text-align: left;"><code>all</code></td>
+<td style="text-align: left;">Bestimmt, welche Dokumente der Multi-Edition-Matrix kompiliert werden (<code>sandwich</code> überspringt Neusatz/TEI/EPUB).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>spread_mode</code></strong></td>
+<td style="text-align: left;"><code>auto</code>, <code>split_spreads</code>, <code>single_page</code>, <code>raw</code></td>
+<td style="text-align: left;"><code>auto</code></td>
+<td style="text-align: left;">Trennt 2-seitige Buchscans (Doppelseiten) automatisch an der Mittellinie in Verso und Recto.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>despeckle_mode</code></strong></td>
+<td style="text-align: left;"><code>safe_philological</code>, <code>aggressive</code>, <code>off</code></td>
+<td style="text-align: left;"><code>safe_philological</code></td>
+<td style="text-align: left;"><code>safe_philological</code> schützt Akzente und Punkte; <code>aggressive</code> für grobe Kopien; <code>off</code> für historische Originalstrukturen.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>colophon_blank</code></strong></td>
+<td style="text-align: left;"><code>true</code>, <code>false</code></td>
+<td style="text-align: left;"><code>false</code></td>
+<td style="text-align: left;">Blendet leere Seitenbereiche nach dem finalen Kapitel-Kolophon weiß ein.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>font_family</code></strong></td>
+<td style="text-align: left;"><code>stix</code>, <code>libertine</code>, <code>deva_mt</code></td>
+<td style="text-align: left;"><code>stix</code></td>
+<td style="text-align: left;"><strong>STIX Two Text</strong> deckt <abbr title="International Alphabet of Sanskrit Transliteration: Das akademische Standard-Umschriftsystem für indische Schriften in lateinischen Buchstaben mit Diakritika.">IAST</abbr> und indologische Diakritika vollständig ab; <strong>Libertine</strong> für westliche Standardtexte; <strong>Deva MT</strong> für traditionellen <abbr title="Die traditionelle indische Silbenschrift für Sanskrit, Hindi und Marathi.">Devanāgarī</abbr>-Bleisatz.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>body_start_page</code></strong></td>
+<td style="text-align: left;">Ganze Zahl (z. B. <code>10</code>)</td>
+<td style="text-align: left;"><code>1</code></td>
+<td style="text-align: left;">Start-Seitenzahl des Haupttextes für native PDF Page Labels bei Kapitelauszügen.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>title_page_style</code></strong></td>
+<td style="text-align: left;"><code>birchville</code>, <code>minimal</code>, <code>none</code></td>
+<td style="text-align: left;"><code>birchville</code></td>
+<td style="text-align: left;">Wappen-Titelblatt nach Birchville Scholarly Synthesis Standard oder schlichter Textbeginn.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>apparatus_translit</code></strong></td>
+<td style="text-align: left;"><code>true</code>, <code>false</code></td>
+<td style="text-align: left;"><code>true</code></td>
+<td style="text-align: left;">Löst indische Manuskriptsiglen (<code>पं०</code>, <code>ख० पु०</code>) automatisch in standardisiertes <abbr title="International Alphabet of Sanskrit Transliteration: Das akademische Standard-Umschriftsystem für indische Schriften in lateinischen Buchstaben mit Diakritika.">IAST</abbr> auf.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-benutzer-onboarding-2fa-autorisierung-portal-nutzung">4. Benutzer-Onboarding, 2FA-Autorisierung &amp; Portal-Nutzung</h2>
+<p>Um GPU- und Serverressourcen zu schützen und Ausführungsprozesse verifizierbar zuzuordnen, ist das gesamte Alexandria-Portal (<code>https://alex.birchville.org</code>) inklusive der Dienste AlexandriaSandwich und TOC-Injection Studio über den <strong>Birchville Onboarding-Prozess</strong> und Authelia (Zwei-Faktor-Authentifizierung) abgesichert.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>┌────────────────────────────────────────────────────────────────────────┐
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│                      4-STUFEN-ONBOARDING-PROZESS                       │
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├──────────────────┬──────────────────┬──────────────────┬───────────────┤
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│ 1. Antrag        │ 2. Bereitstellung│ 3. 2FA &amp; Login   │ 4. Portal     │
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>├──────────────────┼──────────────────┼──────────────────┼───────────────┤
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│ • Mail-Generator │ • CLI-Hash gener.│ • auth.birchville│ • Alexandria- │
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   auf Portal     │ • Authelia YAML  │ • TOTP QR-Scan   │   Pipeline    │
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│ • Dienst-Wahl    │ • Job-Zuweisung  │   (Bitwarden/    │ • TOC-Studio  │
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│   (Alex / TOC)   │ • Einladungsmail │   Aegis/YubiKey) │ • Download    │
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>└──────────────────┴──────────────────┴──────────────────┴───────────────┘
+</code></pre></div>
+<h3 id="der-4-stufen-workflow-fur-benutzer">Der 4-Stufen-Workflow für Benutzer</h3>
+<ol>
+<li>
+<p><strong>Antrag über die Onboarding-Seite (<code>https://birchville.org/onboarding</code>)</strong>:
+   Der Nutzer ruft die Onboarding-Seite auf. Ein schlanker Assistent generiert eine formatierte E-Mail-Vorlage zur Freischaltung des gewünschten Dienstes (AlexandriaSandwich oder TOC-Injection Studio), die direkt an die Administration gesendet wird.</p>
+</li>
+<li>
+<p><strong>Bereitstellung &amp; Identitätsverwaltung durch die Administration</strong>:
+   Der Administrator legt den Nutzer in der Identity DB (<strong>LLDAP</strong> unter <code>https://id.birchville.org</code> bzw. im lokalen Netzwerk unter <code>http://synology.local:17170</code>) mit Benutzername und E-Mail an und weist ihn den Gruppen (<code>alexandria-users</code>, <code>users</code>) zu. Der Nutzer erhält eine Aktivierungs-E-Mail zur Kennwort-Festlegung (oder eine bilinguale Einladung via <code>scripts/birchville_onboard.py</code>).</p>
+</li>
+<li>
+<p><strong>2-Faktor-Authentifizierung (2FA) auf <code>auth.birchville.org</code></strong>:
+   Der Nutzer meldet sich mit seinem Kennwort an, verknüpft seine Authenticator-App (Aegis, Bitwarden, Google Authenticator oder YubiKey FIDO2) und ist sofort für die berechtigten Portale freigeschaltet.</p>
+</li>
+<li>
+<p><strong>Portal-Nutzung auf <code>alex.birchville.org</code></strong>:
+   Im geschützten Portal nutzt der Nutzer die Digitalisierungsstraße für neue oder vorformulierte Aufträge oder öffnet das TOC-Injection Studio (<code>/toc</code>). Vorformulierte Aufträge können mit einem Klick auf <strong><code>▶ Jetzt auslösen</code></strong> gestartet werden. Nach Abschluss stehen <abbr title="Ein PDF, das den sichtbaren Scan als Bildseite zeigt, dahinter jedoch eine unsichtbare, exakt ausgerichtete Textebene für Volltextsuche und Textmarkierung enthält.">Sandwich-PDF</abbr>, Neusatz-PDF, <abbr title="Text Encoding Initiative: Internationaler XML-Standard für die digitale Langzeitarchivierung geisteswissenschaftlicher Texte.">TEI-P5</abbr> und Markdown zum Download bereit.</p>
+</li>
+</ol>
+<h3 id="administrator-werkzeuge-scriptsbirchville_onboardpy">Administrator-Werkzeuge (<code>scripts/birchville_onboard.py</code>)</h3>
+<p>Für Administratoren automatisiert das Tool die Kontenerstellung und das Auftrags-Staging:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># 1. Benutzer anlegen, Argon2id-Hash erzeugen und Einladungsmail drucken</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>python3<span class="w"> </span>scripts/birchville_onboard.py<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--username<span class="w"> </span>scholar1<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--display-name<span class="w"> </span><span class="s2">"Dr. Maria Muster"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--email<span class="w"> </span><span class="s2">"maria.muster@example.org"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>--job<span class="w"> </span>boethlingk_sample
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1"># 2. Bestehenden Auftrag einem Benutzer als vorformuliert zuweisen</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>python3<span class="w"> </span>scripts/birchville_onboard.py<span class="w"> </span>stage<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span>--job<span class="w"> </span>tantrasara_kap3<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span>--user<span class="w"> </span>scholar1
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="c1"># 3. Alle Aufträge und Staging-Status auflisten</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>python3<span class="w"> </span>scripts/birchville_onboard.py<span class="w"> </span>list
+</code></pre></div>
+<hr />
+<h2 id="5-nutzung-uber-die-kommandozeile-cli">5. Nutzung über die Kommandozeile (CLI)</h2>
+<h3 id="multi-edition-aus-kanonischem-json-erzeugen">Multi-Edition aus kanonischem JSON erzeugen</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Alle 4 Editionen parallel generieren und mit PDF-Labels versehen</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python<span class="w"> </span>scripts/build_multi_edition.py<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>data/tantrasara_chap3_canonical.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>output/tantrasara/<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--format<span class="w"> </span>all
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Nur die bilinguale Studienausgabe bauen</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>python<span class="w"> </span>scripts/build_multi_edition.py<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span>data/tantrasara_chap3_canonical.json<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span>output/tantrasara/<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span>--format<span class="w"> </span>bilingual
+</code></pre></div>
+<h3 id="diakritika-schonendes-scan-cleaning">Diakritika-schonendes Scan-Cleaning</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># PDF-Doppelseiten bereinigen und in Einzelseiten trennen</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>scripts/image_restoration.py<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>scans/raw_book.pdf<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>output/cleaned_book.pdf<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--split-spreads<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--dpi<span class="w"> </span><span class="m">300</span>
+</code></pre></div>
+<h3 id="indische-normalisierung-transliteration">Indische Normalisierung &amp; Transliteration</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Apparatus-Zeile normalisieren</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>python<span class="w"> </span>scripts/indic_normalizer.py<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="s2">"पं० १० ख० पु० बिम्बप्रतिबिम्बेति पाठः ।"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>--apparatus
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Ausgabe: paṃ. 10 kha. pu. bimbapratibimbeti pāṭhaḥ .</span>
+</code></pre></div>
+<h3 id="pdf-seitenzahlen-labels-nachtraglich-setzen">PDF-Seitenzahlen &amp; Labels nachträglich setzen</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>scripts/postprocess_pdf_metadata.py<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>document.pdf<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--title-page<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span>--body-start<span class="w"> </span><span class="m">10</span>
+</code></pre></div>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Zurück zum Seitenanfang
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "toc.integrate", "search.suggest", "search.highlight", "content.code.copy", "content.tooltips"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
