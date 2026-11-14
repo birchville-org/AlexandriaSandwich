@@ -61,6 +61,8 @@ SKIP_PREPROCESS_EXPLICIT=0
 LIMIT_EXPLICIT=0
 TYPESET_MODE=""
 TYPESET_MODE_EXPLICIT=0
+PAPER_SIZE=""
+PAPER_EXPLICIT=0
 
 PDF_SRC=""
 
@@ -76,6 +78,7 @@ while [[ $# -gt 0 ]]; do
     --no-unpaper) USE_UNPAPER=0; UNPAPER_EXPLICIT=1; shift ;;
     --skip-preprocess) SKIP_PREPROCESS=1; SKIP_PREPROCESS_EXPLICIT=1; shift ;;
     --typeset-mode) TYPESET_MODE="$2"; TYPESET_MODE_EXPLICIT=1; shift 2 ;;
+    --paper) PAPER_SIZE="$2"; PAPER_EXPLICIT=1; shift 2 ;;
     --limit) LIMIT="$2"; LIMIT_EXPLICIT=1; shift 2 ;;
     --input) INPUT_DIR="$2"; shift 2 ;;
     --processing) PROC_DIR="$2"; shift 2 ;;
@@ -112,6 +115,14 @@ try:
     if t_mode:
         val = re.sub(r"[^a-zA-Z0-9_.-]", "", str(t_mode))
         print(f"CFG_TYPESET_MODE={shlex.quote(val)}")
+    p_size = cfg.get("heuristics", {}).get("paper") or cfg.get("paper")
+    if p_size:
+        val = re.sub(r"[^a-zA-Z0-9_-]", "", str(p_size))
+        print(f"CFG_PAPER={shlex.quote(val)}")
+    t_ed = cfg.get("heuristics", {}).get("target_edition") or cfg.get("target_edition")
+    if t_ed:
+        val = re.sub(r"[^a-zA-Z0-9_-]", "", str(t_ed))
+        print(f"CFG_TARGET_EDITION={shlex.quote(val)}")
     s_pdf = cfg.get("heuristics", {}).get("source_pdf") or cfg.get("source_pdf")
     if s_pdf:
         print(f"CFG_SOURCE_PDF={shlex.quote(str(s_pdf))}")
@@ -126,6 +137,8 @@ PY
   [[ -n "${CFG_LIMIT:-}" && "$LIMIT_EXPLICIT" -eq 0 ]] && LIMIT="$CFG_LIMIT"
   [[ -n "${CFG_SKIP_PREPROCESS:-}" && "$SKIP_PREPROCESS_EXPLICIT" -eq 0 ]] && SKIP_PREPROCESS="$CFG_SKIP_PREPROCESS"
   [[ -n "${CFG_TYPESET_MODE:-}" && "$TYPESET_MODE_EXPLICIT" -eq 0 ]] && TYPESET_MODE="$CFG_TYPESET_MODE"
+  [[ -n "${CFG_PAPER:-}" && "$PAPER_EXPLICIT" -eq 0 ]] && PAPER_SIZE="$CFG_PAPER"
+  TARGET_EDITION="${CFG_TARGET_EDITION:-all}"
   [[ -n "${CFG_SOURCE_PDF:-}" && -z "${PDF_SRC:-}" ]] && PDF_SRC="$CFG_SOURCE_PDF"
 fi
 
@@ -454,16 +467,20 @@ if [[ -n "$PROFILE_SOURCE_PDF" && -f "$PROFILE_SOURCE_PDF" ]]; then
 fi
 
 # 10) Digital Vector Typeset PDF (calibrated against source layout profile)
-if [[ -f "$RENDER_DIGITAL" && -f "${BOOK_DIR}/book.json" ]]; then
+if [[ "${TARGET_EDITION:-all}" == "sandwich" ]]; then
+  log "skip digital typeset & semantic edition (target_edition=sandwich)"
+  DIGITAL_PDF_OUT=""
+elif [[ -f "$RENDER_DIGITAL" && -f "${BOOK_DIR}/book.json" ]]; then
   log "render digital book pdf (calibrated from layout & facsimile) -> $DIGITAL_PDF_OUT"
   set +e
   PRESERVE_ARG=""
-  if [[ "${TYPESET_MODE:-}" == "1to1" || "${TYPESET_MODE:-}" == "paginated" ]]; then
+  if [[ "${TYPESET_MODE:-}" == "1to1" || "${TYPESET_MODE:-}" == "reconstructed_1to1" || "${TYPESET_MODE:-}" == "paginated" ]]; then
     PRESERVE_ARG="--preserve-pages"
   fi
   python3 "$RENDER_DIGITAL" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$DIGITAL_PDF_OUT" \
     $PRESERVE_ARG \
-    ${TYPESET_MODE:+--typeset-mode "$TYPESET_MODE"}
+    ${TYPESET_MODE:+--typeset-mode "$TYPESET_MODE"} \
+    ${PAPER_SIZE:+--paper "$PAPER_SIZE"}
   render_rc=$?
   set -e
   if [[ "$render_rc" -ne 0 ]]; then
@@ -489,7 +506,7 @@ else
 fi
 
 # 11) Semantic Typeset Edition (optional Boethlingk model)
-if [[ -f "$BUILD_TYPESET" ]]; then
+if [[ "${TARGET_EDITION:-all}" != "sandwich" && -f "$BUILD_TYPESET" ]]; then
   COMPLETE_JSON=""
   if [[ -f "${JOB_INPUT}/${JOB_NAME}_complete.json" ]]; then
     COMPLETE_JSON="${JOB_INPUT}/${JOB_NAME}_complete.json"
@@ -521,7 +538,7 @@ fi
 # 12) Multi-format structured exports: TEI-P5 XML & EPUB 3
 IIIF_PAGES_CAND="${JOB_INPUT}/iiif_pages.json"
 
-if [[ -f "$EXPORT_TEI" && -f "${BOOK_DIR}/book.json" ]]; then
+if [[ "${TARGET_EDITION:-all}" != "sandwich" && -f "$EXPORT_TEI" && -f "${BOOK_DIR}/book.json" ]]; then
   log "export tei-p5 -> $TEI_OUT"
   set +e
   python3 "$EXPORT_TEI" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$TEI_OUT" \
@@ -537,7 +554,7 @@ else
   TEI_OUT=""
 fi
 
-if [[ -f "$EXPORT_EPUB" && -f "${BOOK_DIR}/book.json" ]]; then
+if [[ "${TARGET_EDITION:-all}" != "sandwich" && -f "$EXPORT_EPUB" && -f "${BOOK_DIR}/book.json" ]]; then
   log "export epub 3 -> $EPUB_OUT"
   set +e
   python3 "$EXPORT_EPUB" --job "$JOB_NAME" --input "${BOOK_DIR}/book.json" --output "$EPUB_OUT"

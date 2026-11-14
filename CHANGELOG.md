@@ -2,6 +2,24 @@
 
 Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [1.10.1] - 2026-11-14
+
+### Added
+- **Self-Service Parameter-Parität (`ui/main.py`, `ui/templates/upload.html`, `ui/templates/job_detail.html`):**
+  - Neue wählbare Parameter im Portal: `author` (Autor/Herausgeber), `typeset_mode` (`reconstructed_1to1`, `scholarly_reflow`, `dictionary_grid`, `paginated`), `paper` (Auto / `iso-b5` / `a4` / `a5`), `no_unpaper` (`--no-unpaper`) und `skip_preprocess` (`--skip-preprocess` auch beim Erst-Upload).
+  - Automatische Generierung/Aktualisierung von `job.config.json` via `_write_job_config()` inklusive Zusammenführung von UI-Optionen in `heuristics`.
+- **n8n & Pipeline-Runner-Durchverdrahtung (`workflows/n8n_ocr_pipeline.json`, `scripts/n8n_run_job.sh`, `scripts/run_pipeline.sh`):**
+  - Weiterleitung von `no_unpaper`, `typeset_mode` und `--paper` bis `render_digital_pdf.py`.
+  - Unterstützung von `target_edition=sandwich` in `run_pipeline.sh` zum gezielten Überspringen der Neusatz- und Export-Stufen 10–12.
+- **4-Schichten-Parity-Standard (`AGENTS.md`) & Benutzerhandbuch (`docs/de/BENUTZERHANDBUCH.md`, `docs/en/BENUTZERHANDBUCH.md`, `ARCHITECTURE.md`):**
+  - Dokumentation der neuen Self-Service- und `job.config.json`-Parameter (inkl. Korrektur `font_family: deva_mt`).
+
+### Fixed
+- **1:1 Seitenkonkordanz bei `reconstructed_1to1` (`scripts/run_pipeline.sh`, `scripts/render_digital_pdf.py`):**
+  - `typeset_mode=reconstructed_1to1` aktiviert nun automatisch `--preserve-pages` / `mode = "paginated"`.
+- **Re-Run Checkbox-Auswertung (`ui/main.py`, `ui/templates/job_detail.html`):**
+  - Über `_from_ui` werden im Re-Run-Formular deaktivierte Checkboxen (`skip_preprocess`, `no_mistral`, `no_unpaper`) deterministisch als `false` übernommen statt aus `saved_opts` überschrieben zu werden.
+
 ## [1.10.0] - 2026-11-13
 
 ### Added

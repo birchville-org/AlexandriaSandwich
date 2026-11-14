@@ -189,6 +189,10 @@
         <input type="text" id="job_title" name="job_title" placeholder="z.B. Tantrasāra Kapitel 3 (Abhinavagupta)">
       </div>
       <div class="form-group">
+        <label for="author">Autor / Herausgeber (Optional)</label>
+        <input type="text" id="author" name="author" placeholder="z.B. Otto Böhtlingk">
+      </div>
+      <div class="form-group">
         <label for="assigned_to">Benutzer-Zuordnung (E-Mail oder Benutzername)</label>
         <input type="text" id="assigned_to" name="assigned_to" placeholder="{% if current_user.is_admin %}z.B. user@uni-hamburg.de oder leer für alle{% else %}{{ current_user.user or current_user.email }}{% endif %}" value="{% if not current_user.is_admin %}{{ current_user.user or current_user.email }}{% endif %}">
         <small class="text-muted">{% if current_user.is_admin %}Weist diesen Auftrag einem spezifischen Benutzer zu (nur dieser sieht &amp; triggert ihn).{% else %}Ihrem Account zugeordnet.{% endif %}</small>
@@ -395,6 +399,30 @@
         </p>
         
         <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem;">
+          <!-- Typst Neusatzmodus -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="typeset_mode" style="font-weight:600;">Typst-Neusatzmodus</label>
+            <select id="typeset_mode" name="typeset_mode" style="width:100%; padding:0.45rem;">
+              <option value="reconstructed_1to1" selected>1:1 Seitenkonkordanter Neusatz (reconstructed_1to1)</option>
+              <option value="scholarly_reflow">Wissenschaftlicher Fließsatz (scholarly_reflow)</option>
+              <option value="dictionary_grid">Wörterbuch- / Tabellenraster (dictionary_grid)</option>
+              <option value="paginated">Paginierter Nachsatz (paginated)</option>
+            </select>
+            <small class="text-muted">Steuert Seitenkonkordanz und Spiegellayout im digitalen PDF.</small>
+          </div>
+
+          <!-- Papierformat -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="paper" style="font-weight:600;">Papierformat (Digitaler Neusatz)</label>
+            <select id="paper" name="paper" style="width:100%; padding:0.45rem;">
+              <option value="" selected>Automatisch (exakte Scan-Geometrie)</option>
+              <option value="iso-b5">ISO B5 (176 × 250 mm, wissenschaftl. Monographie)</option>
+              <option value="a4">DIN A4 (210 × 297 mm)</option>
+              <option value="a5">DIN A5 (148 × 210 mm)</option>
+            </select>
+            <small class="text-muted">Leer = übernimmt den ermittelten Scan-Satzspiegel.</small>
+          </div>
+
           <!-- Editionsformat -->
           <div class="form-group" style="margin-bottom:0;">
             <label for="target_edition" style="font-weight:600;">Ziel-Edition / Ausgabemodus</label>
@@ -461,11 +489,25 @@
           </div>
         </div>
 
-        <div style="display:flex; align-items:center; gap:0.6rem; margin-top:1rem; padding-top:0.8rem; border-top:1px solid var(--border);">
-          <input type="checkbox" id="colophon_blank" name="colophon_blank" value="true">
-          <label for="colophon_blank" style="font-size:0.88rem; margin:0; cursor:pointer;">
-            <strong>Kolophon-Restfläche säubern:</strong> Unbedruckten Bereich der letzten Seite nach dem Abschlusskolophon weiß blenden.
-          </label>
+        <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:1rem; padding-top:0.8rem; border-top:1px solid var(--border);">
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <input type="checkbox" id="no_unpaper" name="no_unpaper" value="true">
+            <label for="no_unpaper" style="font-size:0.88rem; margin:0; cursor:pointer;">
+              <strong>Unpaper-Beschnitt deaktivieren (<code>--no-unpaper</code>):</strong> Ränder und Marginalien bei empfindlichen Scans unverändert belassen.
+            </label>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <input type="checkbox" id="skip_preprocess" name="skip_preprocess" value="true">
+            <label for="skip_preprocess" style="font-size:0.88rem; margin:0; cursor:pointer;">
+              <strong>Vorverarbeitung überspringen (<code>--skip-preprocess</code>):</strong> Bei bereits sauber entzerrten Scans direkt zur OCR springen.
+            </label>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <input type="checkbox" id="colophon_blank" name="colophon_blank" value="true">
+            <label for="colophon_blank" style="font-size:0.88rem; margin:0; cursor:pointer;">
+              <strong>Kolophon-Restfläche säubern:</strong> Unbedruckten Bereich der letzten Seite nach dem Abschlusskolophon weiß blenden.
+            </label>
+          </div>
         </div>
       </div>
     </details>

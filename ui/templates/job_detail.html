@@ -74,6 +74,7 @@
   </div>
 
   <form method="post" action="/jobs/{{ job }}/trigger?redirect=/status?job={{ job }}" id="rerunForm">
+    <input type="hidden" name="_from_ui" value="1">
     <div class="param-grid">
       <!-- 1. Konfidenz-Schwellenwert (Threshold) -->
       <div class="param-field">
@@ -148,16 +149,36 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.25rem;">
           <label class="param-checkbox" title="Bereits entzerrte 300-DPI-Bilder wiederverwenden; überspringt Deskew und Unpaper">
-            <input type="checkbox" name="skip_preprocess" value="1" checked>
+            <input type="checkbox" name="skip_preprocess" value="1" {% if job_opts.get('skip_preprocess', True) %}checked{% endif %}>
             <span>⚡ Vorverarbeitung wiederverwenden (Schneller Re-Run)</span>
           </label>
+          <label class="param-checkbox" title="Deaktiviert Unpaper-Beschnitt (schützt schmale Marginalien und Randnotizen)">
+            <input type="checkbox" name="no_unpaper" value="1" {% if job_opts.get('no_unpaper') %}checked{% endif %}>
+            <span>📐 Unpaper-Beschnitt deaktivieren (<code>--no-unpaper</code>)</span>
+          </label>
           <label class="param-checkbox" title="Keine Anfragen an Mistral AI senden; 100% kostenlose lokale Verarbeitung">
-            <input type="checkbox" name="no_mistral" value="1">
+            <input type="checkbox" name="no_mistral" value="1" {% if job_opts.get('no_mistral') %}checked{% endif %}>
             <span>🛡️ Nur lokales Tesseract (Mistral AI deaktivieren, 0,00 $)</span>
           </label>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 0.25rem; flex-wrap: wrap;">
+            <label for="typesetModeSelect" style="font-size: 0.8rem; color: var(--text-muted);">Neusatzmodus:</label>
+            <select id="typesetModeSelect" name="typeset_mode" class="param-input" style="width: auto; padding: 0.3rem 0.5rem; font-size: 0.82rem;">
+              <option value="reconstructed_1to1" {% if job_opts.get('typeset_mode', 'reconstructed_1to1') == 'reconstructed_1to1' %}selected{% endif %}>1:1 Seitenkonkordanz</option>
+              <option value="scholarly_reflow" {% if job_opts.get('typeset_mode') == 'scholarly_reflow' %}selected{% endif %}>Wissenschaftlicher Fließsatz</option>
+              <option value="dictionary_grid" {% if job_opts.get('typeset_mode') == 'dictionary_grid' %}selected{% endif %}>Wörterbuch-Raster</option>
+              <option value="paginated" {% if job_opts.get('typeset_mode') == 'paginated' %}selected{% endif %}>Paginiert</option>
+            </select>
+            <label for="paperSelect" style="font-size: 0.8rem; color: var(--text-muted);">Papier:</label>
+            <select id="paperSelect" name="paper" class="param-input" style="width: auto; padding: 0.3rem 0.5rem; font-size: 0.82rem;">
+              <option value="" {% if not job_opts.get('paper') %}selected{% endif %}>Auto (Scan-Format)</option>
+              <option value="iso-b5" {% if job_opts.get('paper') == 'iso-b5' %}selected{% endif %}>ISO B5</option>
+              <option value="a4" {% if job_opts.get('paper') == 'a4' %}selected{% endif %}>DIN A4</option>
+              <option value="a5" {% if job_opts.get('paper') == 'a5' %}selected{% endif %}>DIN A5</option>
+            </select>
+          </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 0.25rem;">
             <label for="limitInput" style="font-size: 0.8rem; color: var(--text-muted);">Seitenlimit:</label>
-            <input type="number" id="limitInput" name="limit" value="0" min="0" max="999" class="param-input" style="width: 80px; padding: 0.3rem 0.5rem; font-size: 0.82rem;">
+            <input type="number" id="limitInput" name="limit" value="{{ job_opts.get('limit', 0) }}" min="0" max="999" class="param-input" style="width: 80px; padding: 0.3rem 0.5rem; font-size: 0.82rem;">
             <span style="font-size: 0.75rem; color: var(--text-dim);">(0 = alle Seiten)</span>
           </div>
         </div>

@@ -23,7 +23,10 @@ const limit = Number(body.limit || 0);
 const pull = body.pull !== false && body.pull !== 'false' && body.pull !== 0;
 const push = body.push !== false && body.push !== 'false' && body.push !== 0;
 const noMistral = body.no_mistral === true || body.no_mistral === 'true' || body.no_mistral === 1;
+const noUnpaper = body.no_unpaper === true || body.no_unpaper === 'true' || body.no_unpaper === 1;
 const skipPreprocess = body.skip_preprocess === true || body.skip_preprocess === 'true' || body.skip_preprocess === 1;
+const typesetMode = String(body.typeset_mode || '').replace(/[^a-zA-Z0-9_.-]/g, '');
+const paper = String(body.paper || '').replace(/[^a-zA-Z0-9_-]/g, '');
 const container = String(body.container || process.env.ALEXANDRIA_CONTAINER || 'alexandria_worker');
 const scripts = String(body.scripts_path || process.env.ALEXANDRIA_SCRIPTS || '/opt/alexandria/scripts');
 const cmd = [
@@ -44,7 +47,10 @@ cmd.push(
 if (pull) cmd.push('--pull');
 if (push) cmd.push('--push');
 if (noMistral) cmd.push('--no-mistral');
+if (noUnpaper) cmd.push('--no-unpaper');
 if (skipPreprocess) cmd.push('--skip-preprocess');
+if (typesetMode) cmd.push('--typeset-mode', typesetMode);
+if (paper) cmd.push('--paper', paper);
 if (limit > 0) cmd.push('--limit', String(limit));
 console.error('[n8n_run_job]', cmd.join(' '));
 const r = spawnSync(cmd[0], cmd.slice(1), { encoding: 'utf8', maxBuffer: 20*1024*1024 });

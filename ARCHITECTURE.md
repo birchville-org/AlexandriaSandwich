@@ -112,19 +112,26 @@ Um "Overfitting" und Spaghetti-Code zu verhindern, sind Verzweigungen nach konkr
 * **Satzspiegel & Apparate:** Erkennung von Fußnotenblöcken und kritischen Apparaten über relative Zeilenabstände und Schriftgradstufen.
 
 ### 5.3 Deklarative Job-Profile (`job.config.json`)
-Spezifische Randbedingungen eines Buchs (z. B. Sprachkombination `deu+san`, Konfidenz-Schwellenwert, Bindebreite für den Gutter-Crop) werden deklarativ im Eingangsverzeichnis hinterlegt:
+Spezifische Randbedingungen eines Buchs (z. B. Sprachkombination `deu+san`, Konfidenz-Schwellenwert, Neusatzmodus, Papierformat) werden deklarativ im Eingangsverzeichnis hinterlegt (oder automatisch vom Self-Service-Webportal via `_write_job_config()` beim Upload/Trigger erzeugt):
 
 ```json
 {
+  "title": "Tantrasāra Kapitel 3",
+  "author": "Abhinavagupta",
   "lang": "san+deu",
   "threshold": 90,
   "use_mistral": true,
   "use_unpaper": true,
-  "template": "dictionary_two_column",
-  "toc_offset": 14
+  "skip_preprocess": false,
+  "typeset_mode": "reconstructed_1to1",
+  "paper": "iso-b5",
+  "heuristics": {
+    "target_edition": "all",
+    "font_family": "stix"
+  }
 }
 ```
-Die Pipeline liest diese Parameter beim Start ein, bleibt im Programmcode jedoch 100 % generisch.
+Die Pipeline (`scripts/run_pipeline.sh`, inklusive `--paper` und `--typeset-mode`) sowie `scripts/consolidate_book.py` lesen diese Parameter beim Start ein und bleiben im Programmcode 100 % generisch.
 
 ### 5.4 Das Regressions-Gate (Golden-Master-Prinzip)
 Wird die Pipeline zur Bewältigung eines neuen Dokuments verfeinert, muss die bestehende Qualität etablierter Referenzjobs (`alex_smoke`, `stenzler_10p`, `katha_06`) unverändert bestehen bleiben. Automatische Testläufe (`scripts/test_golden_regression.sh`) sichern die Engine gegen funktionale Regressionen ab.

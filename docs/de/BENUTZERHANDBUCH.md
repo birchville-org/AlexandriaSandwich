@@ -81,11 +81,16 @@ Nicht alle Entscheidungen können vollautomatisch getroffen werden. Das Service-
 
 | Parameter | Werte / Optionen | Standard | Beschreibung & Empfehlung |
 | :--- | :--- | :--- | :--- |
-| **`target_edition`** | `all`, `sandwich`, `original`, `interlinear`, `transliteration`, `bilingual` | `all` | Bestimmt, welche Dokumente der Multi-Edition-Matrix kompiliert werden. |
+| **`author`** | Freitext (z. B. `Otto Böhtlingk`) | `""` | Autor/Herausgeber für Titelblatt, PDF-Metadaten, TEI-P5 und EPUB 3. |
+| **`typeset_mode`** | `reconstructed_1to1`, `scholarly_reflow`, `dictionary_grid`, `paginated` | `reconstructed_1to1` | Steuert 1:1 seitenkonkordanten Neusatz (`--preserve-pages`) vs. wissenschaftlichen Fließsatz oder Wörterbuch-Raster. |
+| **`paper`** | `""` (Auto), `iso-b5`, `a4`, `a5` | `""` (Auto) | Übernimmt standardmäßig die exakte Scan-Geometrie oder erzwingt ein normiertes Druckformat. |
+| **`no_unpaper`** | `true`, `false` | `false` | Deaktiviert `unpaper`-Beschnitt (`--no-unpaper`), um empfindliche Marginalien und Randnotizen zu schützen. |
+| **`skip_preprocess`** | `true`, `false` | `false` | Überspringt die Bildvorverarbeitung (`--skip-preprocess`) bei bereits sauber entzerrten Scans oder schnellen Re-Runs. |
+| **`target_edition`** | `all`, `sandwich`, `original`, `interlinear`, `transliteration`, `bilingual` | `all` | Bestimmt, welche Dokumente der Multi-Edition-Matrix kompiliert werden (`sandwich` überspringt Neusatz/TEI/EPUB). |
 | **`spread_mode`** | `auto`, `split_spreads`, `single_page`, `raw` | `auto` | Trennt 2-seitige Buchscans (Doppelseiten) automatisch an der Mittellinie in Verso und Recto. |
 | **`despeckle_mode`** | `safe_philological`, `aggressive`, `off` | `safe_philological` | `safe_philological` schützt Akzente und Punkte; `aggressive` für grobe Kopien; `off` für historische Originalstrukturen. |
 | **`colophon_blank`** | `true`, `false` | `false` | Blendet leere Seitenbereiche nach dem finalen Kapitel-Kolophon weiß ein. |
-| **`font_family`** | `stix`, `libertine`, `noto_deva` | `stix` | **STIX Two Text** deckt IAST und indologische Diakritika vollständig ab; **Libertine** für westliche Standardtexte. |
+| **`font_family`** | `stix`, `libertine`, `deva_mt` | `stix` | **STIX Two Text** deckt IAST und indologische Diakritika vollständig ab; **Libertine** für westliche Standardtexte; **Deva MT** für traditionellen Devanāgarī-Bleisatz. |
 | **`body_start_page`** | Ganze Zahl (z. B. `10`) | `1` | Start-Seitenzahl des Haupttextes für native PDF Page Labels bei Kapitelauszügen. |
 | **`title_page_style`** | `birchville`, `minimal`, `none` | `birchville` | Wappen-Titelblatt nach Birchville Scholarly Synthesis Standard oder schlichter Textbeginn. |
 | **`apparatus_translit`**| `true`, `false` | `true` | Löst indische Manuskriptsiglen (`पं०`, `ख० पु०`) automatisch in standardisiertes IAST auf. |

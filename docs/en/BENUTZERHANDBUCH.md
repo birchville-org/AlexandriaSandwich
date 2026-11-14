@@ -81,11 +81,16 @@ Decisions that cannot or should not be made purely by automated heuristics are p
 
 | Parameter | Values / Options | Default | Description & Guidance |
 | :--- | :--- | :--- | :--- |
-| **`target_edition`** | `all`, `sandwich`, `original`, `interlinear`, `transliteration`, `bilingual` | `all` | Determines which documents of the multi-edition matrix to build. |
+| **`author`** | Free text (e.g. `Otto Böhtlingk`) | `""` | Author/editor metadata for title page, PDF metadata, TEI-P5, and EPUB 3. |
+| **`typeset_mode`** | `reconstructed_1to1`, `scholarly_reflow`, `dictionary_grid`, `paginated` | `reconstructed_1to1` | Selects page-concordant 1:1 typesetting (`--preserve-pages`) vs. scholarly reflow or dictionary grid. |
+| **`paper`** | `""` (Auto), `iso-b5`, `a4`, `a5` | `""` (Auto) | Defaults to the detected scan geometry or enforces a standardized page size. |
+| **`no_unpaper`** | `true`, `false` | `false` | Disables `unpaper` cropping (`--no-unpaper`) to protect narrow marginalia and edge notes. |
+| **`skip_preprocess`** | `true`, `false` | `false` | Skips image preprocessing (`--skip-preprocess`) for pre-deskewed scans or fast re-runs. |
+| **`target_edition`** | `all`, `sandwich`, `original`, `interlinear`, `transliteration`, `bilingual` | `all` | Determines which documents of the multi-edition matrix to build (`sandwich` skips digital typesetting/TEI/EPUB). |
 | **`spread_mode`** | `auto`, `split_spreads`, `single_page`, `raw` | `auto` | Automatically splits 2-page landscape scans into verso and recto pages. |
 | **`despeckle_mode`** | `safe_philological`, `aggressive`, `off` | `safe_philological` | `safe_philological` preserves accents/dots; `aggressive` clears heavy library copier noise; `off` retains raw paper texture. |
 | **`colophon_blank`** | `true`, `false` | `false` | Blanks out empty space following the chapter colophon on the last page. |
-| **`font_family`** | `stix`, `libertine`, `noto_deva` | `stix` | **STIX Two Text** supports complete IAST and philological diacritics; **Libertine** for Western texts. |
+| **`font_family`** | `stix`, `libertine`, `deva_mt` | `stix` | **STIX Two Text** supports complete IAST and philological diacritics; **Libertine** for Western texts; **Deva MT** for traditional Devanāgarī typesetting. |
 | **`body_start_page`** | Integer (e.g. `10`) | `1` | Starting page number for PDF page labels when processing extracts. |
 | **`title_page_style`** | `birchville`, `minimal`, `none` | `birchville` | Crested title page following Birchville Scholarly Synthesis standard vs. minimal header. |
 | **`apparatus_translit`**| `true`, `false` | `true` | Automatically expands Indic manuscript sigla (`पं०`, `ख० पु०`) to standardized IAST. |

@@ -116,6 +116,86 @@ def _validate_limit(val: Any) -> int:
         raise HTTPException(status_code=422, detail="Limit muss eine Ganzzahl zwischen 0 und 100000 sein")
 
 
+_ALLOWED_TYPESET_MODES = {"", "reconstructed_1to1", "scholarly_reflow", "dictionary_grid", "paginated", "1to1"}
+_ALLOWED_PAPERS = {"", "iso-b5", "b5", "a4", "a5", "us-letter"}
+
+
+def _validate_typeset_mode(val: Any) -> str:
+    """Validiert den Typst-Neusatzmodus."""
+    cleaned = str(val or "").strip()
+    return cleaned if cleaned in _ALLOWED_TYPESET_MODES else ""
+
+
+def _validate_paper(val: Any) -> str:
+    """Validiert das Papierformat für den digitalen Neusatz."""
+    cleaned = str(val or "").strip().lower()
+    return cleaned if cleaned in _ALLOWED_PAPERS else ""
+
+
+def _write_job_config(job_dir: Path, opts: dict[str, Any]) -> None:
+    """Schreibt oder aktualisiert job.config.json im Job-Verzeichnis für run_pipeline.sh und consolidate_book.py."""
+    if not job_dir.is_dir():
+        return
+    cfg_path = job_dir / "job.config.json"
+    cfg: dict[str, Any] = {}
+    if cfg_path.exists():
+        try:
+            loaded = json.loads(cfg_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                cfg = loaded
+        except Exception:
+            cfg = {}
+
+    if opts.get("job_title"):
+        cfg["title"] = opts["job_title"]
+    if opts.get("author") is not None:
+        cfg["author"] = opts["author"]
+    if opts.get("lang"):
+        cfg["lang"] = opts["lang"]
+    if "threshold" in opts:
+        cfg["threshold"] = int(opts["threshold"])
+    if "limit" in opts:
+        cfg["limit"] = int(opts["limit"])
+    if "no_mistral" in opts:
+        cfg["use_mistral"] = not bool(opts["no_mistral"])
+    if "no_unpaper" in opts:
+        cfg["use_unpaper"] = not bool(opts["no_unpaper"])
+    if "skip_preprocess" in opts:
+        cfg["skip_preprocess"] = bool(opts["skip_preprocess"])
+    if opts.get("typeset_mode"):
+        cfg["typeset_mode"] = opts["typeset_mode"]
+    else:
+        cfg.pop("typeset_mode", None)
+    if opts.get("paper"):
+        cfg["paper"] = opts["paper"]
+    else:
+        cfg.pop("paper", None)
+
+    ui_keys = ("target_edition", "despeckle_mode", "spread_mode", "font_family", "body_start_page", "title_page_style", "colophon_blank")
+    heuristics = cfg.get("heuristics")
+    if not isinstance(heuristics, dict):
+        heuristics = {}
+    for k in ui_keys:
+        if k in opts:
+            heuristics[k] = opts[k]
+    if opts.get("typeset_mode"):
+        heuristics["typeset_mode"] = opts["typeset_mode"]
+    else:
+        heuristics.pop("typeset_mode", None)
+    if opts.get("paper"):
+        heuristics["paper"] = opts["paper"]
+    else:
+        heuristics.pop("paper", None)
+    if heuristics:
+        cfg["heuristics"] = heuristics
+    cfg.pop("ui_options", None)
+
+    try:
+        cfg_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
+    except Exception as e:
+        logging.warning("Could not write job.config.json: %s", e)
+
+
 def _check_csrf_origin(request: Request) -> None:
     """Prüft den Origin-Header bei zustandsändernden POST-Requests."""
     origin = request.headers.get("origin")
@@ -754,8 +834,30 @@ def _list_jobs():
     return sorted(jobs.values(), key=lambda j: j.get("modified", ""), reverse=True)
 
 
-def _trigger_n8n(job, lang="deu+eng", threshold=100, limit=0, no_mistral=False, skip_preprocess=False):
-    payload = {"job": job, "pull": False, "push": False, "lang": lang, "threshold": threshold, "limit": limit, "no_mistral": no_mistral, "skip_preprocess": skip_preprocess}
+def _trigger_n8n(
+    job,
+    lang="deu+eng",
+    threshold=100,
+    limit=0,
+    no_mistral=False,
+    skip_preprocess=False,
+    no_unpaper=False,
+    typeset_mode="",
+    paper="",
+):
+    payload = {
+        "job": job,
+        "pull": False,
+        "push": False,
+        "lang": lang,
+        "threshold": threshold,
+        "limit": limit,
+        "no_mistral": no_mistral,
+        "skip_preprocess": skip_preprocess,
+        "no_unpaper": no_unpaper,
+        "typeset_mode": typeset_mode,
+        "paper": paper,
+    }
     urls_to_try = [N8N_WEBHOOK_URL]
     if FALLBACK_N8N_URL and FALLBACK_N8N_URL != N8N_WEBHOOK_URL:
         urls_to_try.append(FALLBACK_N8N_URL)
@@ -1683,6 +1785,7 @@ async def upload_submit(
     request: Request,
     job: str = Form(...),
     job_title: str = Form(""),
+    author: str = Form(""),
     assigned_to: str = Form(""),
     stage_only: bool = Form(False),
     lang: str = Form("deu+eng"),
@@ -1690,7 +1793,11 @@ async def upload_submit(
     limit: int = Form(0),
     dpi: int = Form(300),
     no_mistral: bool = Form(False),
+    no_unpaper: bool = Form(False),
+    skip_preprocess: bool = Form(False),
     trigger: bool = Form(False),
+    typeset_mode: str = Form("reconstructed_1to1"),
+    paper: str = Form(""),
     target_edition: str = Form("all"),
     despeckle_mode: str = Form("safe_philological"),
     spread_mode: str = Form("auto"),
@@ -1703,6 +1810,8 @@ async def upload_submit(
     _check_csrf_origin(request)
     job = _validate_job(job)
     lang = _validate_lang(lang)
+    typeset_mode = _validate_typeset_mode(typeset_mode)
+    paper = _validate_paper(paper)
     job_dir = INPUT_DIR / job
     job_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1718,6 +1827,7 @@ async def upload_submit(
     job_options = {
         "job": job,
         "job_title": job_title.strip() or job,
+        "author": author.strip(),
         "assigned_to": eff_assigned,
         "is_staged": stage_only or not trigger,
         "status": "VORBEREITET" if (stage_only or not trigger) else "IN_ARBEIT",
@@ -1727,6 +1837,10 @@ async def upload_submit(
         "limit": limit,
         "dpi": dpi,
         "no_mistral": no_mistral,
+        "no_unpaper": no_unpaper,
+        "skip_preprocess": skip_preprocess,
+        "typeset_mode": typeset_mode,
+        "paper": paper,
         "target_edition": target_edition,
         "despeckle_mode": despeckle_mode,
         "spread_mode": spread_mode,
@@ -1740,6 +1854,7 @@ async def upload_submit(
         (job_dir / "job_options.json").write_text(json.dumps(job_options, indent=2, ensure_ascii=False))
     except Exception as e:
         logging.warning("Could not write job_options.json: %s", e)
+    _write_job_config(job_dir, job_options)
 
     saved = []
     notes = []
@@ -1792,7 +1907,17 @@ async def upload_submit(
     }
 
     if trigger and len(saved) > 0:
-        n8n_resp = _trigger_n8n(job, lang=lang, threshold=threshold, limit=limit, no_mistral=no_mistral)
+        n8n_resp = _trigger_n8n(
+            job,
+            lang=lang,
+            threshold=threshold,
+            limit=limit,
+            no_mistral=no_mistral,
+            skip_preprocess=skip_preprocess,
+            no_unpaper=no_unpaper,
+            typeset_mode=typeset_mode,
+            paper=paper,
+        )
         result["triggered"] = True
         result["n8n_response"] = n8n_resp
 
@@ -1888,7 +2013,10 @@ async def trigger_job(request: Request, job: str):
         threshold = 100
         limit = 0
         no_mistral = False
+        no_unpaper = False
         skip_preprocess = False
+        typeset_mode = ""
+        paper = ""
 
         # Parse from Query Params, Form or JSON Body uniformly
         raw_params: dict[str, Any] = dict(request.query_params)
@@ -1922,17 +2050,44 @@ async def trigger_job(request: Request, job: str):
         elif "limit" in saved_opts:
             limit = _validate_limit(saved_opts["limit"])
 
+        from_ui = "_from_ui" in raw_params
+
         if "no_mistral" in raw_params:
             no_mistral = str(raw_params["no_mistral"]).lower() in ("1", "true", "yes", "on")
-        elif "no_mistral" in saved_opts:
+        elif not from_ui and "no_mistral" in saved_opts:
             no_mistral = bool(saved_opts["no_mistral"])
+
+        if "no_unpaper" in raw_params:
+            no_unpaper = str(raw_params["no_unpaper"]).lower() in ("1", "true", "yes", "on")
+        elif not from_ui and "no_unpaper" in saved_opts:
+            no_unpaper = bool(saved_opts["no_unpaper"])
 
         if "skip_preprocess" in raw_params:
             skip_preprocess = str(raw_params["skip_preprocess"]).lower() in ("1", "true", "yes", "on")
+        elif not from_ui and "skip_preprocess" in saved_opts:
+            skip_preprocess = bool(saved_opts["skip_preprocess"])
+
+        if "typeset_mode" in raw_params:
+            typeset_mode = _validate_typeset_mode(raw_params["typeset_mode"])
+        elif saved_opts.get("typeset_mode"):
+            typeset_mode = _validate_typeset_mode(saved_opts["typeset_mode"])
+
+        if "paper" in raw_params:
+            paper = _validate_paper(raw_params["paper"])
+        elif saved_opts.get("paper"):
+            paper = _validate_paper(saved_opts["paper"])
 
         # Update job options with execution metadata
         opt_path = (INPUT_DIR / job / "job_options.json") if (INPUT_DIR / job).is_dir() else (OUT_DIR / job / "job_options.json")
         if saved_opts:
+            saved_opts["lang"] = lang
+            saved_opts["threshold"] = threshold
+            saved_opts["limit"] = limit
+            saved_opts["no_mistral"] = no_mistral
+            saved_opts["no_unpaper"] = no_unpaper
+            saved_opts["skip_preprocess"] = skip_preprocess
+            saved_opts["typeset_mode"] = typeset_mode
+            saved_opts["paper"] = paper
             saved_opts["triggered_by"] = current_user.get("user") or "anonymous"
             saved_opts["triggered_by_email"] = current_user.get("email") or ""
             saved_opts["triggered_at"] = datetime.now(timezone.utc).isoformat()
@@ -1942,6 +2097,7 @@ async def trigger_job(request: Request, job: str):
                 opt_path.write_text(json.dumps(saved_opts, indent=2, ensure_ascii=False))
             except Exception:
                 pass
+            _write_job_config(INPUT_DIR / job, saved_opts)
 
         # Vor Re-Run: bisherigen Lauf automatisch archivieren, falls Artefakte vorhanden sind
         current_art = _get_job_artifacts(job)
@@ -1959,7 +2115,10 @@ async def trigger_job(request: Request, job: str):
             threshold=threshold,
             limit=limit,
             no_mistral=no_mistral,
-            skip_preprocess=skip_preprocess
+            skip_preprocess=skip_preprocess,
+            no_unpaper=no_unpaper,
+            typeset_mode=typeset_mode,
+            paper=paper,
         )
     finally:
         await _release_job_lock(job)

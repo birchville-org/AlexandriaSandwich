@@ -2432,9 +2432,9 @@ def main():
     font_path = Path(args.font_path).resolve() if args.font_path else None
 
     mode = args.mode
-    if args.preserve_pages:
+    if args.preserve_pages or args.typeset_mode in ("1to1", "reconstructed_1to1", "paginated"):
         mode = "paginated"
-    elif args.no_preserve_pages:
+    if args.no_preserve_pages:
         mode = "boehtlingk"
 
     preserve_pages = (mode == "paginated")
